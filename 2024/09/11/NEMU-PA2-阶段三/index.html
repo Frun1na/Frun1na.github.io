@@ -3,7 +3,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <title>NEMU-PA2-阶段三 | Frun1na &#39;s blog</title>
+    <title> | Frun1na &#39;s blog</title>
     <meta name="author" content="Frun1na" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
@@ -159,7 +159,7 @@
         <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
             <div class="article">
     <div>
-        <h1>NEMU-PA2-阶段三</h1>
+        <h1></h1>
     </div>
     <div class="info">
         <span class="date">
@@ -173,7 +173,8 @@
     </div>
     
     <div class="content" v-pre>
-        <h1 id="课程介绍-前言"><a href="#课程介绍-前言" class="headerlink" title="课程介绍&amp;前言"></a>课程介绍&amp;前言</h1><p>​		此课程是天津大学智算学部大二24-25第一学期的实践课，名为《计算机系统综合实践》，主要目标是完成一个叫NEMU的模拟器，以加深《计算机系统基础》的学习。</p>
+        <hr>
+<h2 id="layout-nemutitle-NEMU-PA2-阶段三date-2024-09-11-13-41-17tags"><a href="#layout-nemutitle-NEMU-PA2-阶段三date-2024-09-11-13-41-17tags" class="headerlink" title="layout: nemutitle: NEMU-PA2-阶段三date: 2024-09-11 13:41:17tags:"></a>layout: nemu<br>title: NEMU-PA2-阶段三<br>date: 2024-09-11 13:41:17<br>tags:</h2><h1 id="课程介绍-前言"><a href="#课程介绍-前言" class="headerlink" title="课程介绍&amp;前言"></a>课程介绍&amp;前言</h1><p>​		此课程是天津大学智算学部大二24-25第一学期的实践课，名为《计算机系统综合实践》，主要目标是完成一个叫NEMU的模拟器，以加深《计算机系统基础》的学习。</p>
 <span id="more"></span>
 
 <p>​		此模拟器运行在乌邦图18.04的Linux操作系统上，模拟了cpu，dram等计算机硬件的行为。</p>
@@ -186,13 +187,14 @@
 <p>下面是elf可重定位目标文件的格式</p>
 <p><img src="https://raw.githubusercontent.com/Frun1na/blog-picture/main/image-20240911160717244.png"></p>
 <p><img src="https://raw.githubusercontent.com/Frun1na/blog-picture/main/image-20240911160826567.png"></p>
-<p>​		这个阶段对我们非常重要的就是symtab符号表。通过查阅指导手册对应部分，我们知道了要找OBJECT类型的变量，同时也知道了Name属性存放的是这些变量名字在字符串表(string table)中的偏移量。这是因为对于一个名字，即字符串，程序不知道要留下多大的空间存储比较合适，可能会少，也可能太多了，造成浪费，因此存储一个偏移量。<strong>那么我们要做的，就是先从输出的Section Headers中读取.strab在elf文件的偏移是多少，然后再根据Name在.strab中的偏移量在可执行文件里面找到变量名</strong>。（变量名之间是用00隔开的，转化为符号形式就是’\0’直接读取即可，比较方便）</p>
+<p>​		这个阶段对我们非常重要的就是symtab符号表。通过查阅指导手册对应部分，我们知道了要找OBJECT类型的变量，同时也知道了Name属性存放的是这些变量名字在字符串表(string table)中的偏移量。这是因为对于一个名字，即字符串，程序不知道要留下多大的空间存储比较合适，可能会少，也可能太多了，造成浪费，因此存储一个偏移量。</p>
+<p><strong>那么我们要做的，就是先从输出的Section Headers中读取.strab在elf文件的偏移是多少，然后再根据Name在.strab中的偏移量在可执行文件里面找到变量名</strong>。（变量名之间是用00隔开的，转化为符号形式就是’\0’直接读取即可，比较方便）</p>
 <p>​		我们可以通过指令来查看ELF文件的16进制形式，注意在输入指令时，查看自己的当前操作目录有没有那个文件。</p>
-<pre><code>hd add
+<pre><code class="cmb">hd add
 </code></pre>
 <p>具体如何查找请看指导手册。<strong>这里再强调一下你看到的符号表里面没有宏和局部变量，有静态变量。这是因为局部变量时存储在栈上面的，他的地址并不固定，而且编译时期也不能确定他的地址。至于宏，在预编译时期已经处理完了，编译器看到的文件是宏展开之后的结果，静态变量是在编译时期就分配好地址的，也可以看到。</strong></p>
 <p>然后和你输入的</p>
-<pre><code>p 变量名
+<pre><code class="cmd">p 变量名
 </code></pre>
 <p>中的变量名对比，如果成功，打印符号表中的value即可，这里value是一个地址，想要查看变量值，只需要用PA1实现的解引用即可，如果不成功，那就用循环遍历即可。</p>
 <h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>这里最难的地方应该是从ELF文件里面提取出符号表，字符串表，但是这已经给我们实现完了。</p>
@@ -201,7 +203,7 @@
  Elf32_Sym *symtab = NULL;
  int nr_symtab_entry;
 </code></pre>
-<p>本来有static关键字的，我为了写函数方便，直接去掉了，以便在其他文件里面访问。当然也可以在此文件里面实现，在elf.h中声明，直接调用elf.h中的函数。</p>
+<p>本来有static关键字的，我为了写函数方便，直接去掉了，以便在其他文件里面访问。当然也可以在此文件里面实现，在elf.h中声明，直接调用elf.h中的函数（事实上这种方式更加安全，因为保证了封装性）。</p>
 <p>这些变量看名字不难理解，然后我们看看Elf32_Sym是什么。(定义在\lib-common\uclibc\include\elf.h)</p>
 <pre><code class="c">typedef struct
 &#123;
@@ -217,7 +219,257 @@ typedef uint32_t Elf32_Word;
 typedef uint32_t Elf32_Addr;
 typedef uint16_t Elf32_Section;
 </code></pre>
+<p>​		下面我们研究一下load_elf_tables()</p>
+<pre><code class="c">void load_elf_tables(int argc, char *argv[]) &#123;
+    int ret;
+    Assert(argc == 2, &quot;run NEMU with format &#39;nemu [program]&#39;&quot;);
+    exec_file = argv[1];
 
+    FILE *fp = fopen(exec_file, &quot;rb&quot;);
+    Assert(fp, &quot;Can not open &#39;%s&#39;&quot;, exec_file);
+
+    uint8_t buf[sizeof(Elf32_Ehdr)];
+    ret = fread(buf, sizeof(Elf32_Ehdr), 1, fp);
+    assert(ret == 1);
+
+    /* The first several bytes contain the ELF header. */
+    Elf32_Ehdr *elf = (void *)buf;
+    char magic[] = &#123;ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3&#125;;
+
+    /* Check ELF header */
+    assert(memcmp(elf-&gt;e_ident, magic, 4) == 0);		// magic number
+    assert(elf-&gt;e_ident[EI_CLASS] == ELFCLASS32);		// 32-bit architecture
+    assert(elf-&gt;e_ident[EI_DATA] == ELFDATA2LSB);		// littel-endian
+    assert(elf-&gt;e_ident[EI_VERSION] == EV_CURRENT);		// current version
+    assert(elf-&gt;e_ident[EI_OSABI] == ELFOSABI_SYSV || 	// UNIX System V ABI
+            elf-&gt;e_ident[EI_OSABI] == ELFOSABI_LINUX); 	// UNIX - GNU
+    assert(elf-&gt;e_ident[EI_ABIVERSION] == 0);			// should be 0
+    assert(elf-&gt;e_type == ET_EXEC);						// executable file
+    assert(elf-&gt;e_machine == EM_386);					// Intel 80386 architecture
+    assert(elf-&gt;e_version == EV_CURRENT);				// current version
+
+
+    /* Load symbol table and string table for future use */
+
+    /* Load section header table */
+    uint32_t sh_size = elf-&gt;e_shentsize * elf-&gt;e_shnum;
+    Elf32_Shdr *sh = malloc(sh_size);
+    fseek(fp, elf-&gt;e_shoff, SEEK_SET);
+    ret = fread(sh, sh_size, 1, fp);
+    assert(ret == 1);
+
+    /* Load section header string table */
+    char *shstrtab = malloc(sh[elf-&gt;e_shstrndx].sh_size);
+    fseek(fp, sh[elf-&gt;e_shstrndx].sh_offset, SEEK_SET);
+    ret = fread(shstrtab, sh[elf-&gt;e_shstrndx].sh_size, 1, fp);
+    assert(ret == 1);
+
+    int i;
+    for(i = 0; i &lt; elf-&gt;e_shnum; i ++) &#123;
+        if(sh[i].sh_type == SHT_SYMTAB &amp;&amp; 
+                strcmp(shstrtab + sh[i].sh_name, &quot;.symtab&quot;) == 0) &#123;
+            /* Load symbol table from exec_file */
+            symtab = malloc(sh[i].sh_size);
+            fseek(fp, sh[i].sh_offset, SEEK_SET);
+            ret = fread(symtab, sh[i].sh_size, 1, fp);
+            assert(ret == 1);
+            nr_symtab_entry = sh[i].sh_size / sizeof(symtab[0]);
+        &#125;
+        else if(sh[i].sh_type == SHT_STRTAB &amp;&amp; 
+                strcmp(shstrtab + sh[i].sh_name, &quot;.strtab&quot;) == 0) &#123;
+            /* Load string table from exec_file */
+            strtab = malloc(sh[i].sh_size);
+            fseek(fp, sh[i].sh_offset, SEEK_SET);
+            ret = fread(strtab, sh[i].sh_size, 1, fp);
+            assert(ret == 1);
+        &#125;
+    &#125;
+
+    free(sh);
+    free(shstrtab);
+
+    assert(strtab != NULL &amp;&amp; symtab != NULL);
+
+    fclose(fp);
+&#125;
+</code></pre>
+<p>​		我们一点一点来看，首先是前面几行。</p>
+<pre><code class="c">    int ret;
+    Assert(argc == 2, &quot;run NEMU with format &#39;nemu [program]&#39;&quot;);
+    exec_file = argv[1];
+
+    FILE *fp = fopen(exec_file, &quot;rb&quot;);
+    Assert(fp, &quot;Can not open &#39;%s&#39;&quot;, exec_file);
+
+    uint8_t buf[sizeof(Elf32_Ehdr)];
+    ret = fread(buf, sizeof(Elf32_Ehdr), 1, fp);
+    assert(ret == 1);
+
+    /* The first several bytes contain the ELF header. */
+    Elf32_Ehdr *elf = (void *)buf;
+    char magic[] = &#123;ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3&#125;;
+</code></pre>
+<p>​		然后是Elf32_Ehdr的定义</p>
+<pre><code class="c">typedef struct
+&#123;
+  unsigned char	e_ident[EI_NIDENT];	/* Magic number and other info */
+  Elf32_Half	e_type;			/* Object file type */
+  Elf32_Half	e_machine;		/* Architecture */
+  Elf32_Word	e_version;		/* Object file version */
+  Elf32_Addr	e_entry;		/* Entry point virtual address */
+  Elf32_Off	e_phoff;		/* Program header table file offset */
+  Elf32_Off	e_shoff;		/* Section header table file offset */
+  Elf32_Word	e_flags;		/* Processor-specific flags */
+  Elf32_Half	e_ehsize;		/* ELF header size in bytes */
+  Elf32_Half	e_phentsize;		/* Program header table entry size */
+  Elf32_Half	e_phnum;		/* Program header table entry count */
+  Elf32_Half	e_shentsize;		/* Section header table entry size */
+  Elf32_Half	e_shnum;		/* Section header table entry count */
+  Elf32_Half	e_shstrndx;		/* Section header string table index */
+&#125; Elf32_Ehdr;
+</code></pre>
+<p>​		exec_file为用户程序编译来的可执行文件，先打开这个文件，其中”rb”表示以二进制方式读取，然后buf表示读取文件的前面一部分，就是ELF头了。</p>
+<p>​		然后是下面一部分，正如注释所说，就是检查ELF头读取有没有问题</p>
+<pre><code class="c">/* Check ELF header */
+assert(memcmp(elf-&gt;e_ident, magic, 4) == 0);		// magic number
+assert(elf-&gt;e_ident[EI_CLASS] == ELFCLASS32);		// 32-bit architecture
+assert(elf-&gt;e_ident[EI_DATA] == ELFDATA2LSB);		// littel-endian
+assert(elf-&gt;e_ident[EI_VERSION] == EV_CURRENT);		// current version
+assert(elf-&gt;e_ident[EI_OSABI] == ELFOSABI_SYSV || 	// UNIX System V ABI
+        elf-&gt;e_ident[EI_OSABI] == ELFOSABI_LINUX); 	// UNIX - GNU
+assert(elf-&gt;e_ident[EI_ABIVERSION] == 0);			// should be 0
+assert(elf-&gt;e_type == ET_EXEC);						// executable file
+assert(elf-&gt;e_machine == EM_386);					// Intel 80386 architecture
+assert(elf-&gt;e_version == EV_CURRENT);				// current version
+</code></pre>
+<p>​		下面几行是读取section header table，它的作用是看string table的偏移量，以便在ELF文件中找到string table.</p>
+<p>​		fseek是c语言的一个函数，用于移动文件指针到指定位置，这里就是把指针(fp)移到以SEEK_SET为基准，偏移量为elf-&gt;e_shoff的地方，而SEEK_SET是一个宏定义，为0，所以意思就是移动到section header table的开始位置。</p>
+<p>​		fread用于读取数据，就是把section header table读取到sh指向的区域，一共读取sh_size个。</p>
+<p>​		ret用于检验读取是否成功。</p>
+<pre><code class="c">/* Load section header table */
+uint32_t sh_size = elf-&gt;e_shentsize * elf-&gt;e_shnum;
+Elf32_Shdr *sh = malloc(sh_size);
+fseek(fp, elf-&gt;e_shoff, SEEK_SET);
+ret = fread(sh, sh_size, 1, fp);
+assert(ret == 1);
+</code></pre>
+<p>​		下面是Elf_Shdr的定义：它的类型是Section Table</p>
+<pre><code class="c">typedef struct
+&#123;
+  Elf32_Word	sh_name;		/* Section name (string tbl index) */
+  Elf32_Word	sh_type;		/* Section type */
+  Elf32_Word	sh_flags;		/* Section flags */
+  Elf32_Addr	sh_addr;		/* Section virtual addr at execution */
+  Elf32_Off	sh_offset;		/* Section file offset */
+  Elf32_Word	sh_size;		/* Section size in bytes */
+  Elf32_Word	sh_link;		/* Link to another section */
+  Elf32_Word	sh_info;		/* Additional section information */
+  Elf32_Word	sh_addralign;		/* Section alignment */
+  Elf32_Word	sh_entsize;		/* Entry size if section holds table */
+&#125; Elf32_Shdr;
+</code></pre>
+<p>​		下面的代码好好思考一下就能看懂，elf是ELF头，它里面有一个信息，就是e_shstrndx，即string table的索引值，然后sh[]就是在Section Table中找到了string table.</p>
+<p>​		结合上面section table中的定义，不难想到sh[elf-&gt;e_shstrndx].sh_size就是string table的大小，而sh[elf-&gt;e_shstrndx].sh_offset就是string table的偏移量。</p>
+<p>​		然后就是读取的string table存入shstrtab，这是一个字符串。注意前面理论我们说了不同的Name是用00也就是’\0’隔开的，这里直接把整个表读入，也包括了00，你要是直接打印shstrtab是不会打印完整的</p>
+<p>​		注意这里的string table 是section header的，我们需要的整个程序的string table还没有读取。</p>
+<pre><code class="c">/* Load section header string table */
+char *shstrtab = malloc(sh[elf-&gt;e_shstrndx].sh_size);
+fseek(fp, sh[elf-&gt;e_shstrndx].sh_offset, SEEK_SET);
+ret = fread(shstrtab, sh[elf-&gt;e_shstrndx].sh_size, 1, fp);
+assert(ret == 1);
+</code></pre>
+<p>​		然后接下来读取symbol table.</p>
+<p>​		sh[i].sh_type &#x3D;&#x3D; SHT_SYMTAB就是从section table中找到symbol table那一项。</p>
+<p>​		strcmp(shstrtab + sh[i].sh_name, “.symtab”) &#x3D;&#x3D; 0就是再检查一遍是不是真的symbol table ，sh[i].sh_name是各个选项在string table中的索引值。</p>
+<p>​		如果检查成功，就加载symbol table，存入symtab</p>
+<p>​		如果检测的是string table，那就加载到strtab</p>
+<pre><code class="c">int i;
+for(i = 0; i &lt; elf-&gt;e_shnum; i ++) &#123;
+    if(sh[i].sh_type == SHT_SYMTAB &amp;&amp; 
+            strcmp(shstrtab + sh[i].sh_name, &quot;.symtab&quot;) == 0) &#123;
+        /* Load symbol table from exec_file */
+        symtab = malloc(sh[i].sh_size);
+        fseek(fp, sh[i].sh_offset, SEEK_SET);
+        ret = fread(symtab, sh[i].sh_size, 1, fp);
+        assert(ret == 1);
+        nr_symtab_entry = sh[i].sh_size / sizeof(symtab[0]);
+    &#125;
+    else if(sh[i].sh_type == SHT_STRTAB &amp;&amp; 
+            strcmp(shstrtab + sh[i].sh_name, &quot;.strtab&quot;) == 0) &#123;
+        /* Load string table from exec_file */
+        strtab = malloc(sh[i].sh_size);
+        fseek(fp, sh[i].sh_offset, SEEK_SET);
+        ret = fread(strtab, sh[i].sh_size, 1, fp);
+        assert(ret == 1);
+    &#125;
+&#125;
+</code></pre>
+<p>后面就是释放掉不需要的内存了。这个函数我们只要明白什么功能就够了，不用明白咋读的，看的我有点难受。</p>
+<p>至此，我们就明白了怎么使用以下三个，来查找变量了</p>
+<pre><code class="c"> char *strtab = NULL;
+ Elf32_Sym *symtab = NULL;
+ int nr_symtab_entry;
+
+typedef struct
+&#123;
+  Elf32_Word	st_name;		/* Symbol name (string tbl index) */
+  Elf32_Addr	st_value;		/* Symbol value */
+  Elf32_Word	st_size;		/* Symbol size */
+  unsigned char	st_info;		/* Symbol type and binding */
+  unsigned char	st_other;		/* Symbol visibility */
+  Elf32_Section	st_shndx;		/* Section index */
+&#125; Elf32_Sym;
+
+typedef uint32_t Elf32_Word;
+typedef uint32_t Elf32_Addr;
+typedef uint16_t Elf32_Section;
+</code></pre>
+<p>我的思路是在nemu&#x2F;src&#x2F;monitor&#x2F;debug&#x2F;expr.c中实现，直接访问这三个，才把static去掉了。</p>
+<p>我首先在enum中再添加一个变量OBJECT来指定type的值为变量值</p>
+<pre><code class="c">enum &#123;
+    NOTYPE = 256,NUMBER = 6,EQ = 2,ZUO = 3,YOU = 4,REG = 5,HEX = 1,NOTEQ = 7,AND = 8,OR = 9,NOT = 10,FU = 11,JIE = 12,OBJECT = 13,
+    /* TODO: Add more token types */
+&#125;;
+</code></pre>
+<p>然后在rules中添加规则：</p>
+<pre><code class="c">&#123;&quot;[a-zA-Z_][a-zA-Z0-9_]*&quot;, OBJECT&#125;,
+</code></pre>
+<p>注意这个一定要先提取NUMBER，再提取HEX否则可能会有问题。</p>
+<p>make_token()中就按照前面添加即可，我在最后面贴出我的代码。</p>
+<p>接下来我是在expr()里面实现的，for循环遍历，如果识别到了OBJECT，那就找变量，把变量给tokens成员str[]，把type改成NUMBER，然后计算即可，如果没有找到，就直接return 0 ，报告错误。我这么写是不想直接结束程序，不然万一打错一个字，程序结束了，还要从头开始单步执行跳过，有点难受。不过要是直接结束程序，用panic()也没有什么不妥。</p>
+<pre><code class="c">for (i = 0; i &lt; nr_token; i++) &#123;
+        if (tokens[i].type == OBJECT) &#123;
+            char temp_qaq[32];
+            strncpy(temp_qaq, &amp;tokens[i].str[0], how_long_x[num_x]);
+            temp_qaq[how_long_x[num_x++]] = &#39;\0&#39;;
+            int qwq = 0;
+            bool pipei = false;
+            for (; qwq &lt; nr_symtab_entry; qwq++) &#123;
+                if ((symtab[qwq].st_info &amp; 0xf) == STT_OBJECT)&#123;
+                    char tmp[30];
+                    int tmplen = symtab[qwq + 1].st_name - symtab[qwq].st_name - 1;
+                    strncpy(tmp, strtab + symtab[qwq].st_name, tmplen);
+                    tmp[tmplen] = &#39;\0&#39;;
+                    if (strcmp(temp_qaq, tmp) == 0) &#123;
+                        pipei = true;
+                        tokens[i].type = NUMBER;
+                        long long object_ = symtab[qwq].st_value;
+                        sprintf(tokens[i].str, &quot;%lld&quot;, object_);
+                        break;
+                    &#125;
+                &#125;
+            &#125;
+            if (!pipei) &#123;
+                printf(&quot;wrong name!&quot;);
+                return 0;
+            &#125;
+        &#125;
+    &#125;
+</code></pre>
+<p>我首先把变量的那个字符串复制到了temp_qaq[]数组，并在最后添加’\0’。STT_OBJECT是一个宏定义，为1。tem为symbol table中的变量名复制到的数组。</p>
+<p>如果找到OBJECT类型的token，那就遍历symbol table，找可以匹配的变量即可。</p>
+<p><a target="_blank" rel="noopener" href="https://gitee.com/du-junbao/nemu-homework">这是我的作业远程仓库</a>，NEMU全部作业都在这里。</p>
+<h1 id="打印栈帧链"><a href="#打印栈帧链" class="headerlink" title="打印栈帧链"></a>打印栈帧链</h1><h2 id="理论-1"><a href="#理论-1" class="headerlink" title="理论"></a>理论</h2>
     </div>
     
     
