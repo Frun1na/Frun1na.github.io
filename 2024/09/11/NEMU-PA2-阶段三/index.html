@@ -179,15 +179,15 @@
 <p>​		此模拟器运行在乌邦图18.04的Linux操作系统上，模拟了cpu，dram等计算机硬件的行为。</p>
 <p>​		编写此教程的目的，一方面是看到CSDN上面的教程年代久远，一些代码和思路已不再适用，另一方面为了加强自己的学习。由于此博客建立时，我已经 <del>抄到</del> 完成到了PA2第三阶段，故从这里开始写起，前面的应该会补上(大概)。</p>
 <h1 id="添加变量支持"><a href="#添加变量支持" class="headerlink" title="添加变量支持"></a>添加变量支持</h1><h2 id="理论"><a href="#理论" class="headerlink" title="理论"></a>理论</h2><p>elf表示可重定位目标文件和可执行目标文件，是gcc编译器编译并链接之后的产物。</p>
-<img src="../NEMU-PA2-阶段三/image-20240911155747108.png" alt="image-20240911155747108" style="zoom:33%;" />
+<img src="https://gitee.com/du-junbao/blog-picture/raw/master/image-20240911155747108.png" style="zoom:33%;" />
 
 <p>cpp:预处理（包含头文件，宏展开等）</p>
 <p>cc1:编译（c源程序翻译为汇编程序）</p>
 <p>as:汇编（将汇编程序翻译为机器语言）</p>
 <p>下面是elf可重定位目标文件的格式</p>
-<img src="../NEMU-PA2-阶段三/image-20240911160717244.png" alt="image-20240911160717244" style="zoom:33%;" />
+<img src="https://gitee.com/du-junbao/blog-picture/raw/master/image-20240911160717244.png" style="zoom:33%;" />
 
-<img src="../NEMU-PA2-阶段三/image-20240911160826567.png" alt="image-20240911160826567" style="zoom:33%;" />
+<img src="https://gitee.com/du-junbao/blog-picture/raw/master/image-20240911160826567.png" style="zoom:33%;" />
 
 <p>​		这个阶段对我们非常重要的就是symtab符号表。通过查阅指导手册对应部分，我们知道了要找OBJECT类型的变量，同时也知道了Name属性存放的是这些变量名字在字符串表(string table)中的偏移量。这是因为对于一个名字，即字符串，程序不知道要留下多大的空间存储比较合适，可能会少，也可能太多了，造成浪费，因此存储一个偏移量。<strong>那么我们要做的，就是先从输出的Section Headers中读取.strab在elf文件的偏移是多少，然后再根据Name在.strab中的偏移量在可执行文件里面找到变量名</strong>。（变量名之间是用00隔开的，转化为符号形式就是’\0’直接读取即可，比较方便）</p>
 <p>​		我们可以通过指令来查看ELF文件的16进制形式，注意在输入指令时，查看自己的当前操作目录有没有那个文件。</p>
