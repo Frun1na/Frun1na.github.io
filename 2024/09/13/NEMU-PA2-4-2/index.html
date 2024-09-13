@@ -3,7 +3,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <title>Archives | Frun1na &#39;s blog</title>
+    <title>NEMU-PA2-4-2 | Frun1na &#39;s blog</title>
     <meta name="author" content="Frun1na" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
@@ -37,6 +37,10 @@
 
 
 <script src="/js/lib/preview.js"></script>
+
+
+
+
 
 
 
@@ -150,68 +154,54 @@
 </transition>
 
         <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
-            
-<div id="archives">
-    
-    <div id="timeline-wrap" ref="timeline">
+            <div class="article">
+    <div>
+        <h1>NEMU-PA2-4-2</h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2024/9/13
+        </span>
         
-        <div class="timeline" data-title="nemupa2阶段三（添加变量支持）">
-            <div class="timeline-tail"></div>
-            <div class="timeline-content">
-                <div class="item-time">2024/9/12</div>
-                <a href="/2024/09/12/NEMU-PA2-3/">
-                    <h3>NEMU PA2 阶段三（添加变量支持）</h3>
-                </a>
-                <div class="info">
-                    
-                    
-                </div>
-            </div>
-        </div>
-        
-        <div class="timeline" data-title="nemupa2阶段三（打印栈帧链）">
-            <div class="timeline-tail"></div>
-            <div class="timeline-content">
-                <div class="item-time">2024/9/13</div>
-                <a href="/2024/09/13/NEMU-PA2-3-2/">
-                    <h3>NEMU PA2 阶段三（打印栈帧链）</h3>
-                </a>
-                <div class="info">
-                    
-                    
-                </div>
-            </div>
-        </div>
-        
-        <div class="timeline" data-title="nemupa2阶段四（实现loader）">
-            <div class="timeline-tail"></div>
-            <div class="timeline-content">
-                <div class="item-time">2024/9/13</div>
-                <a href="/2024/09/13/NEMU-PA2-4/">
-                    <h3>NEMU PA2 阶段四（实现loader）</h3>
-                </a>
-                <div class="info">
-                    
-                    
-                </div>
-            </div>
-        </div>
-        
-        <div class="timeline" data-title="nemu-pa2-4-2">
-            <div class="timeline-tail"></div>
-            <div class="timeline-content">
-                <div class="item-time">2024/9/13</div>
-                <a href="/2024/09/13/NEMU-PA2-4-2/">
-                    <h3>NEMU-PA2-4-2</h3>
-                </a>
-                <div class="info">
-                    
-                    
-                </div>
-            </div>
-        </div>
         
     </div>
+    
+    <div class="content" v-pre>
+        <span id="more"></span>
+
+<p>这个选做任务我们跟着指导手册做就可以了。</p>
+<h1 id="知己知彼"><a href="#知己知彼" class="headerlink" title="知己知彼"></a>知己知彼</h1><p>我们直接在&#x2F;obj&#x2F;testcase目录中的终端里面直接输入</p>
+<pre><code class="bash">./print-FLOAT-linux
+</code></pre>
+<p>可以直接运行这个可执行文件，输出正如手册中说，是0000000</p>
+<p>然后我们对其进行反汇编，还是在那个目录中</p>
+<pre><code class="bash">objdump -d ./print-FLOAT-linux &gt; print-FLOAT-linux.txt
+</code></pre>
+<p>可以把反汇编结果输入.txt文件里面，打开文件，找就完了。</p>
+<p>在第520行，我们找到了这个函数：</p>
+<pre><code class="assembly">08048583 &lt;_vfprintf_internal&gt;:
+</code></pre>
+<p>然后在这个函数里面，758行找到了</p>
+<pre><code class="assembly"> 8048889:	e8 d8 0e 00 00       	call   8049766 &lt;_fpmaxtostr&gt;
+</code></pre>
+<p>当然没有纯肉眼看，毕竟这个文件有足足有3000行。</p>
+<p>研究一下那里的汇编语言，有了我之前在打印栈帧链里面写的前置知识之后，这里不难分析了。</p>
+
+    </div>
+    
+    
+    
+    
+    <div id="comment">
+        <div id="giscus-container" class="giscus"></div>
+    </div>
+    
+    
+    
+    
 </div>
 
             <footer id="footer">
@@ -242,6 +232,29 @@
         
     </div>
     <script src="/js/main.js"></script>
+    
+    
+<script
+    src="https://giscus.app/client.js"
+    data-repo="Frun1na/Frun1na.github.io"
+    data-repo-id="R_kgDOMv7m6Q"
+    data-category="General"
+    data-category-id="DIC_kwDOMv7m6c4CiZjQ"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="zh-CN"
+    crossorigin
+    async
+></script>
+
+
+
+
+
     
 </body>
 </html>

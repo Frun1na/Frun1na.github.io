@@ -181,6 +181,55 @@
         
 
 <div class="post">
+    <a href="/2024/09/13/NEMU-PA2-4-2/">
+        <h2 class="post-title">NEMU-PA2-4-2</h2>
+    </a>
+    <div class="category-and-date">
+        
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2024/9/13
+        </span>
+        
+        
+    </div>
+    <div class="description">
+        <div class="content" v-pre>
+            
+            <span id="more"></span>
+
+<p>这个选做任务我们跟着指导手册做就可以了。</p>
+<h1 id="知己知彼"><a href="#知己知彼" class="headerlink" title="知己知彼"></a>知己知彼</h1><p>我们直接在&#x2F;obj&#x2F;testcase目录中的终端里面直接输入</p>
+<pre><code class="bash">./print-FLOAT-linux
+</code></pre>
+<p>可以直接运行这个可执行文件，输出正如手册中说，是0000000</p>
+<p>然后我们对其进行反汇编，还是在那个目录中</p>
+<pre><code class="bash">objdump -d ./print-FLOAT-linux &gt; print-FLOAT-linux.txt
+</code></pre>
+<p>可以把反汇编结果输入.txt文件里面，打开文件，找就完了。</p>
+<p>在第520行，我们找到了这个函数：</p>
+<pre><code class="assembly">08048583 &lt;_vfprintf_internal&gt;:
+</code></pre>
+<p>然后在这个函数里面，758行找到了</p>
+<pre><code class="assembly"> 8048889:	e8 d8 0e 00 00       	call   8049766 &lt;_fpmaxtostr&gt;
+</code></pre>
+<p>当然没有纯肉眼看，毕竟这个文件有足足有3000行。</p>
+<p>研究一下那里的汇编语言，有了我之前在打印栈帧链里面写的前置知识之后，这里不难分析了。</p>
+
+            
+        </div>
+    </div>
+    <div class="post-tags">
+        
+        
+        
+    </div>
+    <a href="/2024/09/13/NEMU-PA2-4-2/" class="go-post">阅读全文</a>
+</div>
+
+<div class="post">
     <a href="/2024/09/13/NEMU-PA2-4/">
         <h2 class="post-title">NEMU PA2 阶段四（实现loader）</h2>
     </a>
@@ -198,7 +247,9 @@
     <div class="description">
         <div class="content" v-pre>
             
-            <p>这一阶段可能没有什么要学习和补充的知识点，所以就跟着手册做就行了</p>
+            <span id="more"></span>
+
+<p>这一阶段可能没有什么要学习和补充的知识点，所以就跟着手册做就行了</p>
 <p>首先按照要求修改makefile文件以及testcase中的makefile.part文件，之后make run运行，在实现了该执行的指令之后发现竟然HIT BAD TRAP，为什么？</p>
 <p>并不是实现的指令有错，这是本阶段第一个要做的任务。通过阅读手册，我们可知kernel会调用loader()来加载用户程序，而我们转到这个函数，发现了确实要在这里完成一些内容。</p>
 <pre><code class="c">uint32_t loader() &#123;

@@ -170,7 +170,9 @@
     </div>
     
     <div class="content" v-pre>
-        <p>这一阶段可能没有什么要学习和补充的知识点，所以就跟着手册做就行了</p>
+        <span id="more"></span>
+
+<p>这一阶段可能没有什么要学习和补充的知识点，所以就跟着手册做就行了</p>
 <p>首先按照要求修改makefile文件以及testcase中的makefile.part文件，之后make run运行，在实现了该执行的指令之后发现竟然HIT BAD TRAP，为什么？</p>
 <p>并不是实现的指令有错，这是本阶段第一个要做的任务。通过阅读手册，我们可知kernel会调用loader()来加载用户程序，而我们转到这个函数，发现了确实要在这里完成一些内容。</p>
 <pre><code class="c">uint32_t loader() &#123;
