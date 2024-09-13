@@ -3,7 +3,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <title>NEMU PA2 阶段三 | Frun1na &#39;s blog</title>
+    <title>NEMU PA2 阶段三（添加变量支持） | Frun1na &#39;s blog</title>
     <meta name="author" content="Frun1na" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
@@ -156,7 +156,7 @@
         <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
             <div class="article">
     <div>
-        <h1>NEMU PA2 阶段三</h1>
+        <h1>NEMU PA2 阶段三（添加变量支持）</h1>
     </div>
     <div class="info">
         <span class="date">
@@ -478,27 +478,20 @@ typedef uint16_t Elf32_Section;
 <p>我首先把变量的那个字符串复制到了temp_qaq[]数组，并在最后添加’\0’。STT_OBJECT是一个宏定义，为1。tem为symbol table中的变量名复制到的数组。</p>
 <p>如果找到OBJECT类型的token，那就遍历symbol table，找可以匹配的变量即可。</p>
 <p><a target="_blank" rel="noopener" href="https://gitee.com/du-junbao/nemu-homework">这是我的作业远程仓库</a>，NEMU全部作业都在这里。</p>
-<h1 id="打印栈帧链"><a href="#打印栈帧链" class="headerlink" title="打印栈帧链"></a>打印栈帧链</h1><h2 id="理论-1"><a href="#理论-1" class="headerlink" title="理论"></a>理论</h2><p>寄存器ESP是栈指针，指向的是函数调用栈的栈顶，向下增长。调用函数时通过call和ret这两个汇编指令来进行，其中call指令为跳转到函数的那个位置，并把call指令的下一条指令的位置存到栈里，当函数执行完，返回时，通过ret指令，将栈里面的地址弹出，并赋给eip，也就是当前指令的执行位置。</p>
-<p><img src="https://frun1na.netlify.app//20240912123540.png"></p>
-<p>除此以外，还要想办法把参数传给调用的函数，以及把返回值从函数里面拿出来，这个过程大部分是用寄存器实现的。</p>
-<p>在x86-64中，最多可以使用6个寄存器传值，如果多于6个，那么剩余的参数被存储在栈上，这个部分称为<strong>栈帧</strong>，假设有n个参数传递，那么7~n个参数就在栈帧里面，并且参数7位于栈顶，之后便可以执行call指令了。</p>
-<p><img src="https://frun1na.netlify.app//20240912124338.png"></p>
-<p>栈帧具体就是指的调用某一个函数单独占的栈上面的空间。关于栈帧到地是怎样的，这里不举例子很难说清，<strong>一定要看《深入理解计算机系统（第三版）》就是黑皮书上面的170、171、172三页</strong>。</p>
-<p>关于寄存器的使用规则，在173，174两页。总结就是RBX、RBP这两个寄存器是<strong>被调用者保存寄存器</strong>，意思就是被调用的那个函数要保护它不被改变，如果要改变，那就先push，最后返回之前pop。而剩下的，除了栈指针寄存器RSP，就是<strong>调用者保存寄存器</strong>，就是调用者要在调用之前保存他，而被调用者就随便用。书上的例子最好还是看一下。</p>
-<p>对于EBP这个寄存器，非常特殊，每次调用函数，被调用函数都要储存它，就是先push它，所以，在程序执行到某一步停止的时候，我们可以直接在栈里面寻找这个EBP，存的就是EBP的旧值。而这个旧值，就是调用现在EBP所在的函数的那个函数的栈帧里面，因此，这就像一个链表，从EBP一次一次到最初的那个函数，这就是栈帧链，反应的是函数的调用关系。</p>
-<p>这里再强调一下，可能你看了书的173页的例子以后可能会有一点疑问，那个汇编语言的第五行，把x存入了RBP中，明明RBP中应该全是地址才对。但是实际上这种情况也可以，因为有些函数调用比较简单，根本不用开栈帧，在这种情况下（<strong>所有的局部变量 都可以保存在寄存器中，而且该函数不会调用任何其他函数，有时被称为叶子过程</strong>），RBP根本不会在调用的Q函数里面push，因此可以放心。</p>
-<p>所以这个打印栈帧链的实现，打印出来的，可能并不一定是所有函数调用的情况。</p>
-<img src="https://frun1na.netlify.app/20240912225419.png" style="zoom: 50%;" />
+<h2 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h2><h3 id="2024-9-13"><a href="#2024-9-13" class="headerlink" title="2024.9.13"></a>2024.9.13</h3><p>尝试运行了一下学校上自动评测的样例：以obj&#x2F;testcase&#x2F;add为ENTRY，运行指令：</p>
+<pre><code class="cmp">p *(test_data + 12)
+</code></pre>
+<p>发现程序出现了缓冲区溢出的运行时错误，通过定位错误，发现是expr中处理token类型为OBJECT时有错误</p>
+<p>就是上边的for循环，当识别出symtabl中的类型是STT_OBJECT之后的处理不当。</p>
+<pre><code class="c">int tmplen = symtab[qwq + 1].st_name - symtab[qwq].st_name - 1;
+</code></pre>
+<p>这一行如果qwq此时就是symtabl中的最后一个，那么symtab[qwq + 1].st_name的值就是0，因此会造成tmplen &lt; 0，导致溢出（因为strncpy的函数原型中的那个长度n是一个无符号整型，传入负值，将会自动类型转换为一个很大的无符号数，这是因为有符号数使用的是补码编码）。</p>
+<p>我的解决方法是，既然这些Name在string table中已经用’\0’隔开了，那么我们不妨就不用再用char数组了，直接用char*</p>
+<pre><code class="c">char *tmp;
+tmp = strtab + symtab[qwq].st_name;
+</code></pre>
+<p>这样if (strcmp(temp_qaq, tmp) &#x3D;&#x3D; 0)也可以正常运行。</p>
 
-<p>接下来我们只讨论有栈帧的情况。</p>
-<p><img src="https://frun1na.netlify.app//20240912234644.png"></p>
-<p>如图所示每个栈帧中包含了EBP旧值、返回地址、函数的参数</p>
-<p>（有个小问题，为什么书上说先通过寄存器传参，不够的再开栈，为什么这里全在栈上）</p>
-<p>因为这里全在栈帧上的是调用者P，它上面的参数1~n是Q的参数，而Q在自己栈帧上的参数存储是正常的（不知道是不是这个原因）</p>
-<p><img src="https://frun1na.netlify.app//20240913000658.png"></p>
-<p>如图所示，每个函数开始时执行push %ebp为了保存ebp旧值，而movl esp ebp指令则是把esp栈指针赋给了ebp，这样ebp就指向了另一个新的栈帧，由于push的时候，esp向下增长减四，那么现在这个ebp正好在ebp旧值的下四字节位置，函数内部通过  偏移量(ebp)  来在栈中存入数据，只后在调用另一个函数时，push这个ebp。这就是所谓的栈帧链。</p>
-<p><img src="https://frun1na.netlify.app//20240913002133.png"></p>
-<h2 id="实现-1"><a href="#实现-1" class="headerlink" title="实现"></a>实现</h2>
     </div>
     
     
