@@ -170,7 +170,120 @@
     </div>
     
     <div class="content" v-pre>
-        
+        <p>这一阶段可能没有什么要学习和补充的知识点，所以就跟着手册做就行了</p>
+<p>首先按照要求修改makefile文件以及testcase中的makefile.part文件，之后make run运行，在实现了该执行的指令之后发现竟然HIT BAD TRAP，为什么？</p>
+<p>并不是实现的指令有错，这是本阶段第一个要做的任务。通过阅读手册，我们可知kernel会调用loader()来加载用户程序，而我们转到这个函数，发现了确实要在这里完成一些内容。</p>
+<pre><code class="c">uint32_t loader() &#123;
+    Elf32_Ehdr *elf;
+    Elf32_Phdr *ph = NULL;
+
+    uint8_t buf[4096];
+
+#ifdef HAS_DEVICE
+    ide_read(buf, ELF_OFFSET_IN_DISK, 4096);
+#else
+    ramdisk_read(buf, ELF_OFFSET_IN_DISK, 4096);
+#endif
+
+    elf = (void*)buf;
+
+    /* TODO: fix the magic number with the correct one */
+    const uint32_t elf_magic = 0xBadC0de;
+    uint32_t *p_magic = (void *)buf;
+    nemu_assert(*p_magic == elf_magic);
+...
+</code></pre>
+<p>我们要填入正确的“魔数”才行。</p>
+<p>指导手册中给出了ramdisk_read()函数的功能：</p>
+<blockquote>
+<p>理解上述过程后, 你需要在kernel&#x2F;src&#x2F;elf&#x2F;elf.c的loader()函数中定义正确 ELF 文件魔数, 然后编写加载segment的代码, 完成加载用户程序的功能。你需 要使用ramdisk_read()函数来读出 ramdisk 中的内容, ramdisk_read()函数的 原型如下：  </p>
+<pre><code class="c">void ramdisk_read(uint8_t *buf, uint32_t offset, uint32_t len);
+</code></pre>
+<p>它负责把从ramdisk中offset偏移处的len字节读入到buf中。</p>
+</blockquote>
+<p>在这里ELF_OFFSET_IN_DISK是一个宏定义，为0。而这个魔数，是用户程序ELF的，我这里makefile里面的用户程序是add，那么就用readelf读出来。</p>
+<p><img src="https://frun1na.netlify.app//20240913153005.png"></p>
+<p>注意这是小端序因为架构是intel 80386，所以魔数就是0x464c457f</p>
+<p>测试之后HIT BAD TRAP的eip地址变大了，应该是说明这个魔数填对了。</p>
+<p>接下来的if语句中是我们下一步做的</p>
+<pre><code class="c">if(ph-&gt;p_type == PT_LOAD) &#123;
+    /* TODO: read the content of the segment from the ELF file 
+     * to the memory region [VirtAddr, VirtAddr + FileSiz)
+     */
+     
+    /* TODO: zero the memory region 
+     * [VirtAddr + FileSiz, VirtAddr + MemSiz)
+     */
+...
+</code></pre>
+<p>其中ph的类型是Elf32_Phdr，根据ppt中的内容，它是一个程序头表，是用来管理segment的</p>
+<pre><code class="c">typedef struct
+&#123;
+  Elf32_Word	p_type;			/* Segment type */
+  Elf32_Off	p_offset;		/* Segment file offset */
+  Elf32_Addr	p_vaddr;		/* Segment virtual address */
+  Elf32_Addr	p_paddr;		/* Segment physical address */
+  Elf32_Word	p_filesz;		/* Segment size in file */
+  Elf32_Word	p_memsz;		/* Segment size in memory */
+  Elf32_Word	p_flags;		/* Segment flags */
+  Elf32_Word	p_align;		/* Segment alignment */
+&#125; Elf32_Phdr;
+</code></pre>
+<p>同时手册里面也说了</p>
+<blockquote>
+<p>同时我们也可以看到, 加载一个可执行文 件并不是加载它所包含的所有内容, 只要加载那些与运行时刻相关的内容就可 以了（Type 为 LOAD）</p>
+</blockquote>
+<p>所以类型为LOAD，这也符合上面if语句的条件。</p>
+<p>这里再次贴出手册里面的引用和ppt截图，以帮助理解。</p>
+<blockquote>
+<p>你需要找出每一个 program header 的 Offset, VirtAddr, FileSiz 和 MemSiz这些参数。其中相对文件偏移Offset指出相应segment的内容从ELF 文件的第 Offset 字节开始, 在文件中的大小为 FileSiz, 它需要被分配到以  VirtAddr 为首地址的虚拟内存位置, 在内存中它占用大小为 MemSiz。但现在 NEMU还没有虚拟地址的概念, 因此你只需要把VirtAddr当做物理地址来使用 就可以了, 也就是说, 这个 segment 使用的内存就是[VirtAddr, VirtAddr  +MemSiz)这一连续区间, 然后将segment 的内容从ELF文件中读入到这一内 存区间, 并将[VirtAddr + FileSiz, VirtAddr + MemSiz)对应的物理区间清零。 </p>
+</blockquote>
+<p><img src="https://frun1na.netlify.app//20240913155518.png"></p>
+<p>这里你可能感到奇怪的就是为什么没有输出“please implement me”，我们查看定义，发现panic这个函数是Log输出的，答案在手册里也已经准备好了。</p>
+<blockquote>
+<p>这是由于现在 NEMU还不能提供输出的功能, 因此现在kernel中的Log()宏并不能成功输出。</p>
+</blockquote>
+<p>外面还有一个for循环，我们也要写出这个循环的条件。</p>
+<pre><code class="c">typedef struct
+&#123;
+  unsigned char	e_ident[EI_NIDENT];	/* Magic number and other info */
+  Elf32_Half	e_type;			/* Object file type */
+  Elf32_Half	e_machine;		/* Architecture */
+  Elf32_Word	e_version;		/* Object file version */
+  Elf32_Addr	e_entry;		/* Entry point virtual address */
+  Elf32_Off	e_phoff;		/* Program header table file offset */
+  Elf32_Off	e_shoff;		/* Section header table file offset */
+  Elf32_Word	e_flags;		/* Processor-specific flags */
+  Elf32_Half	e_ehsize;		/* ELF header size in bytes */
+  Elf32_Half	e_phentsize;		/* Program header table entry size */
+  Elf32_Half	e_phnum;		/* Program header table entry count */
+  Elf32_Half	e_shentsize;		/* Section header table entry size */
+  Elf32_Half	e_shnum;		/* Section header table entry count */
+  Elf32_Half	e_shstrndx;		/* Section header string table index */
+&#125; Elf32_Ehdr;//这是elf的类型的定义
+//e_phnum成员为循环的次数，遍历所有的table，查找其中是LOAD类型的。
+int i = 0;
+ph = (void *)(buf + elf-&gt;e_phoff)；
+for(; i &lt; elf-&gt;e_phnum; i++)&#123;
+    if(ph-&gt;type == PI_LOAD)&#123;
+        ...
+    &#125;
+&#125;
+</code></pre>
+<p>查找成功后，我们要将p_vaddr那个位置开始，写入p_filesz个字节，从p_offset位置开始</p>
+<p>并且还要将一段空间初始化为0</p>
+<p>ph移动到下一个</p>
+<pre><code class="c">ramdisk_read ((void *)ph-&gt;p_vaddr, ph-&gt;p_offset, ph-&gt;p_filesz);
+memset ((void *)(ph-&gt;p_vaddr+ph-&gt;p_filesz), 0, ph-&gt;p_memsz - ph-&gt;p_filesz);
+ph++
+</code></pre>
+<p>那么我们就完成loader了。</p>
+<p>输入</p>
+<pre><code class="cmp">make test
+</code></pre>
+<p>进行测试</p>
+<p>会有三个失败的：hello,hello-inline-asm,printf-FLOAT这三个在第二阶段没有要求通过，所以这很正常，但是除了这三个，应该全成功。</p>
+
     </div>
     
     
