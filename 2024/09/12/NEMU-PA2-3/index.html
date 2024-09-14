@@ -477,7 +477,7 @@ typedef uint16_t Elf32_Section;
 </code></pre>
 <p>我首先把变量的那个字符串复制到了temp_qaq[]数组，并在最后添加’\0’。STT_OBJECT是一个宏定义，为1。tem为symbol table中的变量名复制到的数组。</p>
 <p>如果找到OBJECT类型的token，那就遍历symbol table，找可以匹配的变量即可。</p>
-<p><a target="_blank" rel="noopener" href="https://gitee.com/du-junbao/nemu-homework">这是我的作业远程仓库</a>，NEMU全部作业都在这里。</p>
+<p>这是我的作业远程仓库(链接等这一届完事再给)，NEMU全部作业都在这里。</p>
 <h2 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h2><h3 id="2024-9-13"><a href="#2024-9-13" class="headerlink" title="2024.9.13"></a>2024.9.13</h3><p>尝试运行了一下学校上自动评测的样例：以obj&#x2F;testcase&#x2F;add为ENTRY，运行指令：</p>
 <pre><code class="cmp">p *(test_data + 12)
 </code></pre>

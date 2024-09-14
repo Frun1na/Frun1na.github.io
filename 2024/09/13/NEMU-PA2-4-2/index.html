@@ -181,15 +181,127 @@
 <pre><code class="bash">objdump -d ./print-FLOAT-linux &gt; print-FLOAT-linux.txt
 </code></pre>
 <p>可以把反汇编结果输入.txt文件里面，打开文件，找就完了。</p>
+<p>下面是手册当中我们要找的c代码。</p>
+<img src="https://frun1na.netlify.app//20240914092352.png" style="zoom:50%;" />
+
 <p>在第520行，我们找到了这个函数：</p>
-<pre><code class="assembly">08048583 &lt;_vfprintf_internal&gt;:
+<pre><code class="assembly">8048583 &lt;_vfprintf_internal&gt;:
 </code></pre>
 <p>然后在这个函数里面，758行找到了</p>
 <pre><code class="assembly"> 8048889:	e8 d8 0e 00 00       	call   8049766 &lt;_fpmaxtostr&gt;
 </code></pre>
 <p>当然没有纯肉眼看，毕竟这个文件有足足有3000行。</p>
-<p>研究一下那里的汇编语言，有了我之前在打印栈帧链里面写的前置知识之后，这里不难分析了。</p>
+<p>研究一下那里的汇编语言，有了我之前在打印栈帧链里面写的前置知识之后，这里不难分析汇编语言了。</p>
+<p>从746到763应该是，但还不够，还少else if的条件判断。</p>
+<pre><code class="assembly"> 8048865:	74 04                	je     804886b &lt;_vfprintf_internal+0x2e8&gt;
+ 8048867:	db 2a                	fldt   (%edx)
+ 8048869:	eb 02                	jmp    804886d &lt;_vfprintf_internal+0x2ea&gt;
+ 804886b:	dd 02                	fldl   (%edx)
+ 804886d:	53                   	push   %ebx
+ 804886e:	53                   	push   %ebx
+ 804886f:	68 1c 85 04 08       	push   $0x804851c
+ 8048874:	8d 84 24 a4 00 00 00 	lea    0xa4(%esp),%eax
+ 804887b:	50                   	push   %eax
+ 804887c:	83 ec 0c             	sub    $0xc,%esp
+ 804887f:	db 3c 24             	fstpt  (%esp)
+ 8048882:	ff b4 24 8c 01 00 00 	pushl  0x18c(%esp)
+ 8048889:	e8 d8 0e 00 00       	call   8049766 &lt;_fpmaxtostr&gt;
+ 804888e:	83 c4 20             	add    $0x20,%esp
+ 8048891:	85 c0                	test   %eax,%eax
+ 8048893:	0f 88 82 01 00 00    	js     8048a1b &lt;_vfprintf_internal+0x498&gt;
+ 8048899:	01 44 24 08          	add    %eax,0x8(%esp)
+ 804889d:	e9 63 01 00 00       	jmp    8048a05 &lt;_vfprintf_internal+0x482&gt;
+</code></pre>
+<p>742，743行应该是下面的那个else if.</p>
+<pre><code class="assembly">8048858:	83 f8 0f             	cmp    $0xf,%eax
+804885b:	77 45                	ja     80488a2 &lt;_vfprintf_internal+0x31f&gt;
+</code></pre>
+<p>至于上面那个else if，我没有发现哪个跳转指令是跳到804886x的，应该就是没有专门的跳转，而是就像排除法那样了</p>
+<h2 id="偷龙转凤"><a href="#偷龙转凤" class="headerlink" title="偷龙转凤"></a>偷龙转凤</h2><p>我们打开&#x2F;lib-common&#x2F;FLOAT&#x2F;FLOAT_vfpintf.c，修改modify_vfprintf()函数。</p>
+<pre><code class="c">static void modify_vfprintf() &#123;
+    /* TODO: Implement this function to hijack(劫持) the formating of &quot;%f&quot;
+     * argument during the execution of `_vfprintf_internal&#39;. Below
+     * is the code section in _vfprintf_internal() relative to the
+     * hijack.
+     */
 
+#if 0
+    else if (ppfs-&gt;conv_num &lt;= CONV_A) &#123;  /* floating point */
+        ssize_t nf;
+        nf = _fpmaxtostr(stream,
+                (__fpmax_t)
+                (PRINT_INFO_FLAG_VAL(&amp;(ppfs-&gt;info),is_long_double)
+                 ? *(long double *) *argptr
+                 : (long double) (* (double *) *argptr)),
+                &amp;ppfs-&gt;info, FP_OUT );
+        if (nf &lt; 0) &#123;
+            return -1;
+        &#125;
+        *count += nf;
+
+        return 0;
+    &#125; else if (ppfs-&gt;conv_num &lt;= CONV_S) &#123;  /* wide char or string */
+#endif
+
+    /* You should modify the run-time binary to let the code above
+     * call `format_FLOAT&#39; defined in this source file, instead of
+     * `_fpmaxtostr&#39;. When this function returns, the action of the
+     * code above should do the following:
+     */
+
+#if 0
+    else if (ppfs-&gt;conv_num &lt;= CONV_A) &#123;  /* floating point */
+        ssize_t nf;
+        nf = format_FLOAT(stream, *(FLOAT *) *argptr);
+        if (nf &lt; 0) &#123;
+            return -1;
+        &#125;
+        *count += nf;
+
+        return 0;
+    &#125; else if (ppfs-&gt;conv_num &lt;= CONV_S) &#123;  /* wide char or string */
+#endif
+
+&#125;
+</code></pre>
+<p>首先我们先找到call指令：</p>
+<pre><code class="c">void *p = (void *)(int)&amp;_vfprintf_internal + (0x8048889-0x8048583);
+</code></pre>
+<p>这里的偏移量O是call指令的opcode地址和_vfprintf_internal()函数的首地址相减，每个NEMU应该都不太一样（我说的是地址，不太一样，但是偏移量都是一样的），这里不要直接抄（其实也可以，毕竟偏移量都一样），具体获得方法就在上一步中。</p>
+<p>这里再解释一下为什么这么写可以得到地址。</p>
+<p>首先在这个源文件一开始已经声明了外部符号，也就是函数名，表示它的定义存在于程序的其他地方（通常是其他文件里面，理论上同一个文件里也行）所以在这个程序里面可以直接引用它。</p>
+<pre><code class="c">extern char _vfprintf_internal;
+</code></pre>
+<p>这里_vfprintf_internal是一个函数，但是按理说，extern一个函数不应该这样写，这明明是一个变量。理论上的正确写法应该是：</p>
+<pre><code class="c">extern char _vfprintf_internal(参数1，参数2，...);
+</code></pre>
+<p>这表明此函数的返回值是一个char。</p>
+<p>但是在c语言中，函数名本质上代表了函数代码块的起始地址。如果像上上面那么写，这应该是一个错误，但是编译器不会立即报错，特别是只extern而不调用的情况。所以编译器允许你获取这个函数的地址。因此上面p指针那一串的意思就是，先取地址，此时被编译器解释为char*，然后把这个地址转为int（注意可以这么干仅仅是因为这是nemu，地址的类型是32位的，可以赋给32位的int，但如果自己编程，那在现代的计算机上，地址通常都是64位的（这也是64位操作系统的由来），你不能把他赋给32位的int，除非你知道自己确实在这么干）然后又转为void *,这是c语言中的通用指针类型。</p>
+<p>然后再加上偏移量O，就是call的位置了。</p>
+<p>然后p++指向call的操作数。</p>
+<p>之后再修改它，手册里已经说过，要加上_fpmaxtostr()的首地址和format_FLOAT()的首地址之间的差</p>
+<pre><code class="c">*(int*)p += ((int)format_FLOAT - (int)&amp;_fpmaxtostr);
+</code></pre>
+<p>编译器在处理函数名的时候，会自动转换为指针，所以按理说，不用写&amp;。</p>
+<p>这里为什么_ fpmaxtostr做减数，可以用向量来理解。假设p是向量_ fpmaxtostr，我们的目的是p加上另一个向量，变成format_FLOAT，那么所求向量就是从_ fpmaxtostr指到format_FLOAT的，由于向量相减，高中物理老师教我“减量指向被减量”的口诀，因此format_FLOAT就是被减量。</p>
+<p>那么在这个函数里面，写上这三行，就完事了。</p>
+<p>具体调试应该怎么做，就是先make run（编译）完事之后，直接去目标文件运行print-FLOAT-linux查看输出就ok了，不要什么make test和单步执行然后设置断点，输出变量啥的，这是运行的NEMU里面的样例，而指导手册里说，这个文件是直接在linux上运行的。同时也不要去测试print-FLOAT，还没到那一步。可恶阿，我就直接被这样硬控了一个小时</p>
+<p>可恶，我又错了！</p>
+<p>make run之后，还要重新</p>
+<pre><code class="bash">make pa2-7
+</code></pre>
+<p>才可以！因为之前生成的可执行文件已经可执行了，它自己已经可以执行了，如果print-FLOAT-linux不编译一遍，那不论make run多少次，它里面的二进制数据是不会变的，只有重新make pa2-7才能生成新的可执行文件</p>
+<p>他妈的又一个小时</p>
+<p>这就是因为转专业之前没学计组吗:(</p>
+<p>因为这个文件是在linux运行的，可以通过printf()函数来辅助调试。</p>
+<p>接下来我们设置权限。</p>
+<p>首先头文件</p>
+<pre><code class="c">#include &lt;sys/mman.h&gt;
+</code></pre>
+<p>然后由于p刚定义好之后指向的就是call（p++之前），所以直接p - 100就是前面100个字节了</p>
+<pre><code class="c">mprotect((void*)(((int)p - 100) &amp; 0xfffff000), 4096 * 2, PROT_READ | PROT_WRITE | PROT_EXEC);
+</code></pre>
+<h2 id="知己知彼（2）"><a href="#知己知彼（2）" class="headerlink" title="知己知彼（2）"></a>知己知彼（2）</h2>
     </div>
     
     
