@@ -301,7 +301,250 @@
 <p>然后由于p刚定义好之后指向的就是call（p++之前），所以直接p - 100就是前面100个字节了</p>
 <pre><code class="c">mprotect((void*)(((int)p - 100) &amp; 0xfffff000), 4096 * 2, PROT_READ | PROT_WRITE | PROT_EXEC);
 </code></pre>
-<h2 id="知己知彼（2）"><a href="#知己知彼（2）" class="headerlink" title="知己知彼（2）"></a>知己知彼（2）</h2>
+<h2 id="知己知彼（2）"><a href="#知己知彼（2）" class="headerlink" title="知己知彼（2）"></a>知己知彼（2）</h2><pre><code class="assembly">8048865:	74 04                	je     804886b &lt;_vfprintf_internal+0x2e8&gt;
+ 8048867:	db 2a                	fldt   (%edx)
+ 8048869:	eb 02                	jmp    804886d &lt;_vfprintf_internal+0x2ea&gt;
+ 804886b:	dd 02                	fldl   (%edx)
+ 804886d:	53                   	push   %ebx
+ 804886e:	53                   	push   %ebx
+ 804886f:	68 1c 85 04 08       	push   $0x804851c
+ 8048874:	8d 84 24 a4 00 00 00 	lea    0xa4(%esp),%eax
+ 804887b:	50                   	push   %eax
+ 804887c:	83 ec 0c             	sub    $0xc,%esp
+ 804887f:	db 3c 24             	fstpt  (%esp)
+ 8048882:	ff b4 24 8c 01 00 00 	pushl  0x18c(%esp)
+ 8048889:	e8 d8 0e 00 00       	call   8049766 &lt;_fpmaxtostr&gt;
+ 804888e:	83 c4 20             	add    $0x20,%esp
+ 8048891:	85 c0                	test   %eax,%eax
+ 8048893:	0f 88 82 01 00 00    	js     8048a1b &lt;_vfprintf_internal+0x498&gt;
+ 8048899:	01 44 24 08          	add    %eax,0x8(%esp)
+ 804889d:	e9 63 01 00 00       	jmp    8048a05 &lt;_vfprintf_internal+0x482&gt;
+</code></pre>
+<p>手册里说：</p>
+<blockquote>
+<p>原来的代码 中是通过一条占用三个字节浮点指令来放置第二个参数的, </p>
+</blockquote>
+<p>我们可以根据这句话找出这条指令就是</p>
+<pre><code class="assembly"> 804887f:	db 3c 24             	fstpt  (%esp)
+</code></pre>
+<p>这条指令是将一个浮点数压栈，作为一个参数。</p>
+<p>根据我们所学过的栈帧知识，在某个函数栈帧里，先是因为call指令而被压栈的返回地址，然后是ebp旧值，然后是局部变量，这个函数调用下一个函数的参数，然后又是下一个函数的返回地址…</p>
+<p>那么我们就可以从call往上找，有最近的4个参数压栈，就是参数了。</p>
+<p>我们找到了</p>
+<pre><code class="assembly">804886f:	68 1c 85 04 08       	push   $0x804851c
+ 8048874:	8d 84 24 a4 00 00 00 	lea    0xa4(%esp),%eax
+ 804887b:	50                   	push   %eax
+ 804887c:	83 ec 0c             	sub    $0xc,%esp
+ 804887f:	db 3c 24             	fstpt  (%esp)
+ 8048882:	ff b4 24 8c 01 00 00 	pushl  0x18c(%esp)
+ 8048889:	e8 d8 0e 00 00       	call   8049766 &lt;_fpmaxtostr&gt;
+</code></pre>
+<p>首先将一个数0x804851c压栈，然后是加载内存地址0xa4(%esp)放入eax，然后eax压栈，之后栈顶指针减12，即栈上空间加12个字节</p>
+<p>fstpt这条指令是将FPU堆栈顶部的浮点数存储到esp指向的位置。之后将0x18c(%esp)地址的数据压栈。</p>
+<p><strong>_fpmaxtostr接收的参数和压栈的顺序相反</strong></p>
+<p>因此变量stream的地址是0x18c(%esp)。</p>
+<p>argptr是一个指针，传入的参数是argptr解引用的值，即“FPU堆栈顶部的浮点数”，那我们要继续往前面找传入FPU堆栈顶部的那个指令。</p>
+<pre><code class="assembly">804886b:	dd 02                	fldl   (%edx)
+</code></pre>
+<p>想必我不说这条指令干什么的，也能猜到了吧。而argptr正是edx的值，(%edx)就是解引用。</p>
+<p>argptr指向的就是我们要打印的FLOAT吧</p>
+<h2 id="偷龙转凤（2）"><a href="#偷龙转凤（2）" class="headerlink" title="偷龙转凤（2）"></a>偷龙转凤（2）</h2><p>我们首先要将fstpt的三字节指令变成push (%edx)，即</p>
+<pre><code class="assembly">ff 32              push  (%edx)
+</code></pre>
+<p>然后剩下的一个字节变成</p>
+<pre><code class="assembly">90                 nop
+</code></pre>
+<p>我们可以用上次的p指针来完成</p>
+<pre><code class="c">    p--;	//指向call
+    p -= (0xb4 - 0xaa);		//指向fstpt
+    *(char *)p = 0xff; 
+    p++; 
+    *(char *)p = 0x32; 
+    p++; 
+    *(char *)p = 0x90;//改三个字节
+    p -= 2;					//指向fstpt
+</code></pre>
+<p>之后我们修改分配的栈空间，不用12字节，而是8字节</p>
+<pre><code class="c">// 修改栈空间
+    p -= 3;		//指向上一次sub esp
+    p += 2;	
+    *(char *)p -= 0x4; 
+    p -= 2;
+</code></pre>
+<p>别忘了我们要让所有的浮点指令全消失，包括这里</p>
+<pre><code class="assembly">8048867:	db 2a                	fldt   (%edx)
+ 8048869:	eb 02                	jmp    804886d &lt;_vfprintf_internal+0x2ea&gt;
+ 804886b:	dd 02                	fldl   (%edx)
+</code></pre>
+<p>所以</p>
+<pre><code class="c">p -= (0x804887c-0x8048867);
+*(char *)p = 0x90; 
+*(char *)(p+1) = 0x90;
+*(char *)(p+4) = 0x90; 
+*(char *)(p+5) = 0x90;
+</code></pre>
+<h2 id="偷龙转凤（3）"><a href="#偷龙转凤（3）" class="headerlink" title="偷龙转凤（3）"></a>偷龙转凤（3）</h2><p>然后我们编写 format_FLOAT()</p>
+<pre><code class="c">__attribute__((used)) static int format_FLOAT(FILE *stream, FLOAT f) &#123;
+    /* TODO: Format a FLOAT argument `f&#39; and write the formating
+     * result to `stream&#39;. Keep the precision of the formating
+     * result with 6 by truncating. For example:
+     *              f          result
+     *         0x00010000    &quot;1.000000&quot;
+     *         0x00013333    &quot;1.199996&quot;
+     */
+    //set_bp();
+    char buf[80];
+    int len = sprintf(buf, &quot;0x%08x&quot;, f);
+    return __stdio_fwrite(buf, len, stream);
+&#125;
+</code></pre>
+<p>我们要把FLOAT转为float，存在buf中</p>
+<pre><code class="c">__attribute__((used)) static int format_FLOAT(FILE *stream, FLOAT f) &#123;
+    char buf[80];
+    // 符号
+    int len = 0;
+    if(f &lt; 0) &#123; 
+        buf[len++] = &#39;-&#39;; 
+        f = -f; 
+    &#125;
+    // 整数部分，先是倒序，后面再掉头
+    int por = (f &gt;&gt; 16);
+    while(por != 0) &#123; 
+        buf[len++] = &#39;0&#39; + por % 10; 
+        por /= 10; 
+    &#125;
+    char tmp; 
+    int l = 0; 
+    int r = len-1;
+    if(buf[0] == &#39;-&#39;) 
+        l++;
+    while(l &lt; r) &#123; 
+        tmp = buf[l]; 
+        buf[l] = buf[r]; 
+        buf[r] = tmp; 
+        l++;
+        r--;
+    &#125;
+    buf[len++] = &#39;.&#39;;	//小数点
+    // 小数部分(6位)
+    f &amp;= 0xffff; 
+    int i = 0;
+    for(i = 0; i &lt; 6; i++) &#123;
+        f *= 10; 
+        buf[len++] = &#39;0&#39; + (f &gt;&gt; 16); 
+        f &amp;= 0xffff;
+    &#125;
+    buf[len++] = 0;
+    return __stdio_fwrite(buf, len, stream);
+&#125;
+</code></pre>
+<h2 id="偷龙转凤（4）"><a href="#偷龙转凤（4）" class="headerlink" title="偷龙转凤（4）"></a>偷龙转凤（4）</h2><p>去掉mprotect()，运行NEMU</p>
+<p>发现还有一些没有实现的指令，继续实现即可（因为我是运行一个样例，实现一个指令）</p>
+<p>遇到了手册中同样的问题，有一个fldl指令</p>
+<p>我们根据手册要求做即可。</p>
+<p>为了获取函数地址，我们要首先</p>
+<p>注：这个时候再查看汇编代码的话，那就要看print-FLOAT.txt了</p>
+<pre><code class="c">extern char _ppfs_setargs;
+</code></pre>
+<p>获取地址</p>
+<pre><code class="c">void *p =(void *)(int)&amp;_ppfs_setargs;
+p += (0x8011b8 - 0x801147); //0x71
+</code></pre>
+<p>这里就是lea的首地址了，即float分支的开头</p>
+<pre><code class="assembly">8011b8:	8d 5a 08             	lea    0x8(%edx),%ebx
+8011bb:	dd 02                	fldl   (%edx)
+</code></pre>
+<p>我们放一条jmp指令，跳到long long分支即可。</p>
+<p>我们如何通过阅读汇编语言来找到long long 呢，我们只需要找那个case里面的数和汇编语言对应就行了</p>
+<p>以下是我们要阅读的c代码：</p>
+<pre><code class="c">    enum &#123;                          /* C type: */
+        PA_INT,                       /* int */
+        PA_CHAR,                      /* int, cast to char */
+        PA_WCHAR,                     /* wide char */
+        PA_STRING,                    /* const char *, a &#39;\0&#39;-terminated string */
+        PA_WSTRING,                   /* const wchar_t *, wide character string */
+        PA_POINTER,                   /* void * */
+        PA_FLOAT,                     /* float */
+        PA_DOUBLE,                    /* double */
+        __PA_NOARG,                   /* non-glibc -- signals non-arg width or prec */
+        PA_LAST
+    &#125;;
+
+    /* Flag bits that can be set in a type returned by `parse_printf_format&#39;.  */
+    /* WARNING -- These differ in value from what glibc uses. */
+#define PA_FLAG_MASK		(0xff00)
+#define __PA_FLAG_CHAR		(0x0100) /* non-gnu -- to deal with hh */
+#define PA_FLAG_SHORT		(0x0200)
+#define PA_FLAG_LONG		(0x0400)
+#define PA_FLAG_LONG_LONG	(0x0800)
+#define PA_FLAG_LONG_DOUBLE	PA_FLAG_LONG_LONG
+#define PA_FLAG_PTR		(0x1000) /* TODO -- make dynamic??? */
+
+    while (i &lt; ppfs-&gt;num_data_args) &#123;
+        switch(ppfs-&gt;argtype[i++]) &#123;
+            case (PA_INT|PA_FLAG_LONG_LONG):
+                GET_VA_ARG(p,ull,unsigned long long,ppfs-&gt;arg);
+                break;
+            case (PA_INT|PA_FLAG_LONG):
+                GET_VA_ARG(p,ul,unsigned long,ppfs-&gt;arg);
+                break;
+            case PA_CHAR:	/* TODO - be careful */
+                /* ... users could use above and really want below!! */
+            case (PA_INT|__PA_FLAG_CHAR):/* TODO -- translate this!!! */
+            case (PA_INT|PA_FLAG_SHORT):
+            case PA_INT:
+                GET_VA_ARG(p,u,unsigned int,ppfs-&gt;arg);
+                break;
+            case PA_WCHAR:	/* TODO -- assume int? */
+                /* we&#39;re assuming wchar_t is at least an int */
+                GET_VA_ARG(p,wc,wchar_t,ppfs-&gt;arg);
+                break;
+                /* PA_FLOAT */
+            case PA_DOUBLE:
+                GET_VA_ARG(p,d,double,ppfs-&gt;arg);
+                break;
+</code></pre>
+<p>PA_DOUBLE是我们要修改的那个分支，同时PA_DOUBLE也是一个枚举类型（定义也在我贴出来的代码），为7。</p>
+<p>再贴出这个分支的汇编语言</p>
+<pre><code class="assembly">  8011b3:	83 fb 07             	cmp    $0x7,%ebx
+  8011b6:	75 44                	jne    8011fc &lt;_ppfs_setargs+0xb5&gt;
+  8011b8:	8d 5a 08             	lea    0x8(%edx),%ebx
+  8011bb:	dd 02                	fldl   (%edx)
+</code></pre>
+<p>正好有个cmp比较指令，而且也是7，如果不等于7，就jne跳走，如果是，那就执行这个块里面的指令。</p>
+<p>而如果是long long分支，PA_INT|PA_FLAG_LONG_LONG值为0x800，我们找就完了。</p>
+<pre><code class="assembly">  8011ce:	81 fb 00 08 00 00    	cmp    $0x800,%ebx
+  8011d4:	74 14                	je     8011ea &lt;_ppfs_setargs+0xa3&gt;
+</code></pre>
+<p>直接跳到8011fea</p>
+<p>我们要跳的就是这个位置。</p>
+<p>我们使用的是JMP rel32，对应opcode为E9，这个数，就应该是0x8011ea-0x8011b8 &#x3D;  0x00000032</p>
+<p>但这里使用的小端序，所以就是0x32000000</p>
+<pre><code class="assembly">e9 44 JMP
+</code></pre>
+<p>后面的应该不用改nop了，因为这后面的指令已经不可能访问到了。</p>
+<pre><code class="c">*(char *)p = 0xe9;
+p++;
+*(char *)p = 0x32;
+p++;
+*(char *)p = 0x00;
+p++;
+*(char *)p = 0x00;
+p++;
+*(char *)p = 0x00;
+</code></pre>
+<p>如果有没实现的指令，继续实现即可。</p>
+<p><strong>而且linux下的printf和nemu下的sprintf有些区别，printf就算前面的字符串有’\0’他也会输出后面的，sprintf后再看总的字符串，就会因为\0终止</strong></p>
+<p>所以为了通过测试样例，应该去掉format_FLOAT()中的</p>
+<pre><code class="c">buf[len++] = 0;
+</code></pre>
+<p>调试了半天还是不行</p>
+<p>这里</p>
+<pre><code class="c">*(char *)p = 0x32;
+</code></pre>
+<p>应该改成2d，具体为什么，我是真不清楚了。跳到的那个地方也是有点刁钻</p>
+<p>这样改了之后也是HIT GOOD TRAP了</p>
+
     </div>
     
     
