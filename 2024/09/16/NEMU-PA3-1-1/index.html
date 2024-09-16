@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>NEMU PA3 阶段一（实现一级cache） | Frun1na &#39;s blog</title>
+    <meta name="author" content="Frun1na" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <link rel="icon" href="/images/avatar.jpg" />
+    <link rel="preconnect" href="https://s4.zstatic.net" />
+<script src="https://s4.zstatic.net/ajax/libs/vue/3.3.7/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.cn" />
+<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.cn/css2?family=Fira+Code:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap"
+/>
+<script> const mixins = {}; </script>
+
+<script src="https://polyfill.alicdn.com/v3/polyfill.min.js?features=default"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+<link
+    rel="stylesheet"
+    href="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+/>
+<script src="/js/lib/highlight.js"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+<script src="/js/lib/math.js"></script>
+
+
+<script src="/js/lib/preview.js"></script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/main.css" />
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div id="layout">
+        <transition name="fade">
+            <div id="loading" v-show="loading">
+                <div id="loading-circle">
+                    <h2>LOADING</h2>
+                    <p>加载过慢请开启缓存 浏览器默认开启</p>
+                    <img src="/images/loading.gif" />
+                </div>
+            </div>
+        </transition>
+        <div id="menu" :class="{ hidden: hiddenMenu, 'menu-color': menuColor}">
+    <nav id="desktop-menu">
+        <a class="title" href="/">
+            <span>FRUN1NA &#39;S BLOG</span>
+        </a>
+        
+        <a href="/">
+            <i class="fa-solid fa-house fa-fw"></i>
+            <span>&ensp;Home</span>
+        </a>
+        
+        <a href="/about">
+            <i class="fa-solid fa-id-card fa-fw"></i>
+            <span>&ensp;About</span>
+        </a>
+        
+        <a href="/archives">
+            <i class="fa-solid fa-box-archive fa-fw"></i>
+            <span>&ensp;Archives</span>
+        </a>
+        
+        <a href="/categories">
+            <i class="fa-solid fa-bookmark fa-fw"></i>
+            <span>&ensp;Categories</span>
+        </a>
+        
+        <a href="/tags">
+            <i class="fa-solid fa-tags fa-fw"></i>
+            <span>&ensp;Tags</span>
+        </a>
+        
+    </nav>
+    <nav id="mobile-menu">
+        <div class="title" @click="showMenuItems = !showMenuItems">
+            <i class="fa-solid fa-bars fa-fw"></i>
+            <span>&emsp;FRUN1NA &#39;S BLOG</span>
+        </div>
+        <transition name="slide">
+            <div class="items" v-show="showMenuItems">
+                
+                <a href="/">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-house fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Home</div>
+                    </div>
+                </a>
+                
+                <a href="/about">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-id-card fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">About</div>
+                    </div>
+                </a>
+                
+                <a href="/archives">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-box-archive fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Archives</div>
+                    </div>
+                </a>
+                
+                <a href="/categories">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-bookmark fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Categories</div>
+                    </div>
+                </a>
+                
+                <a href="/tags">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-tags fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Tags</div>
+                    </div>
+                </a>
+                
+            </div>
+        </transition>
+    </nav>
+</div>
+<transition name="fade">
+    <div id="menu-curtain" @click="showMenuItems = !showMenuItems" v-show="showMenuItems"></div>
+</transition>
+
+        <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
+            <div class="article">
+    <div>
+        <h1>NEMU PA3 阶段一（实现一级cache）</h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2024/9/16
+        </span>
+        
+        
+    </div>
+    
+    <div class="content" v-pre>
+        <h1 id="理论"><a href="#理论" class="headerlink" title="理论"></a>理论</h1><span id="more"></span>
+
+<p>在这之前，我们要先理解局部性</p>
+<h2 id="局部性"><a href="#局部性" class="headerlink" title="局部性"></a>局部性</h2><p>一个具有局部性的程序，倾向于引用(最近引用过的数据)的临近数据，或者最近引用的数据本身。这种倾向叫局部性。前者叫空间局部性，后者叫时间局部性。</p>
+<p>一般来说，局部性好的程序运行得更快。</p>
+<p>计算机的各个层次都有局部性，包括硬件，操作系统，应用程序等。</p>
+<p>假设在c程序中有一个数组，它在内存中占据了一片连续的空间。如果有一个for循环，顺序遍历数组的每个元素，那我们称这个函数具有步长为1的引用模式（1指相对于数组元素大小），又称顺序引用模式。在一个数组中，每隔k个元素进行访问，称步长为k的访问模式。k越大，空间局部性越差。</p>
+<p>评价一个程序的局部性：</p>
+<ul>
+<li>重复引用相同变量的程序有良好的时间局部性。 </li>
+<li>对于具有步长为k的引用模式的程序，步长越小，空间局部性越好。具有步长为l 的引用模式的程序有很好的空间局部性。在内存中以大步长跳来跳去的程序空间局部性会很差。 </li>
+<li>对于取指令来说，循环有好的时间和空间局部性。循环体越小，循环迭代次数越 多，局部性越好。</li>
+</ul>
+<p>出自《csapp第三版》418页</p>
+<h2 id="高速缓存存储器-cache"><a href="#高速缓存存储器-cache" class="headerlink" title="高速缓存存储器(cache)"></a>高速缓存存储器(cache)</h2><p>早期cpu寄存器直接从内存中读取数据，但由于技术不断发展，cpu速度越来越快，但是DRAM的速度受限，因此在这两者之间插入了一个高速缓存存储器称为L1高速缓存（一级缓存）。之后又在L1和主存之间插入L2，在L2和主存之间插入L3。</p>
+<p>我们假设cpu和主存之间只有一个L1</p>
+<h3 id="高速缓存的结构和工作原理"><a href="#高速缓存的结构和工作原理" class="headerlink" title="高速缓存的结构和工作原理"></a>高速缓存的结构和工作原理</h3><p><img src="https://frun1na.netlify.app//20240916151402.png"></p>
+<p>如图所示，考虑一个计算机系统，其中每个存储器地址有m位(对应图上字地址)，形成$M &#x3D; 2^{m} $个不同的地址，这样的一个cache被组织为$S &#x3D; 2^{s} $个set，每个set包含$E &#x3D; 2^{e} $个line，每个line由一个有效位，一个tag，一个block组成。其中一个block有$B &#x3D; 2^{b} $个字节。而tag（标记）就剩下了t &#x3D; m - s - b个位来表示。</p>
+<p>具体如何查找，请看图中红字。</p>
+<p>每个组只有一行(E &#x3D; 1)的高速缓存称为直接映射高速缓存。</p>
+<h3 id="直接映射高速缓存"><a href="#直接映射高速缓存" class="headerlink" title="直接映射高速缓存"></a>直接映射高速缓存</h3><p>这种情况下比较简单，当cpu执行一条内存读取指令时，首先检查是否命中</p>
+<p>检查命中分两步：组匹配，行匹配。</p>
+<p>由于直接映射高速缓存只有一行，那么行匹配会非常容易，只有有效位被设置，且tag也匹配时，才命中。</p>
+<p><img src="https://frun1na.netlify.app//20240916160218.png"></p>
+<p>如果命中，就去偏移量的地方取数据，返回寄存器。</p>
+<p>如果不命中，就向L2发出请求，…以此类推，最终取到被请求的block（数据复制时，以块为基本单元，所以一来就是一整个block）。然后将块存在这一组(set)下的某一行中，并设置tag。如果一个set中全都是有效行，那就驱逐出一个行。当然，这对于直接映射很简单，因为每个set只有一个line。</p>
+<p>我们最好手动模拟一下这个过程，对应ppt课件第11张有动画，以及黑皮书第三版429页，以加深理解。</p>
+<p>这里再补充一下，这个用于从cache中检索的地址就是我们理解的那个地址，即指针值（在内存中的地址）。</p>
+<h4 id="冲突不命中"><a href="#冲突不命中" class="headerlink" title="冲突不命中"></a>冲突不命中</h4><p>对应黑皮书431页</p>
+<p>简单说就是有两个数组float x[8] 和 float y[8]，寄存器要先访问x[0]，那就将包含了x[0] ~ x[3]的块加载到cache，然后访问y[0]，由于y[0] ~ y[3]的块的组地址和x[0] ~ x[3]相同，于是就将y[0] ~ y[3]加载，x[0] ~ x[3]被覆盖。然后又要访问x[1]，y[1]…导致反复加载和驱逐相同的block，这就是冲突不命中。因为我们在x和y的block之间抖动（thrash）。</p>
+<p>即使程序有好的空间局部性，且cache也有足够空间，但是由于冲突不命中，导致速度下降2-3倍。</p>
+<p>解决方法就是在两个数组尾部放B个字节的填充。例如这个例子，cache的B为16，那我们在放4个float元素，即float x[12]，float y[12]就可以解决了。</p>
+<h4 id="为什么使用中间的位来做高速缓存索引"><a href="#为什么使用中间的位来做高速缓存索引" class="headerlink" title="为什么使用中间的位来做高速缓存索引"></a>为什么使用中间的位来做高速缓存索引</h4><p><img src="https://frun1na.netlify.app/20240916163915.png"></p>
+<p>如图，这个cache是直接映射的</p>
+<p>假设有一个程序，顺序扫描整个数组，如果用高位做索引，那么扫描完了0000块进入相邻的0001块要重新放逐和加载。</p>
+<p>如果是中间位做索引，那么相邻的块就都存入cache，可以更快取数据</p>
+<h3 id="组相联高速缓存"><a href="#组相联高速缓存" class="headerlink" title="组相联高速缓存"></a>组相联高速缓存</h3><p>每个set的line数大于一，且set数一般大于一</p>
+<p>检查命中时，行匹配比上一种复杂，它要检查所有line的有效位和tag。</p>
+<p>命中时取数据同上</p>
+<p>不命中时，cache要从下一级取出这个block，那么要替换哪一行呢？</p>
+<p>有空行最好，没有就要使用某种策略来替换。</p>
+<p>最简单的策略是随机替换，其他的替换策略利用了局部性原理，但是这些策略很难在代码中利用，而是用额外时间和硬件完成的。</p>
+<p>比如说最不常用(LFU)策略，会替换过去某个时间段引用次数最少的那一行，而最近最少使用(LRU)策略会替换距最后一次访问时间最远的那个。</p>
+<p>存储器层次越往下走，没有命中的代价越高，所以这是值得的。</p>
+<h3 id="全相联高速缓存"><a href="#全相联高速缓存" class="headerlink" title="全相联高速缓存"></a>全相联高速缓存</h3><p>只有一个组，包含了所有行。</p>
+<p>检查命中的组选择非常简单，但是行匹配的规模很大，而且这个匹配要想做简单不容易，因此这种cache只适合小的高速缓存。</p>
+<h3 id="写内存"><a href="#写内存" class="headerlink" title="写内存"></a>写内存</h3><p>如果写一个已经缓存的字w（写命中），在cache中更新后，写回内存有两种方法</p>
+<ul>
+<li>直写：立即将块写回低一层中的副本（缺点是每次直写都引起总线流量）</li>
+<li>写回：尽可能推迟更新，只有当这个块要被驱逐时才写回低一层（缺点是要维护一个修改位，表明是否被修改）</li>
+</ul>
+<p>如果不命中</p>
+<ul>
+<li>写分配：从低一层的缓存中加载这个块，然后更新它（缺点是每次不命中代价较大）</li>
+<li>非写分配：直接写入低一层缓存</li>
+</ul>
+<p>要编写一个高速缓存友好的程序，建议使用写回写分配（理由在书438页）</p>
+<img src="https://frun1na.netlify.app/20240916185834.png" alt="111" style="zoom:50%;" />
+
+<h3 id="真实情况下的高速缓存层次结构"><a href="#真实情况下的高速缓存层次结构" class="headerlink" title="真实情况下的高速缓存层次结构"></a>真实情况下的高速缓存层次结构</h3><p>目前为止，我们一直在假设cache中存的都是数据，但事实上，cache中也保存指令。</p>
+<p>保存数据的叫d-cache</p>
+<p>保存指令的叫i-cache，通常是只读的，比较简单</p>
+<p>同时保存数据和指令的叫统一高速缓存(unified cache)</p>
+<h3 id="衡量cache性能的指标"><a href="#衡量cache性能的指标" class="headerlink" title="衡量cache性能的指标"></a>衡量cache性能的指标</h3><ul>
+<li>未命中率：未命中次数&#x2F;总访问次数（L1：3% - 10%）</li>
+<li>命中时间：将缓存数据发送到处理器的总时间，包括判断命中的时间（L1 ： 1-2周期  L2:5 - 20周期）</li>
+<li>未命中惩罚：由于未命中所需的额外访问数据时间（主存：50 - 200周期）</li>
+<li>命中率基本不提，因为99%命中率的效率基本达到了97%命中率的两倍，所以还是看未命中率</li>
+</ul>
+<img src="https://frun1na.netlify.app/20240916190534.png" alt="111" style="zoom:50%;" />
+
+<p>高速缓存中各个参数对性能影响的分析，看书439页</p>
+<h2 id="高速缓存对程序性能的影响"><a href="#高速缓存对程序性能的影响" class="headerlink" title="高速缓存对程序性能的影响"></a>高速缓存对程序性能的影响</h2><p>这部分看ppt和书即可，以后有时间补。</p>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>我们按照指导书上面的要求来实现cache</p>
+<p>在&#x2F;nemu&#x2F;src&#x2F;memory&#x2F;memory.c中来实现</p>
+<p>首先是数据结构</p>
+<pre><code class="c">#define block_bytes 64		// 一个块的字节
+#define cache_ways 8			// 几路组相连
+#define cache_sets 1024/8	// cache的组数
+
+/* cache的class */
+typedef struct &#123;
+    uint32_t tag;					// 标记位
+    uint8_t block[block_bytes];		// 64个字节
+    bool valid;					// valid bit
+&#125; block;
+typedef struct set &#123;
+    block blocks[cache_ways];
+&#125; set;
+typedef struct cache &#123;
+    /* 成员属性 */
+    set sets[cache_sets];			// 2**10个块
+    /* 成员函数 */
+    void (* init) (cache *this);
+&#125; cache;
+void init_(cache x) &#123;
+    int i, j;
+    for(i = 0; i &lt; cache_sets; i++) &#123;
+        for(j = 0; j &lt; cache_ways; j++) &#123;
+            x.sets[i].blocks[j].valid = 0;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>我们可以定义的再规范一点，这样可以在实现L2的时候轻松一点。</p>
+<p>然后在新文件中专门实现cache。</p>
+<p>nemu&#x2F;include&#x2F;memory&#x2F;cache.h</p>
+<pre><code class="c">#ifndef __CACHE_H__
+#define __CACHE_H__
+
+#include &quot;common.h&quot;
+
+
+/* block */
+#define block_size_bit 6		// addr : 6位块内偏移
+#define block_size 64			// 一个块的字节
+typedef struct &#123;
+    uint32_t tag;					// 标记位(19位)
+    uint8_t block[block_size];		// 64个字节
+    bool valid, dirty;			    // 有效位 和 脏位
+&#125; block;
+
+/* L1 cache
+ * write through	&amp;	not write allocate
+ */
+#define l1_ways 8					// 8路组相连	1个set = 8个块
+#define l1_sets_bit 7				// addr : 组号的位数
+#define l1_sets (1024/8)			// cache的组数	块数/8
+block l1_cache[l1_sets][l1_ways];
+uint64_t l1_t;			// 计时变量
+#define l1_tag_bit 19 //为什么是这个数，前文已经讲了
+void init_cache();
+#endif
+</code></pre>
+<p>感觉L1，L2同时写好一点，因为L1要从L2里面找。</p>
+
+    </div>
+    
+    
+    
+    
+    <div id="comment">
+        <div id="giscus-container" class="giscus"></div>
+    </div>
+    
+    
+    
+    
+</div>
+
+            <footer id="footer">
+    <div id="footer-wrap">
+        <div>
+            &copy;
+            2024 - 2024 Frun1na &#39;s blog
+            <span id="footer-icon">
+                <i class="fa-solid fa-font-awesome fa-fw"></i>
+            </span>
+            &commat;Frun1na
+        </div>
+        <div>
+            Based on the <a target="_blank" rel="noopener" href="https://hexo.io">Hexo Engine</a> &amp;
+            <a target="_blank" rel="noopener" href="https://github.com/theme-particlex/hexo-theme-particlex">ParticleX Theme</a>
+        </div>
+        
+    </div>
+</footer>
+
+        </div>
+        
+        <transition name="fade">
+            <div id="preview" ref="preview" v-show="previewShow">
+                <img id="preview-content" ref="previewContent" />
+            </div>
+        </transition>
+        
+    </div>
+    <script src="/js/main.js"></script>
+    
+    
+<script
+    src="https://giscus.app/client.js"
+    data-repo="Frun1na/Frun1na.github.io"
+    data-repo-id="R_kgDOMv7m6Q"
+    data-category="General"
+    data-category-id="DIC_kwDOMv7m6c4CiZjQ"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="zh-CN"
+    crossorigin
+    async
+></script>
+
+
+
+
+
+    
+</body>
+</html>
