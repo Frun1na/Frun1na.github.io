@@ -1,0 +1,376 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>csapp:ch8_ExceptionalControlFlow | Frun1na &#39;s blog</title>
+    <meta name="author" content="Frun1na" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <link rel="icon" href="/images/avatar.jpg" />
+    <link rel="preconnect" href="https://s4.zstatic.net" />
+<script src="https://s4.zstatic.net/ajax/libs/vue/3.3.7/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.cn" />
+<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.cn/css2?family=Fira+Code:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap"
+/>
+<script> const mixins = {}; </script>
+
+<script src="https://polyfill.alicdn.com/v3/polyfill.min.js?features=default"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+<link
+    rel="stylesheet"
+    href="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+/>
+<script src="/js/lib/highlight.js"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+<script src="/js/lib/math.js"></script>
+
+
+<script src="/js/lib/preview.js"></script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/main.css" />
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div id="layout">
+        <transition name="fade">
+            <div id="loading" v-show="loading">
+                <div id="loading-circle">
+                    <h2>LOADING</h2>
+                    <p>加载过慢请开启缓存 浏览器默认开启</p>
+                    <img src="/images/loading.gif" />
+                </div>
+            </div>
+        </transition>
+        <div id="menu" :class="{ hidden: hiddenMenu, 'menu-color': menuColor}">
+    <nav id="desktop-menu">
+        <a class="title" href="/">
+            <span>FRUN1NA &#39;S BLOG</span>
+        </a>
+        
+        <a href="/">
+            <i class="fa-solid fa-house fa-fw"></i>
+            <span>&ensp;Home</span>
+        </a>
+        
+        <a href="/about">
+            <i class="fa-solid fa-id-card fa-fw"></i>
+            <span>&ensp;About</span>
+        </a>
+        
+        <a href="/archives">
+            <i class="fa-solid fa-box-archive fa-fw"></i>
+            <span>&ensp;Archives</span>
+        </a>
+        
+        <a href="/categories">
+            <i class="fa-solid fa-bookmark fa-fw"></i>
+            <span>&ensp;Categories</span>
+        </a>
+        
+        <a href="/tags">
+            <i class="fa-solid fa-tags fa-fw"></i>
+            <span>&ensp;Tags</span>
+        </a>
+        
+    </nav>
+    <nav id="mobile-menu">
+        <div class="title" @click="showMenuItems = !showMenuItems">
+            <i class="fa-solid fa-bars fa-fw"></i>
+            <span>&emsp;FRUN1NA &#39;S BLOG</span>
+        </div>
+        <transition name="slide">
+            <div class="items" v-show="showMenuItems">
+                
+                <a href="/">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-house fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Home</div>
+                    </div>
+                </a>
+                
+                <a href="/about">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-id-card fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">About</div>
+                    </div>
+                </a>
+                
+                <a href="/archives">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-box-archive fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Archives</div>
+                    </div>
+                </a>
+                
+                <a href="/categories">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-bookmark fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Categories</div>
+                    </div>
+                </a>
+                
+                <a href="/tags">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-tags fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Tags</div>
+                    </div>
+                </a>
+                
+            </div>
+        </transition>
+    </nav>
+</div>
+<transition name="fade">
+    <div id="menu-curtain" @click="showMenuItems = !showMenuItems" v-show="showMenuItems"></div>
+</transition>
+
+        <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
+            <div class="article">
+    <div>
+        <h1>csapp:ch8_ExceptionalControlFlow</h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2024/9/21
+        </span>
+        
+        
+    </div>
+    
+    <div class="content" v-pre>
+        <h1 id="异常控制流"><a href="#异常控制流" class="headerlink" title="异常控制流"></a>异常控制流</h1><span id="more"></span>
+
+<p>首先我们要研究，什么是控制流？</p>
+<p>从计算机上电开始，就有一个一个的指令进入cpu，并等待执行，这些个指令，就形成了队列。这个队列，就是控制流。</p>
+<p>改变控制流，意思就是要改变这些指令的执行顺序，最常见的，jxxx跳转指令，call，ret调用返回等，当<strong>程序的状态</strong>改变时，我们可以使用这些指令来改变控制流，使程序作出恰当的反应。</p>
+<p>什么是程序状态呢？这里我们需要抽象的来理解：比如说，当程序的某个变量值发生改变，然后通过分支语句，跳转到了不同的地方，控制流改变。所以变量值改变，就算做“程序状态改变”。</p>
+<p>通过我们学的知识，我们可以写一个程序了。</p>
+<p><strong>但只有这些并不充分，虽然可以反应程序状态的改变，但不能反应系统状态的改变。</strong></p>
+<p>系统除了要完成所需的功能，还需要能够感知自己的状态，例如，从键盘中输入，或者磁盘读数据，他怎么知道数据什么时候就绪？</p>
+<p>所以我们要使用另一种机制：外部——》计算机系统——》程序改变。</p>
+<p>再举一些例子。</p>
+<p>1.执行read函数读文件，之后程序进入阻塞（block），完事之后通知程序。</p>
+<p>2.整数除0，为什么我没有写关于这个的代码，但是程序运行到这里，还是直接退出</p>
+<p>3.有时候程序进入死循环，人为打断按下ctrl + c，为什么，我明明没有写这个功能的代码。</p>
+<p>这就是<strong>异常控制流</strong>。因此，这里的异常，不是计算过程中出错，而是<strong>一种机制</strong>。</p>
+<p><strong>异常控制流的实现在计算机系统的各个层面上都有体现</strong>。</p>
+<p>纯硬件实现的：异常（为了区分，又被称作处理器级异常）</p>
+<p>更高层：进程上下文切换，信号，非本地跳转。</p>
+<p>所以总结一下，改变控制流有两种方式：</p>
+<p>1.程序状态决定的，使用jxx等跳转指令</p>
+<p>2.<strong>程序之外，系统状态改变，进入新的控制流：异常控制流</strong></p>
+<h1 id="操作系统"><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h1><p>这里我们先几句话简要介绍一下操作系统（operating system,OS）。</p>
+<p>它分为两个部分：kernel(内核),shell(外壳)</p>
+<p>kernel是操作系统启动之后，常驻在内存里面的部分，持续为用户提供服务。</p>
+<p>shell是封装内核的外壳，主要提供用户和操作系统之间的交互。</p>
+<p>比如linux的命令行就是shell。</p>
+<h1 id="（处理器级）异常"><a href="#（处理器级）异常" class="headerlink" title="（处理器级）异常"></a>（处理器级）异常</h1><p>异常就是控制流中的突变，用来响应某种状态的变化。</p>
+<img src="https://frun1na.netlify.app//20240918183050.png" style="zoom:50%;" />
+
+<p>如图，当处理器状态发生某种重要的变化时，此时处理器中正在执行当前指令$I_{curr}$，状态变化（被称为事件）之后，跳转到某个地方进行异常处理，完成之后有三种可能：</p>
+<ol>
+<li>返回到当前指令 $I_{curr}$</li>
+<li>返回到下一条指令$I_{next}$</li>
+<li>程序终止</li>
+</ol>
+<h2 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h2><p>具体这个异常是如何处理的？</p>
+<p>当处理器触发异常时，根据异常号查找异常表，调用对应的异常处理函数。</p>
+<p>这个异常表是由专用的寄存器来存储的：异常表基地址 寄存器</p>
+<p>当计算机上电时，操作系统引导，将这些异常处理函数地址在内存中申请一块空间，并按照对应号码填入，以构成异常表。将其地址存入专用寄存器中。</p>
+<p>那么$异常号\times sizeof(指针) + 基地址$就可以得到异常对应的函数，并调用。</p>
+<img src="https://frun1na.netlify.app//20240918203214.png" style="zoom:50%;" />
+
+<img src="https://frun1na.netlify.app//20240918203239.png" style="zoom:50%;" />
+
+<p>这个函数的调用和普通的函数调用有些不同，具体请看黑皮书503页。</p>
+<h2 id="异常的类别"><a href="#异常的类别" class="headerlink" title="异常的类别"></a>异常的类别</h2><p>异常从大类上说分为两种：异步，同步</p>
+<p>异步：它不是程序引起的，而是由外部原因引起的，因此什么时候触发，什么时候到达，都是不确定的。</p>
+<p>同步：由程序引发，与程序的执行流程同步，是执行当前指令的结果，可以确定什么时候触发和到达。</p>
+<p>异步异常有中断</p>
+<p>同步异常有陷阱，故障，终止</p>
+<h3 id="中断"><a href="#中断" class="headerlink" title="中断"></a>中断</h3><p>中断是来自处理器外部的I&#x2F;O设备触发并送到cpu的。</p>
+<p>cpu芯片上面有一个引脚(pin)，它连接着外设，包括打印机，键盘等。当打印机状态变化时，线路上的电信号改变（电压变化），传入cpu，触发中断，然后cpu执行指令返回打印机，查看什么情况。</p>
+<p>这个引脚在cpu上数量有限，但是可以在主板上进行引脚扩展，以支持多个外设。</p>
+<p>只要是和外设交互，都离不开中断。</p>
+<p>此时cpu正在执行指令，执行完当前指令之后，接收到中断，处理完之后返回下一条指令，从外面来看，就好像没有发生中断一样。</p>
+<p>注意计时器也算是外设，他每隔一段时间就会发送一次中断</p>
+<h3 id="陷阱和系统调用"><a href="#陷阱和系统调用" class="headerlink" title="陷阱和系统调用"></a>陷阱和系统调用</h3><p>陷阱（trap）</p>
+<p>这是一种软中断，所谓软中断，就是软件实现的中断。它的流程和中断一样，都是返回下一条指令，只不过是软件。</p>
+<p>它最重要的用途就是提供应用程序和操作系统之间的像函数一样的接口，叫系统调用，意思是应用程序调用系统函数。</p>
+<p>向系统请求的服务包括：读文件，创建进程，加载，终止进程等。</p>
+<p>比如，x86 linux中的系统调用指令为syscall n，n为服务的类别。</p>
+<blockquote>
+<p>你可能会奇怪，为什么要这么麻烦，直接调用那个系统函数不行吗</p>
+<p>确实不行，因为没有权限，而且那个函数的地址也是每次启动的时候都会改变，并且系统内核与用户程序隔离，也不能让用户程序得知系统内核在内存中的全部的信息，防止恶意破环。</p>
+<p>而且这也可以屏蔽掉底层的硬件实现细节，比如说读磁盘的时候如何控制磁道？磁头？这是由硬件生产商提供的驱动程序完成的，写app的人不用考虑这些。</p>
+<p>不过，虽然驱动程序是由硬件生产商提供的，但是驱动程序也是操作系统的一部分，没有操作系统，驱动程序不能单独运行。</p>
+</blockquote>
+<p>其他介绍请看黑皮书505页写的陷阱和系统调用那里（第二段）。</p>
+<blockquote>
+<p>这里再举一个使用了trap 的例子，就是gdb调试的时候，打断点，程序执行到断点停止，就用了trap。</p>
+<p>当cpu执行到断点（即trap）时，会停止当前程序，保存状态，进入异常处理函数，通知调试器，从而实现此功能，之后会执行下一条指令，这也是我们需要的。</p>
+</blockquote>
+<h3 id="故障（fault）"><a href="#故障（fault）" class="headerlink" title="故障（fault）"></a>故障（fault）</h3><p>不是一提到故障，肯定是计算机出错了。</p>
+<p><strong>非有意，但有可能恢复</strong> </p>
+<p><strong>重新执行引起故障的（“当前”）指令或者终止</strong></p>
+<p>如图所示，进入异常处理程序之后有两种可能</p>
+<p><img src="https://frun1na.netlify.app/20240920221629.png"></p>
+<p>例如：缺页故障（可恢复）、保护故障（不可恢复）、浮 点异常</p>
+<p> 下面具体举几个例子。</p>
+<p>缺页：在第九章才能详细讲，书505页倒数第三段</p>
+<p>保护故障：指针使用不当，数组越界访问（内存访问失败），它会打印一条错误信息：segmentation fault(段错误)</p>
+<blockquote>
+<p>注：如果一个数组定义int a[10],那么你访问a[10]，可能不会出错，因为在栈帧里面有缓冲区，但是缓冲区也有大小限制。</p>
+</blockquote>
+<p>浮点异常：如果当前机器不支持浮点，就会抛出此异常，然后进入异常处理函数，然后将浮点转化为定点，模拟浮点重新执行指令，以实现浮点运算。</p>
+<h3 id="终止（abort）"><a href="#终止（abort）" class="headerlink" title="终止（abort）"></a>终止（abort）</h3><p><strong>非有意，不可恢复</strong></p>
+<p><strong>终止当前程序</strong></p>
+<p> 例如：非法指令、奇偶校验错、机器检查异常（硬件错误）</p>
+<blockquote>
+<p>既然是不可恢复的错误，为什么还有异常处理函数？</p>
+<p>因为可以留下遗言，写日志，把所有信息写进去，方便后人查找问题。</p>
+</blockquote>
+<p>奇偶校验错：读数据的时候，使用校验码检查，发现读错了，只能终止，有时候，带着错误跑下去不如直接终止。</p>
+<h1 id="进程（process）"><a href="#进程（process）" class="headerlink" title="进程（process）"></a>进程（process）</h1><p>定义：<strong>一个进程是一个正在运行的程序的实例 （动态的概念）</strong></p>
+<p>注意这是一个动态的概念，只有已经运行的程序，才能叫进程，仅仅是编译好的可执行文件不叫进程。</p>
+<p>这里的实例就像class一样，只定义不算实例，只有定义了对象才能叫实例。</p>
+<p>一个程序可以运行多次，就会有多个实例。</p>
+<blockquote>
+<p>看<strong>进程上下文</strong>切换这个名字我们可能已经看出了是大概什么意思：对于一个单核处理器，怎样实现一遍听歌，一边写代码？一个答案就是先处理音乐的指令，一会之后，切换，处理写代码的指令，cpu在这两个进程之间来回切换执行，我们就看上去像是同时干这两件事一样。</p>
+<p>这样的进程调度和一个个排队执行进程有什么优势吗？明明总时间是相同的</p>
+<p>问出这个问题，说明没有考虑<strong>交互</strong>，如果一个程序需要用户输入yes&#x2F;no，然后就一直卡在这里了，万一人不在电脑前呢？难道要等输完了，然后其他程序才能执行？就像刚才的写代码，你不输入，程序就卡在这里，等你写完代码才能听歌。</p>
+<p>因此，<strong>排队</strong>不能实时地感知，反应外部世界。</p>
+</blockquote>
+<p><img src="https://frun1na.netlify.app/20240920232038.png"></p>
+<p>逻辑控制流：不管怎么上下文切换，我自己程序的指令和执行的顺序都不变，按我的程序的逻辑走。</p>
+<p>虚拟地址空间：这个要举例子</p>
+<blockquote>
+<p>以前写应用程序，都要用到读内存，写内存，但是万一我代码里面的这个内存访问到其他程序，篡改了其他程序，或者我自己被其他程序篡改了，怎么办？那我们约定，你这个app用0–100，我用100–200…那万一我那个程序非常小众，那些不用我程序的人凭什么要留出这些空间呢？为了解决这个问题，提出了虚拟地址空间的概念，保证我们的程序既不篡改其他程序内存，又能够读写自己的内存。</p>
+</blockquote>
+<p><strong>上下文（context）</strong>：这是一个计算机术语，可以理解为需要程序保持的一些信息，比如说打断的时候，要把程序状态保存下来，比如所寄存器的值。书中的定义在508页。</p>
+<p>并发：（更宏观）一段时间内，多个程序同时运行</p>
+<p>并行：（更微观）某时刻，同时工作（后面章节）</p>
+<p><img src="https://frun1na.netlify.app//20240921193511.png"></p>
+<p>如图所示，对于程序A,B,C自己，就像他们自己在运行一样。</p>
+<h2 id="私有地址空间"><a href="#私有地址空间" class="headerlink" title="私有地址空间"></a>私有地址空间</h2><p>下一章详细讲</p>
+<h2 id="用户模式和内核模式"><a href="#用户模式和内核模式" class="headerlink" title="用户模式和内核模式"></a>用户模式和内核模式</h2><p>为了保证操作系统内核在每个进程中安全封闭，处理器提供了一种机制，限制这个程序可以访问的地址范围。</p>
+<p>处理器用某个控制寄存器的模式位（mode bit）。</p>
+<p>当模式位被设置时，进程就运行在了内核模式中（root），它可以执行指令集的所有指令，也可以访问内存的所有位置。</p>
+<p>没有设置模式位，程序就是用户模式，不允许执行特权指令（privileged instruction），也不能直接读写内核区域的内存，任何以上操作都会引起保护故障异常，只能用系统调用。</p>
+<p>运行程序的代码初始在用户模式，只有当进入异常处理时，才会进入内核模式。</p>
+<h2 id="上下文切换"><a href="#上下文切换" class="headerlink" title="上下文切换"></a>上下文切换</h2><p>内核判断什么时候打断当前程序，启动之前被打断的另一个程序。这种决策，叫做调度（scheduling），由kernel中的调度器处理，当它选择启动了一个进程，就说调度了这个进程。</p>
+<p><img src="https://frun1na.netlify.app//20240921200955.png"></p>
+<p>如图，粉色部分展示了上下文切换。</p>
+<p>1.把进程A寄存器值等上下文写入一片内存</p>
+<p>2.其他进程挑选一个进程B执行</p>
+<p>3.恢复进程B的上下文</p>
+<p>4.中断返回到进程B</p>
+<p>5.一段时间后再次中断</p>
+<p>系统调用可能会引发上下文切换，如果因为等待而发生阻塞，比如磁盘读数据，这段时间就可以切换，当磁盘数据就绪时，发出中断信号，表示读完了</p>
+<p>硬件定时器也可以触发中断，来引发上下文切换。如linux的定时器每5ms触发一次。</p>
+<h1 id="处理系统调用的错误"><a href="#处理系统调用的错误" class="headerlink" title="处理系统调用的错误"></a>处理系统调用的错误</h1>
+    </div>
+    
+    
+    
+    
+    <div id="comment">
+        <div id="giscus-container" class="giscus"></div>
+    </div>
+    
+    
+    
+    
+</div>
+
+            <footer id="footer">
+    <div id="footer-wrap">
+        <div>
+            &copy;
+            2024 - 2024 Frun1na &#39;s blog
+            <span id="footer-icon">
+                <i class="fa-solid fa-font-awesome fa-fw"></i>
+            </span>
+            &commat;Frun1na
+        </div>
+        <div>
+            Based on the <a target="_blank" rel="noopener" href="https://hexo.io">Hexo Engine</a> &amp;
+            <a target="_blank" rel="noopener" href="https://github.com/theme-particlex/hexo-theme-particlex">ParticleX Theme</a>
+        </div>
+        
+    </div>
+</footer>
+
+        </div>
+        
+        <transition name="fade">
+            <div id="preview" ref="preview" v-show="previewShow">
+                <img id="preview-content" ref="previewContent" />
+            </div>
+        </transition>
+        
+    </div>
+    <script src="/js/main.js"></script>
+    
+    
+<script
+    src="https://giscus.app/client.js"
+    data-repo="Frun1na/Frun1na.github.io"
+    data-repo-id="R_kgDOMv7m6Q"
+    data-category="General"
+    data-category-id="DIC_kwDOMv7m6c4CiZjQ"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="zh-CN"
+    crossorigin
+    async
+></script>
+
+
+
+
+
+    
+</body>
+</html>

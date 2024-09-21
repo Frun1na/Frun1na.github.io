@@ -549,6 +549,9 @@ p++;
 </code></pre>
 <p>应该改成2d，具体为什么，我是真不清楚了。跳到的那个地方也是有点刁钻</p>
 <p>这样改了之后也是HIT GOOD TRAP了</p>
+<h1 id="补充："><a href="#补充：" class="headerlink" title="补充："></a>补充：</h1><h2 id="24-9-18"><a href="#24-9-18" class="headerlink" title="24&#x2F;9&#x2F;18"></a>24&#x2F;9&#x2F;18</h2><p>jmp rel32指令的操作数是目标地址减去下一条指令的地址，而我这里直接是减去这一条指令的地址，所以正确的应该还要再减去指令长度5，0x32 - 5 &#x3D; 0x2d。</p>
+<p>我犯这个错误是因为i386手册里，我误以为eip是当前指令的地址，而不是下一套指令。</p>
+<p><img src="https://frun1na.netlify.app/20240918224051.png"></p>
 
     </div>
     
