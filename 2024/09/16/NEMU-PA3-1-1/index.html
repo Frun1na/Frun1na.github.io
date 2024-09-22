@@ -3,7 +3,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <title>NEMU PA3 阶段一（实现一级cache） | Frun1na &#39;s blog</title>
+    <title>NEMU PA3 阶段一（实现L1,L2） | Frun1na &#39;s blog</title>
     <meta name="author" content="Frun1na" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
@@ -161,7 +161,7 @@
         <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
             <div class="article">
     <div>
-        <h1>NEMU PA3 阶段一（实现一级cache）</h1>
+        <h1>NEMU PA3 阶段一（实现L1,L2）</h1>
     </div>
     <div class="info">
         <span class="date">
@@ -310,6 +310,7 @@ void init_cache();
 #endif
 </code></pre>
 <p>感觉L1，L2同时写好一点，因为L1要从L2里面找。</p>
+<p>，感觉之后没啥好讲的，就实现理论中说的功能就行了</p>
 
     </div>
     
