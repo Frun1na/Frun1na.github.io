@@ -305,7 +305,134 @@
 <p>5.一段时间后再次中断</p>
 <p>系统调用可能会引发上下文切换，如果因为等待而发生阻塞，比如磁盘读数据，这段时间就可以切换，当磁盘数据就绪时，发出中断信号，表示读完了</p>
 <p>硬件定时器也可以触发中断，来引发上下文切换。如linux的定时器每5ms触发一次。</p>
-<h1 id="处理系统调用的错误"><a href="#处理系统调用的错误" class="headerlink" title="处理系统调用的错误"></a>处理系统调用的错误</h1>
+<h1 id="处理系统调用的错误"><a href="#处理系统调用的错误" class="headerlink" title="处理系统调用的错误"></a>处理系统调用的错误</h1><p>linux中，c语言的编程风格：系统调用的函数返回值是一个int，如果它的计算结果是一个更加复杂的类型，那么会将那个类型的指针传入函数，用于承接计算的结果。</p>
+<pre><code class="c">struct s;
+func(..., ..., &amp;s);//正确
+
+struct *s;
+func(..., ..., s)//错误，s是一个野指针
+    
+struct *s;
+s = malloc();
+func(..., ..., s);
+free(s); //正确，但基本不这么干
+</code></pre>
+<p>那么，这个返回的int，表示的就是这个调用的执行状态，成功还是失败。（有一些必然能够执行成功的调用，就没有返回值）</p>
+<p>linux约定，-1表示的就是失败。</p>
+<p>同时全局变量errno表示失败的原因</p>
+<p>我们在进行系统调用时，<strong>一定</strong>要检查是否成功调用，而不能假设一定能成功。如果有错，那么我们直接打印错误信息，并结束程序。</p>
+<pre><code class="c">if((pid = fork()) &lt; 0) &#123;
+ fprintf(stderr, &quot;fork error: %s\n&quot;, strerror(errno));
+ exit(0);
+ &#125;
+</code></pre>
+<p>其中，fprintf是写文件，第一个参数是文件名，在这里是stderr，它是一个文件描述符，表示标准错误输出(standard error output)，而fprintf虽然可以向文件中写，但也可以向标准文件里面写。而这里stderr和控制台相连，因此，这个字符串会显示在终端。</p>
+<p>strerror(errno)用于将error转化为一个描述错误的字符串。</p>
+<p>为了省事，我们可以封装一下</p>
+<pre><code class="c">voidunix_error(char*msg) &#123;/* Unix-style error */
+    fprintf(stderr, &quot;%s: %s\n&quot;, msg, strerror(errno));
+    exit(0);
+ &#125;
+
+if((pid= fork()) &lt; 0)
+    unix_error(&quot;fork error&quot;);
+</code></pre>
+<p>但是这样也有点麻烦，我们可以再封装一下</p>
+<pre><code class="c">pid_t Fork(void)&#123;
+    pid_t pid;
+    if ((pid = fork()) &lt; 0)
+         unix_error(&quot;Fork error&quot;);
+     return pid;
+ &#125;
+ 
+pid = Fork();
+</code></pre>
+<p>现在我们只要调用Fork就行了，这种命名方式是stevens风格，函数原型相同，但是首字母大写，表示这个函数经过了封装。</p>
+<p>以后我们写所有<strong>系统调用</strong>都要这么写。</p>
+<h1 id="进程控制"><a href="#进程控制" class="headerlink" title="进程控制"></a>进程控制</h1><p>linux中有很多的关于进程控制的c函数，我们详细介绍。</p>
+<h2 id="获取进程ID"><a href="#获取进程ID" class="headerlink" title="获取进程ID"></a>获取进程ID</h2><pre><code class="c">#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+ pid_t getpid(void);   //获取当前进程的ID
+ pid_t getppid(void);   //获取父进程的ID
+</code></pre>
+<img src="https://frun1na.netlify.app//20240925193306.png" style="zoom: 50%;" />
+
+<p>如图所示，在Linux中，所有进程都是由其他进程启动的。</p>
+<p> 这被称为父&#x2F;子关系。 </p>
+<p>进程”init”是所有用户进程的祖先进程。它在系 统启动时由内核创建。 </p>
+<p>进程形成一个层次结构，称为“进程树”。 </p>
+<p>Windows没有进程层次的概念。</p>
+<h2 id="创建和终止进程"><a href="#创建和终止进程" class="headerlink" title="创建和终止进程"></a>创建和终止进程</h2><p>首先我们先来了解一下进程的状态，对于程序员来说，有三种状态：</p>
+<p>1.运行 ：进程正在执行，或者等待执行，并最终将由内核调度（即被选择执行）。 </p>
+<p>2.停止（阻塞，block）：进程的执行被暂停，直到进一步通知（信号）才会被调度。</p>
+<p>3.终止 ：进程永久停止。</p>
+<p>首先解释一下停止状态</p>
+<p>假设有以下代码：</p>
+<pre><code class="c">int main()&#123;
+    int a;
+    cin &gt;&gt; a;  //运行到这里，此时程序等待用户的输入，处于阻塞状态，只有按下回车，才会继续运行。
+    ...
+&#125;
+</code></pre>
+<p>遇到cin，操作系统会通过一个信号，让进程进入阻塞状态，此时不会被调度，只有接收到解除阻塞的信号（输入完成），程序才能被再次调度。关于信号，将在本章后面介绍。</p>
+<p>这和程序进入死循环不同，block状态不会导致cpu占用率增加，这可以大大减少因为等待输入而浪费的cpu资源。</p>
+<p>除了cin，读磁盘等也会引起block</p>
+<p>但是对于操作系统，进程却有4种状态，如图所示。</p>
+<img src="https://frun1na.netlify.app//20240925203544.png" style="zoom:50%;" />
+
+<h3 id="终止"><a href="#终止" class="headerlink" title="终止"></a>终止</h3><p>进程因以下三个原因之一而终止： </p>
+<p>1.收到默认操作是终止的信号 ：比如段错误信号</p>
+<p>2.从main函数返回 </p>
+<p>3.调用exit （系统调用） </p>
+<blockquote>
+<p><strong>在写一些大型程序时，如果函数调用嵌套的过多，要是一个个返回太过于麻烦，所以直接exit，因为对于大型的程序，不太好回到main</strong></p>
+</blockquote>
+<p><strong>void exit(int status)</strong> </p>
+<p>此函数终止进程并返回状态status ，父进程可以收到status</p>
+<p>惯例：正常返回状态是 0，错误时是非零。</p>
+<p> 另一种显式设置退出状态的方法是从main函数返回一个整数值。 </p>
+<p>exit 被一旦被调用，就会结束进程，函数不会返回（因为exit一定会成功，所以不用返回int）</p>
+<h3 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h3><p>父进程通过调用fork 来创建一个新的运行中的子进程。</p>
+<p>int fork(void) </p>
+<p>​	对于子进程，fork 返回0，对于父进程，返回子进程的PID。 </p>
+<p>​	子进程几乎与父进程相同： </p>
+<ul>
+<li>子进程获得父进程虚拟地址空间的相同（但是独立的）副本，包括代码，数据，堆，栈等。</li>
+<li>子进程获得父进程打开的文件描述符的相同副本（子进程可以读写父进程打开的任何文件）。 </li>
+<li>子进程有不同于父进程的PID，这是最大的区别。</li>
+</ul>
+<p>fork 很有趣（而且经常令人困惑），因为它被调用一次但返回两次。</p>
+<p>fork意思是叉子，这个名字非常的生动形象。</p>
+<img src="https://frun1na.netlify.app//20240925222146.png" style="zoom:67%;" />
+
+<p><strong>通过返回0还是非零来判断在子进程还是父进程。</strong></p>
+<p>举个例子：</p>
+<pre><code class="c">int main()&#123;
+     pid_t pid;
+     int x = 1;
+     pid = Fork(); 
+    if (pid == 0) &#123;  /* Child */
+         printf(&quot;child : x=%d\n&quot;, ++x); 
+        exit(0);
+     &#125;
+ /* Parent */
+     printf(&quot;parent: x=%d\n&quot;, --x); 
+    exit(0);
+ &#125;
+</code></pre>
+<p>运行这个文件</p>
+<pre><code class="bash">linux&gt; ./fork
+ parent: x=0
+ child : x=2
+</code></pre>
+<p>下面进行一些解释：</p>
+<ul>
+<li><strong>调用一次，返回两次</strong>：对于这个例子很好理解，但是如果某个程序调用了多次fork，那就要仔细思考了</li>
+<li><strong>并发执行</strong>：父进程和子进程都是并发运行的，独立的。具体如何切换上下文，由kernel进行，所以终端上的输出谁先谁后都可能。</li>
+<li><strong>相同但是独立的地址空间</strong>：当fork返回时，在父进程和子进程的虚拟地址空间相同，且独立，因此，对于这两个进程，x都为1，之后对x的修改都是独立的。</li>
+<li><strong>共享文件</strong>：两个进程都输出到了屏幕上，因为父进程已经打开了stdout，并指向屏幕，子进程可以直接写文件。</li>
+</ul>
+
     </div>
     
     
