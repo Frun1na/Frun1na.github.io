@@ -3,7 +3,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <title>csapp:ch7_Linking | Frun1na &#39;s blog</title>
+    <title>csapp:ch7_Linking（完结） | Frun1na &#39;s blog</title>
     <meta name="author" content="Frun1na" />
     <meta name="description" content="" />
     <meta name="keywords" content="" />
@@ -161,7 +161,7 @@
         <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
             <div class="article">
     <div>
-        <h1>csapp:ch7_Linking</h1>
+        <h1>csapp:ch7_Linking（完结）</h1>
     </div>
     <div class="info">
         <span class="date">
@@ -566,7 +566,168 @@ int main()&#123;
     exit(0);
 &#125;
 </code></pre>
-<h3 id="编译时打桩"><a href="#编译时打桩" class="headerlink" title="编译时打桩"></a>编译时打桩</h3>
+<p>然后我们使用本地的malloc.h和mymalloc.c</p>
+<pre><code class="c">#ifdef COMPILETIME
+/* Compile-time interposition of malloc and free using C
+ * preprocessor. A local malloc.h file defines malloc (free)
+ * as wrappers mymalloc (myfree) respectively.
+ */
+
+#include &lt;stdio.h&gt;
+#include &lt;malloc.h&gt;
+
+/*
+ * mymalloc - malloc wrapper function
+ */
+void *mymalloc(size_t size, char *file, int line)
+&#123;
+    void *ptr = malloc(size);
+    printf(&quot;%s:%d: malloc(%d)=%p\n&quot;, file, line, (int)size, ptr);
+    return ptr;
+&#125;
+/* free wrapper function */
+void myfree(void *ptr， char *file, int line)&#123;
+    free(ptr);
+    printf(&quot;%s:%d:free(%p)\n&quot;, ptr)
+&#125;
+#endif             //mymalloc.c
+</code></pre>
+<pre><code class="c">#define malloc(size) mymalloc(size, __FILE__, __LINE__ )
+#define free(ptr) myfree(ptr, __FILE__, __LINE__ )
+
+void *mymalloc(size_t size, char *file, int line);
+void myfree(void *ptr, char *file, int line);
+//malloc.h
+</code></pre>
+<p>mymalloc.c中的是包装函数。</p>
+<h3 id="编译时打桩"><a href="#编译时打桩" class="headerlink" title="编译时打桩"></a>编译时打桩</h3><p>使用指令编译</p>
+<pre><code class="bash">gcc -DCOMPILETIME -c mymalloc.c
+gcc -I. -o hello hello.c mymalloc.o
+</code></pre>
+<p>第一行-DCOMPILETIME表示在编译时创建一个宏COMPILETIME（没有D），用于条件编译。</p>
+<p>mymalloc.c中有#ifdef COMPILETIME意为如果定义了宏，就编译这段代码。</p>
+<p>第二行-I.选项指示在搜索系统标准库之前，先在当前目录查找malloc.h，所以会运行打桩。（.表示当前目录，I后面的内容表示的就是路径，可以绝对，也可以相对）</p>
+<p>注：mymalloc.c中的函数编译是用标准malloc.h编译的。</p>
+<p>运行</p>
+<pre><code class="bash">./helloc
+hello.c:7: malloc(10)=0x501010
+hello.c:7: free(0x501010)
+hello, world
+</code></pre>
+<h3 id="链接时打桩"><a href="#链接时打桩" class="headerlink" title="链接时打桩"></a>链接时打桩</h3><p>Linux 静态链接器支持用–wrap f标志进行链接时打桩。这个标志告诉链接器，把对符号f的引用解析成__warp_f（前缀是两个下划线），还要把对符号 _ _real _ f（前缀是两个下划线）的引用解析为f。</p>
+<p>我们修改mymalloc.c</p>
+<pre><code class="c">#ifdef LINKTIME
+/* 
+   Link-time interposition of malloc and free using the static
+   linker&#39;s (ld) &quot;--wrap symbol&quot; flag.
+*/
+
+#include &lt;stdio.h&gt;
+
+void *__real_malloc(size_t size);
+void __real_free(void *ptr);
+
+/*
+ * __wrap_malloc - malloc wrapper function
+ */
+void *__wrap_malloc(size_t size)
+&#123;
+    void *ptr = __real_malloc(size);
+    printf(&quot;malloc(%d) = %p\n&quot;, (int)size, ptr);
+    return ptr;
+&#125;
+/* free wrapper function */
+ void __wrap_free(void *ptr)&#123;
+    __real_free(ptr);         /* Call libc free */
+    printf(&quot;free(%p)\n&quot;, ptr)
+ &#125;
+#endif
+</code></pre>
+<p>然后分别编译两个文件</p>
+<pre><code class="bash">linux&gt; gcc -DLINKTIME -c mymalloc.c
+linux&gt; gcc -c hello.c
+</code></pre>
+<p>之后链接</p>
+<pre><code class="bash">linux&gt; gcc -W1,--wrap,malloc -W1,--wrap,free -o hello hello.o mymalloc.o
+</code></pre>
+<p>-wl,option表示把option传递给链接器。其中option中的每个逗号都替换为空格。</p>
+<p>所以-wl,–wrap,malloc 就把–wrap malloc 传递给链接器</p>
+<p>运行</p>
+<pre><code class="bash">linux&gt; ./hello
+malloc(10) = 0x501010
+free(0x501010)
+hello, world
+</code></pre>
+<h3 id="加载-运行期打桩"><a href="#加载-运行期打桩" class="headerlink" title="加载&#x2F;运行期打桩"></a>加载&#x2F;运行期打桩</h3><p>编译时打桩需要能够访问程序的源代码，链接时打桩需要能够访问程序的可重定位文件。不过，运行时打桩，只需要访问可执行目标文件。这个机制基于动态链接器的LD_PRELOAD环境变量。</p>
+<p>如果LD_PRELOAD 环境变量被设置为一个共享库路径名（绝对或相对）的列表（以空格或分号分隔），那么当你加载和执行一个程序，需要解析未定义的引用时，动态链接器（LD-LINUX.SO)会先搜索LD_PRELOAD库，然后才搜索任何其他的库。有了这个机制，就可以实现打桩。</p>
+<p>下面是包装函数mymalloc.c</p>
+<pre><code class="c">#ifdef RUNTIME
+ /* Run-time interposition of malloc and free based on
+  * dynamic linker&#39;s (ld-linux.so) LD_PRELOAD mechanism */
+#define _GNU_SOURCE
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;dlfcn.h&gt;
+
+void *malloc(size_t size)&#123;
+    static void *(*mallocp)(size_t size);
+    char *error;
+    void *ptr;
+
+    /* get address of libc malloc */
+    if (!mallocp) &#123;
+        mallocp = dlsym(RTLD_NEXT, &quot;malloc&quot;);
+        if ((error = dlerror()) != NULL) &#123;
+            fputs(error, stderr);
+            exit(1);
+        &#125;
+    &#125;
+    ptr = mallocp(size);
+    printf(&quot;malloc(%d) = %p\n&quot;, (int)size, ptr);
+    return ptr;
+&#125;
+/* free wrapper function */
+void free(void *ptr)&#123;
+    void (*freep)(void *) = NULL;
+    char *error;
+    if (!ptr)
+        return;
+     freep = dlsym(ETLD_NEXT, &quot;free&quot;); /* Get address of libc free */
+    if ((error = dlerror()) != NULL)&#123;
+        fputs(error, stderr);
+        exit(1);
+    &#125;
+    freep(ptr); /* Call libc free */
+    printf(&quot;free(°/ÿp)\nM, ptr);
+&#125;
+#endif
+</code></pre>
+<p>构建含有包装函数的共享库</p>
+<pre><code class="bash">linux&gt; gcc -DRUNTIME -shared -fpic -o mymalloc.so mymalloc.c -ldl
+</code></pre>
+<p>编译主程序</p>
+<pre><code class="bash">linux&gt; gcc -o hello hello.c
+</code></pre>
+<p>在shell中运行</p>
+<pre><code class="bash">1inux&gt; LD_PRELOAD=&quot;/usr/lib64/libdl.so ./mymalloc.so&quot; ./hello  
+malloc(10) = 0x501010
+free(0x501010)
+hello, world
+</code></pre>
+<h2 id="处理目标文件的工具"><a href="#处理目标文件的工具" class="headerlink" title="处理目标文件的工具"></a>处理目标文件的工具</h2><p>在处理目标文件这类二进制文件的时候，linux有一些工具可以使用。</p>
+<p>比如说GNU binutlis包</p>
+<ul>
+<li>AR: 创建静态库，插人、删除、列出和提取成员。</li>
+<li>STRINGS: 列出一个目标文件中所有可打印的字符串。 </li>
+<li>STRIP: 从目标文件中删除符号表信息。 </li>
+<li>NM:列出一个目标文件的符号表中定义的符号。 </li>
+<li>SIZE: 列出目标文件中节的名字和大小。 </li>
+<li>READELF: 显示一个目标文件的完整结构，包括ELF头中编码的所有信息。包含 SIZE 和 NM的功能。 </li>
+<li>OBJDUMP: 所有二进制工具之母。能够显示一个目标文件中所有的信息。它最大 的作用是反汇编.text节中的二进制指令。 Linux 系统为操作共享库还提供了LDD程序：</li>
+<li>LDD: 列出一个可执行文件在运行时所需要的共享库。</li>
+</ul>
+<p>本章完</p>
+
     </div>
     
     
