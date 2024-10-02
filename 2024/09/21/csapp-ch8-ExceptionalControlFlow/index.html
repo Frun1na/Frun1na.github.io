@@ -175,7 +175,7 @@
     </div>
     
     <div class="content" v-pre>
-        <h1 id="异常控制流"><a href="#异常控制流" class="headerlink" title="异常控制流"></a>异常控制流</h1><span id="more"></span>
+        <h1 id="异常控制流（完结？）"><a href="#异常控制流（完结？）" class="headerlink" title="异常控制流（完结？）"></a>异常控制流（完结？）</h1><span id="more"></span>
 
 <p>首先我们要研究，什么是控制流？</p>
 <p>从计算机上电开始，就有一个一个的指令进入cpu，并等待执行，这些个指令，就形成了队列。这个队列，就是控制流。</p>
@@ -304,7 +304,7 @@
 <p>4.中断返回到进程B</p>
 <p>5.一段时间后再次中断</p>
 <p>系统调用可能会引发上下文切换，如果因为等待而发生阻塞，比如磁盘读数据，这段时间就可以切换，当磁盘数据就绪时，发出中断信号，表示读完了</p>
-<p>硬件定时器也可以触发中断，来引发上下文切换。如linux的定时器每5ms触发一次。</p>
+<p>硬件定时器也可以触发中断，来引发上下文切换。如linux的定时器每5ms触发一次。而这5ms就叫做一个<strong>时间片</strong>。</p>
 <h1 id="处理系统调用的错误"><a href="#处理系统调用的错误" class="headerlink" title="处理系统调用的错误"></a>处理系统调用的错误</h1><p>linux中，c语言的编程风格：系统调用的函数返回值是一个int，如果它的计算结果是一个更加复杂的类型，那么会将那个类型的指针传入函数，用于承接计算的结果。</p>
 <pre><code class="c">struct s;
 func(..., ..., &amp;s);//正确
@@ -432,6 +432,888 @@ pid = Fork();
 <li><strong>相同但是独立的地址空间</strong>：当fork返回时，在父进程和子进程的虚拟地址空间相同，且独立，因此，对于这两个进程，x都为1，之后对x的修改都是独立的。</li>
 <li><strong>共享文件</strong>：两个进程都输出到了屏幕上，因为父进程已经打开了stdout，并指向屏幕，子进程可以直接写文件。</li>
 </ul>
+<p>注：不是复制完从头执行，而是从fork返回到地方开始执行，因为就连程序计数器也复制了。</p>
+<p>因此，打印的顺序取决于系统的调度策略，这是不可预测的。正因如此，在开发过程中，因为并发过程产生的错误复现非常困难(那种特定的出错的交错方式很难复现)，这才是重量级的困难。</p>
+<h2 id="进程图"><a href="#进程图" class="headerlink" title="进程图"></a>进程图</h2><p>进程图可以很清晰的表现出这些进程的关系，以及执行的指令顺序。</p>
+<p>如图所示，这是刚才例子的进程图。</p>
+<p><img src="https://frun1na.netlify.app//20240928101021.png"></p>
+<ul>
+<li>每个顶点都表示一条语句执行。</li>
+<li>而顶点到顶点的有向边a-&gt;b表示a在b之前执行，表示相对顺序，至于是不是a执行完立马执行b，这个不一定。</li>
+<li>可以在边上标注一些重要信息，比如说变量x的值。</li>
+</ul>
+<p>注：进程图没有什么硬性要求，只要自己看懂即可，考试不考画图，没有意义。</p>
+<p>对于单处理器计算机，进程图所有顶点的拓扑排序表示程序中，语句的一个可行的全序排列。</p>
+<p>只要满足有向边规定的一个执行顺序，就是一个拓扑排序，这个排序有很多种可能，因为上下文切换，所以每个拓扑排序都是可能的执行顺序，对于大型项目，这就没有什么办法可以穷举出所有排列。<br>如图所示，我们简化一下刚才的那个进程图。</p>
+<p><img src="https://frun1na.netlify.app/20240928101213.png"></p>
+<p>我们写出一个序列，只要满足b在e和c前面，而e和c谁前谁后都是一种可能，这就是拓扑排序。<br>比如说 a b e f c d可能，a b c e f d也可能，但是 a b d c e f 绝对不可能。<br>下面我们应用进程图来分析一些例子。</p>
+<pre><code class="c"> voidfork2()
+ &#123;
+ printf(&quot;L0\n&quot;);
+ fork();
+ printf(&quot;L1\n&quot;);
+ fork();
+ printf(&quot;Bye\n&quot;);
+ &#125;
+</code></pre>
+<img src="https://frun1na.netlify.app//20240928101321.png" style="zoom:50%;" />
+
+<p>例1：连续两次fork会创建4个进程。</p>
+<p>那么，一种可能的输出就是 L0 L1 Bye Bye L1 Bye Bye</p>
+<p>例2：在父进程中嵌套执行fork</p>
+<pre><code class="c">void fork4()&#123;
+    printf(&quot;L0\n&quot;);
+    if (fork() != 0) &#123;
+        printf(&quot;L1\n&quot;);
+        if (fork() != 0) &#123;
+            printf(&quot;L2\n&quot;);
+        &#125;
+    &#125;
+    printf(&quot;Bye\n&quot;);
+&#125;
+</code></pre>
+<img src="https://frun1na.netlify.app//20240928101627.png" style="zoom:50%;" />
+
+<p>例3：在子进程中嵌套执行fork。</p>
+<pre><code class="c">void fork5() &#123;
+    printf(&quot;L0\n&quot;);
+    if (fork() == 0) &#123;
+        printf(&quot;L1\n&quot;);
+        if (fork() == 0) &#123;
+            printf(&quot;L2\n&quot;);
+        &#125;
+    &#125;
+    printf(&quot;Bye\n&quot;);
+&#125;
+</code></pre>
+<img src="https://frun1na.netlify.app//20240928101946.png" style="zoom:50%;" />
+
+<h2 id="回收子进程"><a href="#回收子进程" class="headerlink" title="回收子进程"></a>回收子进程</h2><p>当一个进程终止时，它不会被立即清除，仍然在占用资源，只有被回收，才会彻底清除掉。</p>
+<p>一个终止但没有回收的进程，叫做僵尸进程，即半死不活，但是占用资源。</p>
+<p>回收有两种方式，<strong>显式和隐式</strong>。</p>
+<p><strong>显式回收由父进程执行，通过wait或waitpid函数。</strong></p>
+<p>如果父进程不进行回收，则会进行隐式回收。</p>
+<p>子进程已经终止，而当父进程也终止时，子进程会被init进程回收。</p>
+<p>所以，我们要保证一些长期运行的装置的进程进行显式回收，比如服务器，shell等。</p>
+<p>下面我们做实验，验证shell和init的进程回收。</p>
+<p>代码如下，我们终止子进程，同时在父进程中写一个死循环，防止父进程终止。</p>
+<pre><code class="c">void fork7() &#123;
+    if (fork() == 0) &#123;
+    /* Child */
+        printf(&quot;Terminating Child, PID = %d\n&quot;, getpid());
+        exit(0);
+        &#125;
+    else &#123;
+        printf(&quot;Running Parent, PID = %d\n&quot;, getpid());
+        while (1); /* Infinite loop */
+        &#125;
+&#125;         //forks.c
+</code></pre>
+<p>然后在控制台输入指令，运行程序</p>
+<pre><code class="bash">linux&gt; ./forks7 &amp;
+[1] 6639
+Running Parent, PID = 6639
+Terminating Child, PID = 6640
+</code></pre>
+<p>后面的&amp;表示在后台运行，因为在前台运行死循环的时候，不能输入指令。<br>接下来输入ps来查看进程</p>
+<pre><code class="bash">linux&gt; ps
+ PID TTY          TIME CMD
+6585 ttyp9   00:00:00 tcsh
+6639 ttyp9   00:00:03 forks
+6640 ttyp9   00:00:00 forks &lt;defunct&gt;
+6641 ttyp9   00:00:00 ps
+</code></pre>
+<p>default意思就是僵尸进程</p>
+<p>然后我们手动杀死父进程</p>
+<pre><code class="bash">linux&gt; kill 6639
+</code></pre>
+<p>此时父进程终止，子进程由init回收，而父进程是在shell中生成的，因此由shell回收。</p>
+<p>如果我们在子进程中写死循环会怎样呢</p>
+<pre><code class="c">void fork8()&#123;
+    if (fork() == 0) &#123;
+    /* Child */
+    printf(&quot;Running Child, PID = %d\n&quot;,getpid());
+    while (1) ; /* Infinite loop */
+    &#125; 
+    else &#123;
+        printf(&quot;Terminating Parent, PID = %d\n&quot;,getpid());
+        exit(0);
+    &#125;
+&#125;
+</code></pre>
+<p>运行，并查看进程。</p>
+<pre><code class="bash">linux&gt; ./forks8
+Terminating Parent, PID = 6675
+Running Child, PID = 6676
+linux&gt; ps
+PID TTY        TIME CMD  
+6585 ttyp9   00:00:00 tcsh
+6676 ttyp9   00:00:06 forks
+6677 ttyp9   00:00:00 ps
+</code></pre>
+<p>6675已经没了，父进程被终止，由shell回收了，但子进程还在运行。</p>
+<p>接下来杀死子进程，该进程由init回收。</p>
+<blockquote>
+<p>注：如果父进程终止，而子进程还在运行，那么子进程就会成为孤儿，kernel会安排init进程称为他的养父。</p>
+</blockquote>
+<p><strong>接下来，我们讨论一下wait和waitpid。</strong></p>
+<h3 id="wait"><a href="#wait" class="headerlink" title="wait"></a>wait</h3><p>wait即等待，意思就是等到子进程终止，然后回收它，在此期间把当前进程挂起。</p>
+<pre><code class="c">#include &lt;sys/types.h&gt;
+#include &lt;sys/wait.h&gt;
+int wait(int *child_status)
+</code></pre>
+<p>其中传入的int指针是用于获取子进程的退出状态，就是exit的参数。</p>
+<p>这个函数本身返回一个int，用于判断这个函数是否执行成功（如果没有子进程，就返回-1，同时errno设置为ECHILD，如果wait被一个信号中断，返回-1，设置为EINTR），如果成功，返回子进程pid</p>
+<p>如果都通过返回值传递，那如果返回-1，我们不知道是回收失败还是子进程因为异常而终止。</p>
+<p>如果父进程有多个子进程，那么此函数是等待这些子进程其中之一终止，并返回，之后，就认为被回收了。</p>
+<p>如果child_status是一个空指针，那么不会获得子进程的退出状态。</p>
+<p>函数返回后，child_status指向的值就是退出状态。在wait.h中定义了解释这个状态的宏。</p>
+<ul>
+<li>WIFEXITED(status)： 如果子进程通过调用exit 或者一个返回（return)正常终 止，就返回真。</li>
+<li>WEXITSTATUS(status):  返回一个正常终止的子进程的退出状态。只有在 WIFEXITED()返回为真时，才会定义这个状态。</li>
+<li>WIFSIGNALED(status): 如果子进程是因为一个未被捕获的信号（本章后面讲）终止的，那么就返回真。</li>
+<li>WTERMSIG(status): 返回导致子进程终止的信号的编号。只有在 WIFSIGNALED()返回为真时，才定义这个状态。</li>
+<li>WIFSTOPPED(status)： 如果引起返回的子进程当前是停止的，那么就返回真。<strong>注：停止和挂起差不多，不过停止是由信号引起的，具体在信号里面讲。</strong></li>
+<li>WSTOPSIG(status): 返回引起子进程停止的信号的编号。只有在 WIFSTOPPFD()返回为真时，才定义这个状态。</li>
+<li>WIFCONTINUED(status): 如果子进程收到 SIGCONT信号重新启动，则返回真。</li>
+</ul>
+<p>这些宏考试不考。</p>
+<p>接下来，我们举个例子</p>
+<pre><code class="c">voidfork9() &#123;
+    intchild_status;
+    if(fork() == 0) &#123;
+        printf(&quot;HC: hello from child\n&quot;);
+        exit(0);
+    &#125; 
+    else&#123;
+        printf(&quot;HP: hellofrom parent\n&quot;);
+        wait(&amp;child_status);
+        printf(&quot;CT: childhas terminated\n&quot;);
+    &#125;
+    printf(&quot;Bye\n&quot;);
+&#125;
+</code></pre>
+<p>这个程序的进程图可以这么画</p>
+<img src="https://frun1na.netlify.app//20240928143625.png" style="zoom:50%;" />
+
+<p>输出序列不写了。</p>
+<p>使用wait函数，处理子进程的顺序是随机的。</p>
+<pre><code class="c">void fork10() &#123;
+    pid_t pid[N];
+    int i, child_status;
+    for (i = 0; i &lt; N; i++)
+        if ((pid[i] = fork()) == 0) &#123;
+            exit(100+i); /* Child */
+        &#125;
+    for (i = 0; i &lt; N; i++) &#123; /* Parent */
+        pid_t wpid = wait(&amp;child_status);
+        if (WIFEXITED(child_status))
+            printf(&quot;Child %d terminated with exit status %d\n&quot;,wpid, WEXITSTATUS(child_status));
+        else
+            printf(&quot;Child %d terminate abnormally\n&quot;, wpid);
+    &#125;
+&#125;
+</code></pre>
+<p>假设N为2，那么，按照什么顺序来回收这两个子进程，是随机的，即使在同一台机器上运行两次，这两次的顺序都可能不一样。</p>
+<p>因此，我们写程序不能假定一定是某个顺序。</p>
+<p>注：此代码只是一个示意，实际运行，wait不一定是N次，原因是信号，后面讲。</p>
+<h3 id="waitpid"><a href="#waitpid" class="headerlink" title="waitpid"></a>waitpid</h3><p>waitpid与wait最大的不同就是waitpid会回收的是某个特定的子进程。</p>
+<pre><code class="c">#include &lt;sys/types.h&gt;
+#include &lt;sys/wait.h&gt;
+pid_t waitpid(pid_t pid, int &amp;status, int options)
+</code></pre>
+<p>这个函数行为和wait相同，挂起调用进程，直到等待集合(wait set)中有一个子进程终止，就返回（如果调用时已经终止，就立即返回）此时，该子进程就被回收了。</p>
+<p>第一个参数pid表示等待集合，如果大于0，就是一个单独的子进程。如果是-1，那就是所有的子进程。</p>
+<p>第二个参数同wait</p>
+<p>第三个参数为选项，默认为0。其他选项有WNOHANG、WUNTRACED和 WCONTINUED，具体看书517页，不用背。</p>
+<blockquote>
+<p>旁注：相关的常量</p>
+<p>WNOHANG和WUNTRACED这样的常量是由系统头文件定义的。比如这两个就是wait.h定义的</p>
+<p>#define WNOHANG 1 </p>
+<p>#define WUNTRACED 2 </p>
+<p>为了使用他们，要包含头文件#include &lt;sys&#x2F;wait.h&gt;</p>
+<p>为了使用ECHILD和EINTR要包含errno.h。</p>
+<p>为了方便，此书创建了一个头文件csapp.h，包含了所有用到的头文件。</p>
+</blockquote>
+<p>我们将刚才的代码改为使用waitpid就可以按照顺序回收子进程了。</p>
+<h2 id="进程休眠"><a href="#进程休眠" class="headerlink" title="进程休眠"></a>进程休眠</h2><pre><code class="c">#include &lt;unistd.h&gt;
+unsigned int sleep(unsigned int secs);
+</code></pre>
+<p>sleep可以主动将程序挂起一段时间。</p>
+<p>secs的单位是秒</p>
+<p>休眠指定时间后，返回0</p>
+<p>休眠时被信号打断，返回剩下的秒数</p>
+<p>注：这个函数不能用作高精度计时。</p>
+<pre><code class="c">#include &lt;unistd.h&gt;
+int pause(void);
+</code></pre>
+<p>pause将进程挂起直至收到信号</p>
+<p>调用此函数之后，该进程休眠，收到信号后，返回-1，且errno设置为EINTR</p>
+<h2 id="加载并运行程序"><a href="#加载并运行程序" class="headerlink" title="加载并运行程序"></a>加载并运行程序</h2><h3 id="execve"><a href="#execve" class="headerlink" title="execve"></a>execve</h3><p>如何在一个进程中启动别的程序？</p>
+<p>使用execve系统调用</p>
+<pre><code class="c">#include &lt;unistd.h&gt;
+ int execve(const char *filename, const char *argv[], const char *envp[]);//如果成功，则不返回，如果错误，则返回一1
+</code></pre>
+<p>第一个参数是可执行文件的路径（可以是可执行文件，也可以是#!interpreter开头的脚本文件，比如#!&#x2F;bin&#x2F;bash）</p>
+<p>第二个参数是参数列表，其中argv[0] &#x3D;&#x3D; filename</p>
+<p>第三个参数是环境变量列表，格式为“name&#x3D;value”</p>
+<p>和fork调用一次，返回两次不同，这个函数调用一次，不返回。</p>
+<p>调用之后，把当前进程删除干净，回收，然后启动其他程序（加载，运行，在第七章讲过），然后将控制传递给新的main。<strong>只保留PID，打开文件，和信号上下文</strong></p>
+<p>举个例子，如果在子进程中使用当前环境变量来执行“&#x2F;bin&#x2F;ls –lt  &#x2F;usr&#x2F;include”</p>
+<pre><code class="c">char* myargv[] = &#123;&quot;/bin/ls&quot;, &quot;-lt&quot;, &quot;/usr/include&quot;, NULL&#125;;  
+char* environ[] = &#123;&quot;USER=droh&quot;, &quot;HOME=/home/user&quot;, ..., NULL&#125;;  
+</code></pre>
+<img src="https://frun1na.netlify.app//20240928161546.png" style="zoom: 50%;" />
+
+<pre><code class="c">if((pid= Fork()) == 0) &#123;   /* Child runs program */
+    if(execve(myargv[0], myargv, environ) &lt; 0) &#123;                                                        
+        printf(&quot;%s: Command not found.\n&quot;, myargv[0]);                                                 
+        exit(1);                                                                                     
+    &#125;                                                                                                
+&#125;
+</code></pre>
+<h3 id="新程序启动时的栈"><a href="#新程序启动时的栈" class="headerlink" title="新程序启动时的栈"></a>新程序启动时的栈</h3><p>新的主函数main有以下原型：</p>
+<pre><code class="c">int main(int argc, char *argv[],char *envp[]);
+</code></pre>
+<p>第一个参数表示argv[]中有多少项。</p>
+<p>第二个参数argv指向argv[]数组的第一个条目</p>
+<p>第三个参数envp指向envp[]中的第一个条目</p>
+<img src="https://frun1na.netlify.app//20240928162601.png" style="zoom:50%;" />
+
+<p>如图所示，当main开始执行时，用户栈如图所示。从栈底（高地址）到栈顶（低地址）依次是：</p>
+<ul>
+<li>参数字符串和环境字符串</li>
+<li>环境变量指针数组（environ指向envp[0]，是一个全局变量）</li>
+<li>参数列表指针数组（每个元素指向一个字符串）</li>
+<li>然后是启动函数的栈帧</li>
+</ul>
+<h3 id="操作环境变量"><a href="#操作环境变量" class="headerlink" title="操作环境变量"></a>操作环境变量</h3><p>linux中一些函数可以操作环境变量数组</p>
+<pre><code class="c">#include &lt;stdlib.h&gt;
+ char *getenv(const char *name);
+</code></pre>
+<p>在环境数组中搜索“name&#x3D;value”，找到了则返回指针，没找到则返回NULL</p>
+<p>…（书523页）</p>
+<h3 id="利用-fork和-execve-运行程序"><a href="#利用-fork和-execve-运行程序" class="headerlink" title="利用 fork和 execve 运行程序"></a>利用 fork和 execve 运行程序</h3><p>这是一个例子，实现了一个简单的shell，在524页自己看书。</p>
+<p>这个实验也是本课程要求做的，我会在其他文章里面写他。</p>
+<h1 id="shell命令解释器"><a href="#shell命令解释器" class="headerlink" title="shell命令解释器"></a>shell命令解释器</h1><p>学习linux系统调用函数除了看ppt和书，还可以查看linux系统的手册。</p>
+<pre><code class="bash">linux&gt;man [函数/命令]         //查看man手册
+linux&gt;man [数字] [函数/命令]   //查看第几个
+</code></pre>
+<p>尤其是之后要讲的信号，有非常多系统调用。</p>
+<p>接下来介绍一下shell，以帮助做实验</p>
+<h2 id="linux下进程的层次结构"><a href="#linux下进程的层次结构" class="headerlink" title="linux下进程的层次结构"></a>linux下进程的层次结构</h2><pre><code class="bash">linux&gt;pstree
+linux&gt;pstree -p
+</code></pre>
+<p>可以使用这两个指令来查看进程树，其中-p可以显示进程ID</p>
+<h2 id="shell程序"><a href="#shell程序" class="headerlink" title="shell程序"></a>shell程序</h2><p>shell （外壳），为用户提供操作界面的软件，为用户运行应用程序的程序。人和kernel通过shell命令来沟通。</p>
+<p>界面除了图形界面，还有字符界面（服务器为了节约资源一般没有图形界面），字符界面就是sshell</p>
+<p>shell有多种，包括sh，csh&#x2F;tcsh，bash，dsash，zsh等，其中bash用的最多。</p>
+<p><strong>下面是一个简单的shell实现。</strong></p>
+<pre><code class="c">int main()&#123;
+    /* command line */
+    char cmdline[MAXLINE];     //缓冲区，用于存储命令输入字符串
+    while (1) &#123;                
+        /* read */
+        printf(&quot;&gt; &quot;);         //命令提示符，在linux中可以在.bashrc文件中定制（借助环境变量）
+        Fgets(cmdline, MAXLINE, stdin);  //F大写，表明是封装后的函数。即fget [1]
+        if (feof(stdin))          //[2]
+            exit(0);
+        /* evaluate */
+        eval(cmdline);        //查看这个指令是否可以执行，如果可以，就执行。
+    &#125;   //[3]
+&#125; 
+
+voideval(char *cmdline)&#123;
+        char*argv[MAXARGS]; /* 参数列表 execve() */
+        charbuf[MAXLINE];                      /* Holds modified command line */
+        int bg;                                /* Should the job run in bg or fg? */
+        pid_tpid;                              /* Process id */
+        strcpy(buf, cmdline); //复制到buf  
+        bg = parseline(buf, argv);   //检查是前台命令还是后台命令，同时在argv中存入参数列表，后台命令适合运行慢，不在命令行输出的程序
+        if (argv[0] == NULL)
+            return;   /* 无视空的输入 */
+        if (!builtin_command(argv)) &#123;   //[4]
+            if((pid = Fork()) == 0) &#123;   /* Child runs user job */
+                if(execve(argv[0], argv, environ) &lt; 0) &#123;
+                    printf(&quot;%s: Command not found.\n&quot;, argv[0]);
+                    exit(0);
+                &#125;
+            &#125;
+            /* 接下来父进程检查是否是后台命令 */
+            if(!bg) &#123;  //如果不是，就等到子进程结束返回
+                int status;
+                if(waitpid(pid, &amp;status, 0) &lt; 0)
+                unix_error(&quot;waitfg: waitpid error&quot;);
+                &#125;
+            else//如果是后台命令，打印
+                printf(&quot;%d%s&quot;, pid, cmdline);
+        &#125;
+    return;
+&#125;
+</code></pre>
+<p>1：标准c库文件操作fread, fopen…来得到一个FILE *类型的句柄。有3个默认打开的文件：stdin  stdout  stderr，分别是标准输入，标准输出，标准错误。其中stdin在usr（unix system resource，不是user！）目录中。下面解释Fget(a, b, c)，其中a表示缓冲区地址，b表示缓冲区大小，c表示从哪里读到缓冲区。可以从控制台或外设中读取，c语言中的这个抽象是非常好的，从这些里面读取和从文件中读取是完全一样的。一直读到\n为止。这个fget比普通的get更加安全。</p>
+<p>2：feof()表示查看文件是否结束。控制台中也可以有文件结束符，使用ctrl + d打出来。fgets读到\n或者eof都会返回，这里检查有没有结束，如果结束，直接退出。</p>
+<p>3：这里虽然是一个无限循环，但这并不会占满cpu，在等待输入的时候，会进入block状态。</p>
+<p>4：检查是否是内部命令（内部命令如ps）。外部命令指在bin中有文件对应的或者可执行文件。如果是外部命令，则创建子进程，加载，传参…</p>
+<h2 id="存在的问题"><a href="#存在的问题" class="headerlink" title="存在的问题"></a>存在的问题</h2><p>这个示例前台作业可以回收，但是后台作业怎么办？</p>
+<p>如果使用wait，父进程（shell）就会被阻塞，那就不能称为后台了。</p>
+<p>由于shell要一直运行，因此，后台命令现在是回收不了的，这就要用到信号了。</p>
+<p>子进程结束只有OS知道，那OS就可以发送一个信号，打断当前父进程。</p>
+<h1 id="信号"><a href="#信号" class="headerlink" title="信号"></a>信号</h1><p>信号是一个<strong>简短</strong>的消息，通知进程系统中发生了某种类型的事件 </p>
+<p>它类似于异常和中断 ，从内核发送（有时是由另一个进程的请求触发）到一个进程 </p>
+<p>信号类型由小整数ID（1-30）进行标识 </p>
+<p>信号中唯一的信息是它的ID 和它到达的事实（表示这件事发生了，但是不能用收到时间作为发生时间）</p>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Default Action</th>
+<th>Corresponding Event</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2</td>
+<td>SIGIN</td>
+<td>Terminate（终止）</td>
+<td>User typed ctrl-c</td>
+</tr>
+<tr>
+<td>9</td>
+<td>SIGKILL</td>
+<td>Terminate</td>
+<td>Kill program (cannot override or ignore)</td>
+</tr>
+<tr>
+<td>11</td>
+<td>SIGSEGV</td>
+<td>Terminate</td>
+<td>Segmentation violation</td>
+</tr>
+<tr>
+<td>14</td>
+<td>SIGALRM</td>
+<td>Terminate</td>
+<td>Timer signal</td>
+</tr>
+<tr>
+<td>17</td>
+<td>SIGCHLD</td>
+<td>Ignore</td>
+<td>Child stopped or terminated</td>
+</tr>
+</tbody></table>
+<p>更多信号请看书527页表格</p>
+<p>键盘按下ctrl + c，命令行收到SIGIN，于是给对应进程发送SIGIN。</p>
+<p>SIGKILL不能随便使用，有权限。而且此信号不能被重写，在关机的时候使用。先是操作系统给所有进程发送正常终止信号，有些进程，比如记事本，会弹出窗口，确认是否保存。然后windows弹出是否强制关机，如果点“仍要关机”，就发送SIGKILL强行结束进程。</p>
+<p>回收进程要用到17号</p>
+<h2 id="信号术语"><a href="#信号术语" class="headerlink" title="信号术语"></a>信号术语</h2><p><strong>发送信号</strong></p>
+<p>内核通过更新目标进程的上下文中的某些状态（后面说）向目标进程发送（传递）信号 （每个进程）</p>
+<p>内核发送信号的原因有以下几种： </p>
+<ul>
+<li>内核检测到系统事件，如：除零错误（SIGFPE）或子进程的终止（SIGCHLD）</li>
+<li>另一个进程调用了kill 系统调用，显式请求内核向目标进程发送信号</li>
+</ul>
+<p><strong>接收信号</strong></p>
+<p>当内核强制目标进程对信号的传递做出某种反应时，目标进程会收到一个信号</p>
+<p>一些可能的响应方式： </p>
+<ul>
+<li>忽略信号（什么都不做） </li>
+<li>终止进程（可以生成核心转储core dump）（指程序崩了，将log存入磁盘，用于调试）</li>
+<li>通过执行称为信号处理程序的用户级函数捕获信号 </li>
+<li>类似于硬件异常处理程序在响应异步中断时被调用（处理完后，跳转到下一条指令）</li>
+</ul>
+<p>和中断有两个区别：来源不同，异常处理函数不在kernel中</p>
+<img src="https://frun1na.netlify.app/20240930183754.png" style="zoom:50%;" />
+
+<p><strong>挂起（Pending）和阻塞（Blocked）信号</strong></p>
+<p>如果信号已发送但尚未接收，则该信号处于<strong>挂起</strong>状态，此信号又叫待处理信号(pending signal)</p>
+<p>每种类型的信号最多只能有一个挂起的信号 ，因此，信号不是排队的。如果一个进程有一个类型为k 的挂起信号，那么发送到该进程的后续类型为k 的信号将被丢弃，挂起的信号最多只能接收一次（<strong>如果发送同一个信号到不同进程，还是可以接收的</strong>）</p>
+<p>进程可以阻塞接收某些信号</p>
+<p>被阻塞的信号可以被传递，但是待处理信号没有被接收，直到信号解除阻塞时才会被接收</p>
+<p><strong>挂起和阻塞位</strong></p>
+<p>在每个进程的上下文中，都会维护<strong>标识信号挂起和阻塞的位向量</strong></p>
+<p>挂起位向量：表示挂起信号的集合 </p>
+<ul>
+<li>当传递类型为k 的信号时，内核将挂起中的位k设置为1</li>
+</ul>
+<p>阻塞位向量：表示阻塞信号的集合 </p>
+<ul>
+<li>当接收到类型为k 的信号时，内核将挂起中的位k清零 </li>
+<li>可以使用sigprocmask 函数设置和清除 </li>
+<li>也称为信号屏蔽</li>
+</ul>
+<p>发送一个信号之后，首先pending和mask按位取与，然后按位取反。得到的位就是要处理的。</p>
+<h2 id="发送信号"><a href="#发送信号" class="headerlink" title="发送信号"></a>发送信号</h2><h3 id="进程组"><a href="#进程组" class="headerlink" title="进程组"></a>进程组</h3><p>每个进程属于且仅属于一个进 程组 </p>
+<pre><code class="c"> #include &lt;unistd.h&gt;
+ pid_t getpgrp(void);
+                               //返回：调用进程的进程组ID
+</code></pre>
+<p>默认地，一个子进程和它的父进程同属于一个进程组。</p>
+<pre><code class="c">#include &lt;unistd.h&gt;
+int setpgid(pid_t pid, pid_t pgid);
+                                     //返回：若成功则为0，若错误则为-1
+</code></pre>
+<p>此函数用于把进程pid的进程组改为pgid</p>
+<p>如果参数pid为0，就使用当前进程的PID。如果pgid为0，就用pid进程的PID作为进程组ID</p>
+<p>比如，setpgid(0, 0)会将当前进程拉入一个进程组，该进程组ID就是当前进程的PID。</p>
+<img src="https://frun1na.netlify.app//20240930191717.png" style="zoom:50%;" />
+
+<h3 id="用-bin-kill-程序发送信号"><a href="#用-bin-kill-程序发送信号" class="headerlink" title="用&#x2F;bin&#x2F;kill 程序发送信号"></a>用&#x2F;bin&#x2F;kill 程序发送信号</h3><p>可以向一个进程和一个进程组发 送某些信号</p>
+<p>&#x2F;bin&#x2F;kill –9 24818 ：向24818进程发送SIGKILL信号 </p>
+<p>&#x2F;bin&#x2F;kill –9 –24817 ：向24817进程组中的每个进程发送SIGKILL信号（负的PID会解释为进程组ID）</p>
+<h3 id="从键盘发送信号"><a href="#从键盘发送信号" class="headerlink" title="从键盘发送信号"></a>从键盘发送信号</h3><p>按下Ctrl-C（Ctrl-Z）会导致内核 向<strong>前台进程组</strong>中的每个作业（作业(job)表示对一条命令行指令求值而创建的进程）发送 SIGINT（SIGTSTP）信号 </p>
+<p>SIGINT - 默认操作是终止每个进程 </p>
+<p>SIGTSTP- 默认操作是停止（暂停） 每个进程</p>
+<p>下图是一个示例。</p>
+<p><img src="https://frun1na.netlify.app/20240930193618.png"></p>
+<p>会话的概念自己搜索。</p>
+<h3 id="用-kill系统调用发送信号"><a href="#用-kill系统调用发送信号" class="headerlink" title="用 kill系统调用发送信号"></a>用 kill系统调用发送信号</h3><pre><code class="c">#include &lt;sys/types.h&gt;
+#include &lt;signal.h&gt;
+ int kill(pid_t pid, int sig);
+                                       //返回：若成功则为0,若错误则为一1。
+</code></pre>
+<p>如果pid大于零，那么kill函数发送信号号码sig给进程pid。</p>
+<p>如果pid等于零，那么 kill发送信号sig给调用进程所在进程组中的每个进程，包括调用进程自己。</p>
+<p>如果pid 小于零，kill发送信号sig给进程组|pid|（pid的绝对值）中的每个进程。</p>
+<p>下面是一个示例，父进程给每个子进程发送一个终止信号。</p>
+<pre><code class="c">void fork12()&#123;
+    pid_t pid[N];
+    int i;
+    int child_status;
+    for (i = 0; i &lt; N; i++)
+        if ((pid[i] = fork()) == 0) &#123;
+            /* Child: Infinite Loop */
+            while(1);
+        &#125;
+    for (i = 0; i &lt; N; i++) &#123;
+        printf(&quot;Killing process %d\n&quot;, pid[i]);
+        kill(pid[i], SIGINT);
+    &#125;
+    for (i = 0; i &lt; N; i++) &#123;
+        pid_t wpid = wait(&amp;child_status);
+            if (WIFEXITED(child_status))
+                printf(&quot;Child %d terminated with exit status %d\n&quot;,wpid, WEXITSTATUS(child_status));
+            else
+                printf(&quot;Child %d terminated abnormally\n&quot;, wpid);
+        &#125;
+&#125;
+</code></pre>
+<h3 id="用-alarm函数发送信号（自学）"><a href="#用-alarm函数发送信号（自学）" class="headerlink" title="用 alarm函数发送信号（自学）"></a>用 alarm函数发送信号（自学）</h3><p>进程可以通过调用alarm函数向它自己发送SIGALRM信号。（设定闹钟）</p>
+<pre><code class="c">#include &lt;unistd.h&gt;
+ unsigned int alarm(unsigned int secs);
+//返回：前一次闹钟剩余的秒数，若以前没有设定闹钟，则为0。
+</code></pre>
+<p>内核在 secs 秒后发送一个SIGALRM信号给调用进程。如果secs是0，不会设定闹钟。</p>
+<h2 id="接收信号"><a href="#接收信号" class="headerlink" title="接收信号"></a>接收信号</h2><p>假设内核正在从异常处理函数返回，并准备将控制权交给进程p</p>
+<p>此时，内核计算pnb&#x3D; pending &amp; ~blocked（这是进程p 的挂起非阻塞信号集合）</p>
+<p>如果(pnb&#x3D;&#x3D; 0)，将控制传递给进程p的逻辑流中的下一条指令</p>
+<p>否则，选择pnb中最小的非零位k，并强制进程p 接收信号k，接收信号触发p 中的某些操作，对于pnb中的所有非零位k重复上述过程 </p>
+<p>最后将控制传递给进程p 的逻辑流中的下一条指令</p>
+<p>每种信号都有一个默认操作，为以下三种之一：</p>
+<ul>
+<li>进程终止 </li>
+<li>进程暂停，直到收到SIGCONT信号重新启动 </li>
+<li>进程忽略该信号</li>
+</ul>
+<p>函数signal可以改变这些默认行为</p>
+<pre><code class="c">#include &lt;signal.h&gt;
+ typedef void (*sighandler_t)(int);
+ sighandler_t signal(int signum, sighandler_t handler);
+                                //返回：若成功则为指向前次处理程序的指针，若出错则为SIG_ERR(不设置errno)
+</code></pre>
+<p>这里sighandler是一个函数指针类型，signal可以改变信号signum的行为。</p>
+<p>handler的值：</p>
+<ul>
+<li>SIG_IGN：忽略类型为signum 的信号 </li>
+<li>SIG_DFL：收到类型为signum 的信号时恢复默认操作 </li>
+<li>否则，handler 是用户级别信号处理函数的地址 ，这个函数称为信号处理程序。当进程接收到类型为signum 的信号时，调用该函数（称为捕获信号）， 执行处理程序（称为处理信号） ， 当处理程序执行其返回语句时，控制返回到被信号中断的进程控制流中的指令，handler函数指针的int参数表示信号的编号。</li>
+</ul>
+<p>下面是一个示例</p>
+<pre><code class="c">void sigint_handler(int sig) /* SIGINT handler */&#123;
+    printf(&quot;So you think you can stop the bomb with ctrl-c, do you?\n&quot;);
+    sleep(2);
+    printf(&quot;Well...&quot;);
+    fflush(stdout);    //用于清空输出缓冲区，确保所有输出都输出到屏幕上，而不是等到缓冲区满了才输出
+    sleep(1); 
+    printf(&quot;OK. :-)\n&quot;);
+    exit(0);
+    &#125;
+int main()&#123;
+    /* Install the SIGINT handler */
+    if(signal(SIGINT, sigint_handler) == SIG_ERR)
+        unix_error(&quot;signal error&quot;);
+    /* Wait for the receipt of a signal */
+    pause();
+    return 0;
+&#125;
+</code></pre>
+<p>信号处理程序也可以被其他信号处理打断。</p>
+<img src="https://frun1na.netlify.app//20241001113428.png" style="zoom:50%;" />
+
+<p>注：</p>
+<p>1.在并发流中，信号处理程序是一个独立的逻辑流（不是进程），和主程序“并发”运行。这里并发是指的通过中断机制实现的，而不是什么上下文切换。</p>
+<img src="https://frun1na.netlify.app//20241001115313.png" style="zoom: 33%;" />
+
+<p>2.再次强调一下信号发送和接收的时机，是进程上下文切换到主进程的时候，检查一次。</p>
+<img src="https://frun1na.netlify.app//20241001115611.png" style="zoom:33%;" />
+
+<h2 id="信号的阻塞和解除阻塞"><a href="#信号的阻塞和解除阻塞" class="headerlink" title="信号的阻塞和解除阻塞"></a>信号的阻塞和解除阻塞</h2><p> Linux 提供阻塞信号的<strong>隐式</strong>和<strong>显式</strong>的机制：</p>
+<p><strong>隐式</strong>阻塞机制 ：内核会阻塞当前正在处理的类型的任何挂起信号 ，假设正在处理信号s，同时又发送了信号s给当前进程，那么s会被阻塞，直到信号处理程序返回。例如，SIGINT处理程序无法被另一 个SIGINT中断</p>
+<p><strong>显式</strong>阻塞和解除阻塞机制 ：sigprocmask函数可以明确的阻塞和解除阻塞某个信号。</p>
+<pre><code class="c">#include &lt;signal.h&gt;
+ int sigprocmask(int how, const sigset_t *set, sigset_t *oldset);      //返回：如果成功则为0，若出错则为一1。
+</code></pre>
+<p>此函数的行为取决于how：</p>
+<ul>
+<li>SIG_BLOCK: 把 set中的信号添加到 blocked中（blocked&#x3D;blocked|set)</li>
+<li>SIG_UNBLOCK: 从 blocked中删除 set中的信号（blocked&#x3D;blocked &amp;~ set)</li>
+<li>SIG_SETMASK: block&#x3D;set</li>
+</ul>
+<p>如果oldset非空，那么blocked位向量之前的值保存在oldset中。</p>
+<p><strong>这里的sigset_t就是那些位向量构成的int型信号集合。</strong></p>
+<p>对于set，我们可以先声明一个此类型的变量，然后使用如下函数来操作它</p>
+<pre><code class="c">sigset_t mask, prev_mask;
+int sigemptyset(sigset_t *set);   //初始化set为空
+int sigfillset(sigset_t *set);    //把所有信号添加到set
+int sigaddset(sigset_t *set, int signum); //把signum添加到set
+int sigdelset(sigset_t *set, int signum); //把signum从set中删去
+//返回：如果成功则为0，若出错则为一1
+int sigismember(const sigset_t *set, int signum); //如果signum是set的一个元素，就返回1，否则为0，出错为-1
+</code></pre>
+<p>于是我们可以临时阻塞一个信号了</p>
+<pre><code class="c"> sigset_t mask, prev_mask;
+ Sigemptyset(&amp;mask);
+ Sigaddset(&amp;mask, SIGINT);
+ /* Block SIGINT and save previous blocked set */
+ Sigprocmask(SIG_BLOCK, &amp;mask, &amp;prev_mask);
+
+
+ /* Code region that will not be interrupted by SIGINT */\
+     
+     
+ /* Restore previous blocked set, unblocking SIGINT */
+ Sigprocmask(SIG_SETMASK, &amp;prev_mask, NULL);  //注：大写的s表示封装了。
+</code></pre>
+<h2 id="编写信号处理程序"><a href="#编写信号处理程序" class="headerlink" title="编写信号处理程序"></a>编写信号处理程序</h2><p>信号处理程序的可靠实现是一件很棘手的事情 ，因为它们与主程序并发运行并共享相同的全局数据结构，共享的数据结构可能会被损坏。</p>
+<p>注：这里的并发不是说，执行信号处理程序的时候，主程序没有打断，还在执行，而是，当执行信号处理程序的时候，主程序打断，执行主程序的时候，信号处理程序打断。 </p>
+<p>后续课程中会讨论如何解决并发问题（12章） ，以下给出一些建议，以实现更可靠安全的信号处理</p>
+<h3 id="安全信号处理的原则："><a href="#安全信号处理的原则：" class="headerlink" title="安全信号处理的原则："></a>安全信号处理的原则：</h3><p>1.<strong>保持处理程序尽可能简单</strong>，例如，设置一个全局标志并返回，所有与接收信号相关的处理都由主函数执行（周期性检查，复位这个标志即可。）</p>
+<p>2.<strong>在处理程序中只调用异步信号安全的函数</strong>（简称安全的函数），printf、sprintf、malloc和exit是不安全的，详细请看书534页。</p>
+<p>3.<strong>在进入和退出时保存和恢复errno</strong>，以防其他处理程序覆盖errno的值，只有在处理程序需要返回时，才这样做。如果要调用exit，那就不用了。</p>
+<p>4.<strong>通过临时阻塞所有信号来保护对共享数据结构的访问</strong>（读或写），以防止可能的损坏。</p>
+<p>​		因为读写一个数据结构需要一系列指令完成。万一在其中一个指令，被打断了，而且，这个打断主程序的处理程序也要访问那个数据结构，那就会发生不可预知的问题了。</p>
+<p>5.<strong>将全局变量声明为volatile</strong>，以防止编译器将它们存储在寄存器中。</p>
+<p>​		假设一个处理程序和一个main函数，它们共享一个全局变量g，处理程序更新g，main周期性地读g。对于一个优化编译器而言，main中g的值看上去从来没有变化过，因此使用缓存在寄存器中g的副本来每次引用。如果这样，min函数可能永远都无法看到处理程序更新过的值。而volatile类型限定符可以告诉编译器，不要缓存。（volatile int g），当然，一般也要在访问的时候临时阻塞。</p>
+<p>6.<strong>将全局标志声明为volatile sig_atomic_t</strong>。</p>
+<p>​		在一些信号处理程序中，会写一个全局标志来记录收到信号。主程序周期读这个标志，相应并清除。于是c提供了sig_atomic_i，这是一种整型数据类型，对这个数据类型的读写只需要一条指令就可以完成，因此不用临时阻塞。当然，一定要是仅被读取或写入的变量（例如，flag &#x3D; 1， 而不是flag++） </p>
+<p>注意，这里的这些建议都是非常保守的。如果你可以断言，你的信号处理程序没有读取errno，就不用管它，如果在进行信号处理的时候，不会被打断，就可以放心用printf等等等，不过，在编写大型程序的时候，没人敢这么断言，而且他们也很难证明。</p>
+<p><img src="https://frun1na.netlify.app//20241002115043.png"></p>
+<p><img src="https://frun1na.netlify.app//20241002115210.png"></p>
+<h3 id="正确的信号处理"><a href="#正确的信号处理" class="headerlink" title="正确的信号处理"></a>正确的信号处理</h3><p>下面的代码实现了shell中，回收后台子进程的功能，通过信号。</p>
+<pre><code class="c">int ccount = 0;
+void child_handler(int sig) &#123;
+    int olderrno = errno;
+    pid_t pid;
+    if ((pid = wait(NULL)) &lt; 0)
+        Sio_error(&quot;wait error&quot;);
+    ccount--;
+    Sio_puts(&quot;Handler reaped child &quot;);
+    Sio_putl((long)pid);
+    Sio_puts(&quot; \n&quot;);
+    sleep(1);
+    errno = olderrno;
+&#125;
+</code></pre>
+<p>其中，在主程序中，ccount表示有多少个子进程。</p>
+<p>每接收到一个SIGCHILD信号，就回收一个子进程。</p>
+<p><strong>但这是不对的</strong></p>
+<p>如果在执行子进程回收程序的时候，又收到一个SIGCHILD，那么他会被阻塞，那如果再收到一个呢？这就直接丢弃了。因为每种类型的信号，最多一个被挂起。</p>
+<p>我们要做的，就是每接收到一次SIGCHILD，就尽可能多的回收子进程，使用循环</p>
+<pre><code class="c">void child_handler2(int sig)&#123;
+ int olderrno= errno;
+ pid_t pid;
+ while((pid= wait(NULL)) &gt; 0) &#123; //NULl表示，我们不关心子进程的退出状态，而是仅仅销毁它
+     ccount--;
+     Sio_puts(&quot;Handler reaped child &quot;);
+     Sio_putl((long)pid);
+     Sio_puts(&quot; \n&quot;);
+ &#125;
+ if(errno != ECHILD)
+     Sio_error(&quot;wait error&quot;);
+ errno= olderrno;
+&#125;
+</code></pre>
+<p><strong>但这又有个问题，只要有一个子进程终止，父进程就强行回收所有子进程？这不太好，应该是回收所有已经终止的子进程。</strong></p>
+<p><strong>所以我们可以使用waitpid中的选项WNOHANG，当没有子进程终止时，会返回0。</strong></p>
+<h3 id="可移植的信号处理"><a href="#可移植的信号处理" class="headerlink" title="可移植的信号处理"></a>可移植的信号处理</h3><p>不同版本的Unix可能具有不 同的信号处理语义</p>
+<ul>
+<li>一些旧系统在捕获信号后 会将操作还原为默认值 </li>
+<li>一些被中断的系统调用可 能会返回errno&#x3D;&#x3D; EINTR </li>
+<li>一些系统不会阻塞正在处 理的信号类型的信号</li>
+</ul>
+<p>解决方案：使用sigaction</p>
+<p>不过这个函数的参数比较复杂，于是有另一个包装函数Signal，调用方式和signal相同。</p>
+<ul>
+<li>只有这个处理程序当前正在处理的那种类型的信号被阻塞。 </li>
+<li>和所有信号实现一样，信号不会排队等待。 </li>
+<li>只要可能，被中断的系统调用会自动重启。 </li>
+<li>一旦设置了信号处理程序，它就会一直保持，直到 Signal带着 handler参数为 SIG_IGN 或者SIG_DFL被调用。</li>
+</ul>
+<p>下面是这个函数的定义</p>
+<pre><code class="c">handler_t*Signal(int signum, handler_t *handler)&#123;
+    struct sigaction action, old_action;
+    action.sa_handler = handler;
+    sigemptyset(&amp;action.sa_mask); /* Block sigs of type being handled */
+    action.sa_flags = SA_RESTART; /* Restart syscalls if possible */
+    if (sigaction(signum, &amp;action, &amp;old_action) &lt; 0)
+        unix_error(&quot;Signal error&quot;);
+    return (old_action.sa_handler);
+&#125;
+</code></pre>
+<h2 id="同步流以避免并发错误"><a href="#同步流以避免并发错误" class="headerlink" title="同步流以避免并发错误"></a>同步流以避免并发错误</h2><p>如何编写读写相同存储位置的并发流程序？</p>
+<p>我们在12章详细讲。</p>
+<p>这里举一个例子。</p>
+<pre><code class="c">int main(int argc, char**argv)&#123;
+ int pid;
+ sigset_t mask_all, prev_all;
+    
+ Sigfillset(&amp;mask_all);
+ Signal(SIGCHLD, handler);
+ initjobs(); /* Initializethe joblist*/
+    
+ while(1) &#123;
+     if((pid= Fork()) == 0) &#123; /* Child */
+         Execve(&quot;/bin/date&quot;, argv, NULL);
+     &#125;
+     
+     Sigprocmask(SIG_BLOCK, &amp;mask_all, &amp;prev_all); /* Parent */
+     addjob(pid);  /* Add the child to the job list */
+     Sigprocmask(SIG_SETMASK, &amp;prev_all, NULL);//在创建job时阻塞
+ &#125;
+ exit(0);
+&#125;
+</code></pre>
+<p>这是一个shell实现，每当有进程创建时，都在表上addjob，每当有进程终止，都会删除这个job</p>
+<pre><code class="c">void handler(int sig) &#123;  //信号处理程序
+    int olderrno = errno;
+    sigset_t mask_all, prev_all;
+    pid_t pid;
+    
+    Sigfillset(&amp;mask_all);
+    while((pid= waitpid(-1, NULL, 0)) &gt; 0) &#123; /* Reap child */
+         Sigprocmask(SIG_BLOCK, &amp;mask_all, &amp;prev_all);
+         deletejob(pid);                     /* Delete the child from the job list */
+         Sigprocmask(SIG_SETMASK, &amp;prev_all, NULL);
+     &#125;
+    if(errno!= ECHILD)
+         Sio_error(&quot;waitpid error&quot;);
+    errno= olderrno;
+&#125;
+</code></pre>
+<p>但是可能发生：</p>
+<ol>
+<li>父进程执行fork函数，内核调度新创建的子进程运行，而不是父进程。</li>
+<li>在父进程能够再次运行之前，子进程就终止，并且变成一个僵死进程，使得内核 传递一个SIGCHLD信号给父进程。</li>
+<li>后来，当父进程再次变成可运行但又在它执行之前，内核注意到有未处理的 SIGCHLD信号，并通过在父进程中运行处理程序接收这个信号。</li>
+<li>信号处理程序回收终止的子进程，并调用deletejob, 这个函数什么也不做，因 为父进程还没有把该子进程添加到列表中。 </li>
+<li>在处理程序运行完毕后，内核运行父进程，父进程从fork返回，通过调用add job 错误地把(不存在的）子进程添加到作业列表中。</li>
+</ol>
+<p>现在，这个条目永远也删除不了了。</p>
+<p>这要怎么办？</p>
+<p>这个案例叫做竞争（race），addjob和deletejob中存在竞争。如果addjob赢了，啥事没有。但如果没赢，就完了。</p>
+<p>于是我们在主进程调用fork之前，直接将SIGCHILD阻塞掉，使得无论怎样，addjob都能赢。于是在addjob之后，解除阻塞。</p>
+<p>注意，此时创建的子进程，由于和父进程完全一样，继承了block的信号，因此，我们在execve之前，要解除子进程中block的信号。</p>
+<pre><code class="c">int main(intargc, char**argv)&#123;
+    int pid;
+    sigset_t mask_all, mask_one, prev_one;
+    Sigfillset(&amp;mask_all);
+    Sigemptyset(&amp;mask_one);
+    Sigaddset(&amp;mask_one, SIGCHLD);
+    Signal(SIGCHLD, handler);
+    initjobs(); /* Initialize the joblist*/
+    while(1) &#123;
+        Sigprocmask(SIG_BLOCK, &amp;mask_one, &amp;prev_one); /* Block SIGCHLD */
+        if ((pid = Fork()) == 0) &#123; /* Child process */
+            Sigprocmask(SIG_SETMASK, &amp;prev_one, NULL); /* Unblock SIGCHLD */
+            Execve(&quot;/bin/date&quot;, argv, NULL);
+        &#125;
+        Sigprocmask(SIG_BLOCK, &amp;mask_all, NULL); /* Parent process */
+        addjob(pid);  /* Add the child to the job list */
+        Sigprocmask(SIG_SETMASK, &amp;prev_one, NULL);  /* Unblock SIGCHLD */
+    &#125;
+    exit(0);
+&#125;
+</code></pre>
+<h2 id="显式等待信号"><a href="#显式等待信号" class="headerlink" title="显式等待信号"></a>显式等待信号</h2><p>有时，如果shell创建了一个前台程序，那么在接收下一条指令之前，必须要等待子程序回收。</p>
+<p>下面是一个基本思路：</p>
+<p>首先设置信号处理程序，然后在父进程阻塞SIGCHILD，然后启动子程序，之后父进程进入无限循环，等待全局变量pid被修改，来告知子进程回收了，之后在做一些其他事情。</p>
+<pre><code class="c">volatilesig_atomic_t pid;
+voidsigchld_handler(int s)&#123;
+    int olderrno= errno;
+    /* Main is waiting for nonzero pid */
+    pid = Waitpid(-1, NULL, 0); 
+    errno= olderrno;
+&#125;
+
+void sigint_handler(int s)&#123;
+&#125;
+
+int main(intargc, char**argv) &#123;
+    sigset_tmask, prev;
+    Signal(SIGCHLD, sigchld_handler);
+    Signal(SIGINT, sigint_handler);
+    Sigemptyset(&amp;mask);
+    Sigaddset(&amp;mask, SIGCHLD);
+    while (1) &#123;
+        /* Block SIGCHLD */
+        Sigprocmask(SIG_BLOCK, &amp;mask, &amp;prev);
+        if(Fork() == 0) /* Child */
+            exit(0);
+        /* Parent */
+        pid = 0;
+        /* Unblock SIGCHLD */
+        Sigprocmask(SIG_SETMASK, &amp;prev, NULL); 
+        /* Wait for SIGCHLD to be received (wasteful!) */
+        while(!pid);
+        /* Do some work after receiving SIGCHLD */
+        printf(&quot;.&quot;);
+    &#125;
+    exit(0);
+&#125;
+</code></pre>
+<p>这个逻辑是对的，但是这个无限循环的等待有点浪费资源。</p>
+<p>最适合的解决方法是用sigsuspend，其他不适合的方法，请看书545页。</p>
+<pre><code class="c"> #include &lt;signal.h&gt;
+ int sigsuspend(const sigset_t *mask);   //返回-1
+</code></pre>
+<p>等效于不可中断的：</p>
+<pre><code class="c">sigprocmask(SIG_SETMASK, &amp;mask, &amp;prev);
+pause();
+sigprocmask(SIG_SETMASK, &amp;prev, NULL);
+</code></pre>
+<p>收到信号之后，先运行信号处理，再返回。</p>
+<p>修改后：</p>
+<pre><code class="c">int main(intargc, char**argv) &#123;
+    sigset_tmask, prev;
+    Signal(SIGCHLD, sigchld_handler);
+    Signal(SIGINT, sigint_handler);
+    Sigemptyset(&amp;mask);
+    Sigaddset(&amp;mask, SIGCHLD);
+    while (1) &#123;
+        /* Block SIGCHLD */
+        Sigprocmask(SIG_BLOCK, &amp;mask, &amp;prev);
+        if(Fork() == 0) /* Child */
+            exit(0);
+        pid = 0;
+        /* Wait for SIGCHLD to be received (wasteful!) */
+        while(!pid);
+             Sigsuspend(&amp;prev);
+        /* Do some work after receiving SIGCHLD */
+        printf(&quot;.&quot;);
+    &#125;
+    exit(0);
+&#125;
+</code></pre>
+<h1 id="非本地跳转（自学）"><a href="#非本地跳转（自学）" class="headerlink" title="非本地跳转（自学）"></a>非本地跳转（自学）</h1><p>这是c语言提供的用户级异常控制流形式，它可以将控制流从一个正在执行的函数直接跳转到另一个地方，而不进行任何其他措施。</p>
+<p>强大但危险的用户级机制，用于将控制权传递到任意位置 </p>
+<ul>
+<li>打破了“过程调用&#x2F;返回规则”的受控方式 </li>
+<li>用于错误恢复和信号处理</li>
+</ul>
+<p>非本地跳转是通过setjmp和longjmp函数来提供的</p>
+<pre><code class="c">#include &lt;setjmp.h&gt;
+ int setjmp(jmp_buf env);
+ int sigsetjmp(sigjmp_buf env, int savesigs);
+//返回：setjmp返回0,longjmp返回非零。
+</code></pre>
+<p>setjmp 函数在 env缓冲区中保存当前调用环境，以供后面的 longjmp使用，并返回 0。调用环境包括程序计数器、栈指针和通用目的寄存器。出于某种超出本书描述范围的原因，setjmp返回的值不能被赋值给变量。int i &#x3D; setjmp(buf) 这是错误的！！！</p>
+<pre><code class="c"> #include &lt;setjmp.h&gt;
+ void longjmp(jmp_buf env, int retval);
+ void siglongjmp(sigjmp_buf env, int retval);
+</code></pre>
+<p> longjmp 函数从 env缓冲区中恢复调用环境，然后直接回到最近一次初始化env的setjmp处，就相当于setjmp返回了两次。并带有非零的返回值retval。</p>
+<p>setjmp函数只被调 用一次，但返回多次：一次是当第一次调用setjmp()，调用环境保存在缓冲区buf时， 一次是每个相应的longjmp调用。另一方面，longjmp函数被调用一次，但从不返回。</p>
+<p>非本地跳转的一个重要应用就是允许从一个深层嵌套的函数调用中立即返回，通常是 由检测到某个错误情况引起的。于是不需要解开调用栈。</p>
+<pre><code class="c">jmp_buf buf;
+int error1 = 0;
+int error2 = 1;
+void foo(void), bar(void);
+
+/* Deeply nested function foo */
+void foo(void)&#123;
+    if(error1)
+    longjmp(buf, 1);
+    bar();
+&#125;
+
+void bar(void)&#123;
+    if(error2)
+    longjmp(buf, 2);
+&#125;
+
+int main()&#123;
+    switch(setjmp(buf)) &#123;
+    case 0:
+        foo();
+        break;
+    case 1:
+        printf(&quot;Detected an error1 condition in foo\n&quot;);
+        break;
+    case 2:
+        printf(&quot;Detected an error2 condition in foo\n&quot;);
+        break;
+    default:
+        printf(&quot;Unknown error condition in foo\n&quot;);
+    &#125;
+exit(0);
+&#125;
+</code></pre>
+<p>这是一个示例，使用jmp</p>
+<p>注：longjmp会跳过所有中间过程。因此，如果中间函数调用中分配了某些数据结构，本来预期在函数结尾处释放它们，那么这些释放代码会被跳 过，因而会产生内存泄漏。</p>
+<p>非本地跳转的限制：只能跳转到已经调用，没有返回的函数环境中。</p>
+<p><img src="https://frun1na.netlify.app//20241002165127.png"></p>
+<p><img src="https://frun1na.netlify.app//20241002165145.png"></p>
+<p>非本地跳转的另一个重要应用是使一个信号处理程序分支到一个特殊的代码位置，而不是返回到被信号到达中断了的指令的位置。</p>
+<p>sigsetjmp 和 siglongjmp函数是 setjmp和 longjmp的可以被信号处理程序使用的版本。</p>
+<p>下面是一个使用信号的非本地跳转。</p>
+<p>当按下ctrl+c时，会重启程序。</p>
+<pre><code class="c">#include &quot;csapp.h&quot;
+sigjmp_buf buf;
+void handler(int sig)&#123;
+    siglongjmp(buf, 1);
+&#125;
+int main()&#123;
+    if (!sigsetjmp(buf, 1)) &#123;
+        Signal(SIGINT, handler);
+        Sio_puts(&quot;starting\n&quot;);
+    &#125;
+    else
+        Sio_puts(&quot;restarting\n&quot;);
+    while(1) &#123;
+        Sleep(1);
+        Sio_puts(&quot;processing...\n&quot;);
+    &#125;
+    exit(0); /* Control never reaches here */
+&#125;
+</code></pre>
+<img src="https://frun1na.netlify.app//20241002165559.png" style="zoom: 50%;" />
+
+<p>为了避免竞争，必须在调用了sigsetjmp之 后再设置处理程序。否则，就会可能在初始调用sigsetjmp之前 运行处理程序。</p>
+<p>sigsetjmp和siglongjmp函数不属于异步信号安全的函数。原因是一般来说siglongjmp可以跳到任意代码，所以我 们必须小心，在siglongjmp可达的代码中调用安全的函数。在本例中，我们调用安全的 sio_puts 和 sleep函数。不安全的 exit函数是不可达的。</p>
+<blockquote>
+<p>旁注：C++和Java中的软件异常</p>
+<p>C++和Java提供的异常机制是较高层次的，是C语言的 setjmp和longjmp函数的更加结构化的版本。你可以把try语句中的catch子句看做类似于setjmp函数。相 似地，throw语句就类似于 longjmp函数。</p>
+</blockquote>
+<h1 id="linux中操作进程的工具（自学）"><a href="#linux中操作进程的工具（自学）" class="headerlink" title="linux中操作进程的工具（自学）"></a>linux中操作进程的工具（自学）</h1><ul>
+<li>STRACE: 打印一个正在运行的程序和它的子进程调用的每个系统调用的轨迹。用-static编译你的程序，能得到一个更干净的、不带有大量与共享库相关的输出的轨迹。</li>
+<li>PS: 列出当前系统中的进程（包括僵死进程）。 </li>
+<li>TOP: 打印出关于当前进程资源使用的信息。 </li>
+<li>PMAP: 显示进程的内存映射。</li>
+<li>&#x2F;proc: —个虚拟文件系统，以 ASCII文本格式输出大量内核数据结构的内容，用户 程序可以读取这些内容。比如，输入“cat&#x2F;proc&#x2F;loadavg”可以看到你的 Linux系统上 当前的平均负载。</li>
+</ul>
+<p>小结自己看书</p>
+<p>完结</p>
 
     </div>
     
