@@ -723,11 +723,11 @@ linux&gt;pstree -p
     &#125;   //[3]
 &#125; 
 
-voideval(char *cmdline)&#123;
+void eval(char *cmdline)&#123;
         char*argv[MAXARGS]; /* 参数列表 execve() */
-        charbuf[MAXLINE];                      /* Holds modified command line */
+        char buf[MAXLINE];                      /* Holds modified command line */
         int bg;                                /* Should the job run in bg or fg? */
-        pid_tpid;                              /* Process id */
+        pid_t pid;                              /* Process id */
         strcpy(buf, cmdline); //复制到buf  
         bg = parseline(buf, argv);   //检查是前台命令还是后台命令，同时在argv中存入参数列表，后台命令适合运行慢，不在命令行输出的程序
         if (argv[0] == NULL)
@@ -862,12 +862,15 @@ int setpgid(pid_t pid, pid_t pgid);
 <h3 id="用-bin-kill-程序发送信号"><a href="#用-bin-kill-程序发送信号" class="headerlink" title="用&#x2F;bin&#x2F;kill 程序发送信号"></a>用&#x2F;bin&#x2F;kill 程序发送信号</h3><p>可以向一个进程和一个进程组发 送某些信号</p>
 <p>&#x2F;bin&#x2F;kill –9 24818 ：向24818进程发送SIGKILL信号 </p>
 <p>&#x2F;bin&#x2F;kill –9 –24817 ：向24817进程组中的每个进程发送SIGKILL信号（负的PID会解释为进程组ID）</p>
+<p>不过在linux中输入命令，默认在bin下搜索，因此，直接kill也可以。</p>
 <h3 id="从键盘发送信号"><a href="#从键盘发送信号" class="headerlink" title="从键盘发送信号"></a>从键盘发送信号</h3><p>按下Ctrl-C（Ctrl-Z）会导致内核 向<strong>前台进程组</strong>中的每个作业（作业(job)表示对一条命令行指令求值而创建的进程）发送 SIGINT（SIGTSTP）信号 </p>
 <p>SIGINT - 默认操作是终止每个进程 </p>
 <p>SIGTSTP- 默认操作是停止（暂停） 每个进程</p>
 <p>下图是一个示例。</p>
 <p><img src="https://frun1na.netlify.app/20240930193618.png"></p>
-<p>会话的概念自己搜索。</p>
+<p>其中</p>
+<p>fg表示将暂停的进程放在前台运行</p>
+<p>bg表示……………………….后台…….</p>
 <h3 id="用-kill系统调用发送信号"><a href="#用-kill系统调用发送信号" class="headerlink" title="用 kill系统调用发送信号"></a>用 kill系统调用发送信号</h3><pre><code class="c">#include &lt;sys/types.h&gt;
 #include &lt;signal.h&gt;
  int kill(pid_t pid, int sig);
@@ -916,11 +919,12 @@ int setpgid(pid_t pid, pid_t pgid);
 <li>进程暂停，直到收到SIGCONT信号重新启动 </li>
 <li>进程忽略该信号</li>
 </ul>
-<p>函数signal可以改变这些默认行为</p>
+<p>函数signal可以改变这些默认行为（即<strong>注册一个信号处理函数</strong>）</p>
 <pre><code class="c">#include &lt;signal.h&gt;
  typedef void (*sighandler_t)(int);
  sighandler_t signal(int signum, sighandler_t handler);
-                                //返回：若成功则为指向前次处理程序的指针，若出错则为SIG_ERR(不设置errno)
+                                //返回：若成功则为指向前一次信号处理程序的指针，若出错则为SIG_ERR(不设置errno)
+//有些大型程序需要使用不同的信号处理函数，返回老的程序的指针方便进行恢复注册上一个信号处理函数
 </code></pre>
 <p>这里sighandler是一个函数指针类型，signal可以改变信号signum的行为。</p>
 <p>handler的值：</p>
@@ -933,7 +937,7 @@ int setpgid(pid_t pid, pid_t pgid);
 <pre><code class="c">void sigint_handler(int sig) /* SIGINT handler */&#123;
     printf(&quot;So you think you can stop the bomb with ctrl-c, do you?\n&quot;);
     sleep(2);
-    printf(&quot;Well...&quot;);
+    printf(&quot;Well...&quot;);  //printf如果没有\n，不会立即输出，而是存到缓冲区中。（第10章解决）
     fflush(stdout);    //用于清空输出缓冲区，确保所有输出都输出到屏幕上，而不是等到缓冲区满了才输出
     sleep(1); 
     printf(&quot;OK. :-)\n&quot;);
@@ -953,6 +957,7 @@ int main()&#123;
 
 <p>注：</p>
 <p>1.在并发流中，信号处理程序是一个独立的逻辑流（不是进程），和主程序“并发”运行。这里并发是指的通过中断机制实现的，而不是什么上下文切换。</p>
+<p>比如，在上面的例子中，主程序到pause就完了，主程序的控制流只有这么多。而信号处理程序的控制流不是主程序的，因此说，独立的控制流。但进程还是主进程。</p>
 <img src="https://frun1na.netlify.app//20241001115313.png" style="zoom: 33%;" />
 
 <p>2.再次强调一下信号发送和接收的时机，是进程上下文切换到主进程的时候，检查一次。</p>
@@ -994,17 +999,18 @@ int sigismember(const sigset_t *set, int signum); //如果signum是set的一个�
      
  /* Restore previous blocked set, unblocking SIGINT */
  Sigprocmask(SIG_SETMASK, &amp;prev_mask, NULL);  //注：大写的s表示封装了。
+//这里的恢复指的是把原先的mask赋回来，而不是剔除掉SIGINT，万一在阻塞SIGINT之前，SIGINT已经阻塞了，那剔除了会发生问题。
 </code></pre>
 <h2 id="编写信号处理程序"><a href="#编写信号处理程序" class="headerlink" title="编写信号处理程序"></a>编写信号处理程序</h2><p>信号处理程序的可靠实现是一件很棘手的事情 ，因为它们与主程序并发运行并共享相同的全局数据结构，共享的数据结构可能会被损坏。</p>
-<p>注：这里的并发不是说，执行信号处理程序的时候，主程序没有打断，还在执行，而是，当执行信号处理程序的时候，主程序打断，执行主程序的时候，信号处理程序打断。 </p>
+<p>比如说，errno全局变量。信号处理程序进行系统调用，失败，主程序以为是它失败了。</p>
 <p>后续课程中会讨论如何解决并发问题（12章） ，以下给出一些建议，以实现更可靠安全的信号处理</p>
 <h3 id="安全信号处理的原则："><a href="#安全信号处理的原则：" class="headerlink" title="安全信号处理的原则："></a>安全信号处理的原则：</h3><p>1.<strong>保持处理程序尽可能简单</strong>，例如，设置一个全局标志并返回，所有与接收信号相关的处理都由主函数执行（周期性检查，复位这个标志即可。）</p>
 <p>2.<strong>在处理程序中只调用异步信号安全的函数</strong>（简称安全的函数），printf、sprintf、malloc和exit是不安全的，详细请看书534页。</p>
 <p>3.<strong>在进入和退出时保存和恢复errno</strong>，以防其他处理程序覆盖errno的值，只有在处理程序需要返回时，才这样做。如果要调用exit，那就不用了。</p>
 <p>4.<strong>通过临时阻塞所有信号来保护对共享数据结构的访问</strong>（读或写），以防止可能的损坏。</p>
 <p>​		因为读写一个数据结构需要一系列指令完成。万一在其中一个指令，被打断了，而且，这个打断主程序的处理程序也要访问那个数据结构，那就会发生不可预知的问题了。</p>
-<p>5.<strong>将全局变量声明为volatile</strong>，以防止编译器将它们存储在寄存器中。</p>
-<p>​		假设一个处理程序和一个main函数，它们共享一个全局变量g，处理程序更新g，main周期性地读g。对于一个优化编译器而言，main中g的值看上去从来没有变化过，因此使用缓存在寄存器中g的副本来每次引用。如果这样，min函数可能永远都无法看到处理程序更新过的值。而volatile类型限定符可以告诉编译器，不要缓存。（volatile int g），当然，一般也要在访问的时候临时阻塞。</p>
+<p>5.<strong>将全局变量声明为volatile</strong>，变量放在内存里，以防止编译器将它们存储在寄存器中。</p>
+<p>​		假设一个处理程序和一个main函数，它们共享一个全局变量g，信号处理程序更新g，main周期性地读g。对于一个优化编译器而言，main中g的值看上去从来没有变化过（因为信号处理程序没有在main中显式调用，信号触发是动态的，而编译器是静态的，预测不了。），因此使用缓存在寄存器中g的副本来每次引用。如果这样，min函数可能永远都无法看到信号处理程序更新过的值。而volatile类型限定符可以告诉编译器，不要缓存。（volatile int g），当然，一般也要在访问的时候临时阻塞。</p>
 <p>6.<strong>将全局标志声明为volatile sig_atomic_t</strong>。</p>
 <p>​		在一些信号处理程序中，会写一个全局标志来记录收到信号。主程序周期读这个标志，相应并清除。于是c提供了sig_atomic_i，这是一种整型数据类型，对这个数据类型的读写只需要一条指令就可以完成，因此不用临时阻塞。当然，一定要是仅被读取或写入的变量（例如，flag &#x3D; 1， 而不是flag++） </p>
 <p>注意，这里的这些建议都是非常保守的。如果你可以断言，你的信号处理程序没有读取errno，就不用管它，如果在进行信号处理的时候，不会被打断，就可以放心用printf等等等，不过，在编写大型程序的时候，没人敢这么断言，而且他们也很难证明。</p>
