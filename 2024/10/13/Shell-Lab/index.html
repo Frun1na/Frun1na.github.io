@@ -628,6 +628,107 @@ tsh&gt; jobs
 &#125;
 </code></pre>
 <p>这样，一个个测试样例即可，应该是都可以过的。</p>
+<p>最后还有Sio，并没有给出，不过可以在csapp.c中找到</p>
+<pre><code class="c">/* Sio (Signal-safe I/O) routines */
+ssize_t sio_puts(char s[]);
+ssize_t sio_putl(long v);
+void sio_error(char s[]);
+
+/* 经过封装的sio */
+ssize_t Sio_puts(char s[]);
+ssize_t Sio_putl(long v);
+void Sio_error(char s[]);
+//这些是智慧树中的异步信号安全的输出函数(csapp.h)
+
+
+//下面是异步信号安全的Sio的实现（csapp.c）
+
+
+static void sio_reverse(char s[])
+&#123;
+    int c, i, j;
+
+    for (i = 0, j = strlen(s) - 1; i &lt; j; i++, j--) &#123;
+        c = s[i];
+        s[i] = s[j];
+        s[j] = c;
+    &#125;
+&#125;
+
+/* sio_ltoa - Convert long to base b string (from K&amp;R) */
+static void sio_ltoa(long v, char s[], int b)
+&#123;
+    int c, i = 0;
+
+    do &#123;
+        s[i++] = ((c = (v % b)) &lt; 10) ? c + &#39;0&#39; : c - 10 + &#39;a&#39;;
+    &#125; while ((v /= b) &gt; 0);
+    s[i] = &#39;\0&#39;;
+    sio_reverse(s);
+&#125;
+
+/* sio_strlen - Return length of string (from K&amp;R) */
+static size_t sio_strlen(char s[])
+&#123;
+    int i = 0;
+
+    while (s[i] != &#39;\0&#39;)
+        ++i;
+    return i;
+&#125;
+/* $end sioprivate */
+
+/* Public Sio functions */
+/* $begin siopublic */
+
+ssize_t sio_puts(char s[]) /* Put string */
+&#123;
+    return write(STDOUT_FILENO, s, sio_strlen(s)); //line:csapp:siostrlen
+&#125;
+
+ssize_t sio_putl(long v) /* Put long */
+&#123;
+    char s[128];
+
+    sio_ltoa(v, s, 10); /* Based on K&amp;R itoa() */  //line:csapp:sioltoa
+    return sio_puts(s);
+&#125;
+
+void sio_error(char s[]) /* Put error message and exit */
+&#123;
+    sio_puts(s);
+    _exit(1);                                      //line:csapp:sioexit
+&#125;
+/* $end siopublic */
+
+/*******************************
+ * Wrappers for the SIO routines
+ ******************************/
+ssize_t Sio_putl(long v)
+&#123;
+    ssize_t n;
+
+    if ((n = sio_putl(v)) &lt; 0)
+        sio_error(&quot;Sio_putl error&quot;);
+    return n;
+&#125;
+
+ssize_t Sio_puts(char s[])
+&#123;
+    ssize_t n;
+
+    if ((n = sio_puts(s)) &lt; 0)
+        sio_error(&quot;Sio_puts error&quot;);
+    return n;
+&#125;
+
+void Sio_error(char s[])
+&#123;
+    sio_error(s);
+&#125;
+
+
+</code></pre>
 
     </div>
     
