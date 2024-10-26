@@ -175,7 +175,460 @@
     </div>
     
     <div class="content" v-pre>
+        <h1 id="ShellLab"><a href="#ShellLab" class="headerlink" title="ShellLab"></a>ShellLab</h1><span id="more"></span>
+
+<p><a target="_blank" rel="noopener" href="https://gitee.com/tjuwangli/shelllab">实验要用到的文件</a>(注意查看时间线，我把完成的作业也push上来了)</p>
+<p>注意此实验要在linux下完成。</p>
+<p>我们首先仔细阅读几遍README.md，把陌生的概念搞懂。</p>
+<p>这里强调一下第八章异常控制流的一些内容：</p>
+<ul>
+<li>信号中的输出全用封装后的Sio，而不是printf，因为异步信号安全问题</li>
+<li>所有的注册信号处理函数都要用大写S的那个，它已经给我们实现了可移植的信号处理。</li>
+</ul>
+<p>sdriver.pl ：<code>.pl</code> 文件是 Perl 脚本文件的扩展名。这是一种编程语言。</p>
+<p>然后我们看tsh.c</p>
+<p>里面内置的英文注释已经解释很多了。</p>
+<pre><code class="c">while ((c = getopt(argc, argv, &quot;hvp&quot;)) != EOF) &#123;
+    switch (c) &#123;
+    case &#39;h&#39;:             /* print help message */
+        usage();
+    break;
+    case &#39;v&#39;:             /* emit additional diagnostic info */
+        verbose = 1;
+    break;
+    case &#39;p&#39;:             /* don&#39;t print a prompt */
+        emit_prompt = 0;  /* handy for automatic testing */
+    break;
+default:
+        usage();
+&#125;
+&#125;
+</code></pre>
+<p>这是用来解析参数的</p>
+<pre><code class="bash">./tsh -h
+# 比如说这一条是打印帮助信息
+</code></pre>
+<p>这里注意，在运行tsh之前，先输入make来编译它。</p>
+<p>由于没有实现quit，所以想退的话，直接把终端删了重新运行吧。</p>
+<p>我们需要实现：</p>
+<pre><code class="c">void eval(char *cmdline)  //分析命令，并派生子进程执行 主要功能是解析cmdline并运行
+int builtin_cmd(char **argv)//解析和执行bulidin命令，包括 quit, fg, bg, and jobs
+void do_bgfg(char **argv) //执行bg和fg命令
+void waitfg(pid_t pid)//实现阻塞等待前台程序运行结束
+void sigchld_handler(int sig)//SIGCHID信号处理函数
+void sigint_handler(int sig)//信号处理函数，响应 SIGINT (ctrl-c) 信号 
+void sigtstp_handler(int sig)//信号处理函数，响应 SIGTSTP (ctrl-z) 信号
+</code></pre>
+<p>以及提供给我们的函数：</p>
+<pre><code class="c">int parseline(const char *cmdline, char **argv);   //获取参数列表，返回是否为后台运行命令
+void sigquit_handler(int sig);  //处理SIGQUIT信号
+void clearjob(struct job_t *job);  //清除job结构体 
+void initjobs(struct job_t *jobs);  //初始化任务jobs[]
+int maxjid(struct job_t *jobs);   //返回jobs链表中最大的jid号。
+int addjob(struct job_t *jobs, pid_t pid, int state, char *cmdline);  //向jobs[]添加一个任务
+int deletejob(struct job_t *jobs, pid_t pid);   //在jobs[]中删除pid的job
+pid_t fgpid(struct job_t *jobs);  //返回当前前台运行job的pid号
+struct job_t *getjobpid(struct job_t *jobs, pid_t pid);  //根据pid找到对应的job 
+struct job_t *getjobjid(struct job_t *jobs, int jid);   //根据jid找到对应的job 
+int pid2jid(pid_t pid);   //根据pid找到jid 
+void listjobs(struct job_t *jobs);  //打印jobs 
+</code></pre>
+<p>以及job类型的实现：</p>
+<pre><code class="c">struct job_t &#123;              /* The job struct */
+    pid_t pid;              /* job PID */
+    int jid;                /* job ID [1, 2, ...] */
+    int state;              /* UNDEF, BG, FG, or ST */
+    char cmdline[MAXLINE];  /* command line */
+&#125;;
+struct job_t jobs[MAXJOBS]; /* The job list */
+</code></pre>
+<p>状态的宏定义</p>
+<pre><code class="c">/* Job states */
+#define UNDEF 0 /* undefined */
+#define FG 1    /* running in foreground */
+#define BG 2    /* running in background */
+#define ST 3    /* stopped */
+</code></pre>
+<p>按理说，这7个函数可以先写简单的，但是如果不写eval根本没法测试，所以就先写它。</p>
+<h2 id="eavl"><a href="#eavl" class="headerlink" title="eavl"></a>eavl</h2><p>我们参考一下教材中的框架（深入理解计算机系统黑皮书第三版525页）</p>
+<pre><code class="c">void eval(char *cmdline) &#123;
+    char* argv[MAXARGS]; /* 参数列表 execve() */
+    char buf[MAXLINE];                      /* 将command line复制到这个数组 */
+    int bg;                                /* 标志程序是前台还是后台 */
+    pid_t pid;                              /* 创建的进程id */
+    strcpy(buf, cmdline); //复制到buf  
+    bg = parseline(buf, argv);   //检查是前台命令还是后台命令，将结果存入bg，同时在argv中存入参数列表
+    if (argv[0] == NULL)
+        return;   /* 无视空的输入 */
+    if (!builtin_command(argv)) &#123;   
+        if ((pid = Fork()) == 0) &#123;   //子进程运行该程序
+            if (execve(argv[0], argv, environ) &lt; 0) &#123;
+                printf(&quot;%s: Command not found.\n&quot;, argv[0]);
+                exit(0);
+            &#125;
+        &#125;
+        /* 接下来父进程检查是否是后台命令 */
+        if (!bg) &#123;  //如果不是，就等到子进程结束返回
+            int status;
+            if (waitpid(pid, &amp;status, 0) &lt; 0)
+                unix_error(&quot;waitfg: waitpid error&quot;);
+        &#125;
+        else//如果是后台命令，打印
+            printf(&quot;%d%s&quot;, pid, cmdline);
+    &#125;
+    return;
+&#125;
+</code></pre>
+<p>然后我们开始修改。</p>
+<pre><code class="c">void eval(char *cmdline) &#123;
+    char* argv[MAXARGS];   //参数列表                 
+    char buf[MAXLINE];     //将cmdline复制到此数组       
+    pid_t pid;                              
+    int state = UNDEF;     //启动的进程状态
+    sigset_t mask, prev_mask; //用于信号阻塞和恢复
+
+
+    strcpy(buf, cmdline);//将cmdline复制到buf
+    
+    //构建阻塞信号集合
+    if (sigemptyset(&amp;mask) &lt; 0) &#123;  
+        unix_error(&quot;sigemptyset error&quot;);
+    &#125;
+    if (sigaddset(&amp;mask, SIGINT) &lt; 0) &#123;
+        unix_error(&quot;sigaddset error&quot;);
+    &#125;
+    if (sigaddset(&amp;mask, SIGTSTP) &lt; 0) &#123;
+        unix_error(&quot;sigaddset error&quot;);
+    &#125;
+    if (sigaddset(&amp;mask, SIGCHLD) &lt; 0) &#123;
+        unix_error(&quot;sigaddset error&quot;);
+    &#125;
+    //构建阻塞信号集合(SIGINT、SIGTSTP、SIGCHLD)完成
+    
+    //读取命令的前台后台
+    if (parseline(buf, argv)) &#123;
+        state = BG;
+    &#125;
+    else &#123;
+        state = FG;
+    &#125;
+    //前台后台读取完成
+
+    //如果命令是空行，直接返回
+    if (argv[0] == NULL)
+        return;  
+
+    //如果不是内置命令
+    if (!builtin_cmd(argv)) &#123;
         
+        //阻塞信号，防止竞争
+        if (sigprocmask(SIG_BLOCK, &amp;mask, &amp;prev_mask) &lt; 0) &#123;
+            unix_error(&quot;sigprocmask error&quot;);
+        &#125;
+
+        //创建进程
+        if ((pid = fork()) &lt; 0) &#123;
+            unix_error(&quot;fork error&quot;);
+        &#125;
+
+        if (pid == 0) &#123;  //子进程控制流开始
+           
+            //在子进程中恢复信号
+            if (sigprocmask(SIG_SETMASK, &amp;prev_mask, NULL) &lt; 0) &#123;
+                unix_error(&quot;sigprocmask error&quot;);
+            &#125;
+
+            //设置前台进程组，以便SIGINT信号的实现
+            if (setpgid(0, 0) &lt; 0) &#123;
+                unix_error(&quot;setpgid error&quot;);
+            &#125;
+            //加载程序
+            if (execve(argv[0], argv, environ) &lt; 0) &#123;
+                printf(&quot;%s: Command not found.\n&quot;, argv[0]);
+                exit(0);
+            &#125;
+        &#125;
+
+        //将当前进程加入到job list中
+        addjob(jobs, pid, state, cmdline);
+
+        //shell进程恢复阻塞的信号
+        if (sigprocmask(SIG_SETMASK, &amp;prev_mask, NULL) &lt; 0) &#123;
+            unix_error(&quot;sigprocmask error&quot;);
+        &#125;
+
+        if (state == FG) &#123; //前台作业等待执行
+            waitfg(pid);
+        &#125;
+        else
+            printf(&quot;[%d] (%d) %s&quot;, pid2jid(pid), pid, cmdline);    //后台作业打印
+    &#125;
+    return;
+&#125;
+</code></pre>
+<p>增加了信号，以及添加进joblist中。</p>
+<p>注：</p>
+<p>1.每个子进程必须要设置进程组id，否则一个子进程和它的父进程在同一个进程组，这是很麻烦的，因为SIGINT和SIGTSTP要发送信号到前台进程组。而他们不能也把这个微型shell也终止了，所以子进程组和shell要区分。同时，我们不能因为前台进程只有一个，而仅仅将信号发到那一个进程，万一那个前台进程又fork了呢？发送到那一组，才可以使所有的前台进程都收到。</p>
+<p>2.我们一定要在fork之前进行信号阻塞，这是一个非常经典的同步流错误，具体看第八章教材或者我的笔记</p>
+<h2 id="builtin-cmd"><a href="#builtin-cmd" class="headerlink" title="builtin_cmd"></a>builtin_cmd</h2><p>此函数的功能是识别和解释内置命令：quit、fg、bg和jobs</p>
+<p><code>int builtin_cmd(char **argv)</code></p>
+<p>也就是，如果argv是内置命令，就执行（有返回就返回true），如果不是，返回false</p>
+<ul>
+<li>quit命令终止shell。</li>
+<li>jobs命令列出所有<strong>后台</strong>作业。</li>
+<li>bg 命令通过发送SIGCONT信号重新启动，然后在后台运行它。 参数可以是PID或JID。</li>
+<li>fg 命令通过发送SIGCONT信号重新启动，然后在前台运行它。 参数可以是PID或JID。</li>
+</ul>
+<pre><code class="c">int builtin_cmd(char **argv) &#123;
+
+    if (!strcmp(argv[0], &quot;quit&quot;)) &#123;  //如果是quit，退出shell
+        exit(0);
+    &#125;
+    else if (!strcmp(argv[0], &quot;bg&quot;) || !strcmp(argv[0], &quot;fg&quot;)) &#123; //如果是bg或者fg命令，执行do_fgbg函数 
+        do_bgfg(argv);
+    &#125;
+    else if (!strcmp(argv[0], &quot;jobs&quot;)) &#123;  //如果命令是jobs，列出所有后台作业
+        listjobs(jobs);
+    &#125;
+    else &#123;
+        return 0;
+    &#125;
+    return 1;
+
+&#125;
+</code></pre>
+<p>这个很容易</p>
+<h2 id="do-bgfg"><a href="#do-bgfg" class="headerlink" title="do_bgfg"></a>do_bgfg</h2><blockquote>
+<p>bg <job>:将停止的后台作业更改为正在运行的后台作业。通过发送SIGCONT信号重新启动<job>，然后在后台运行它。<job>参数可以是PID，也可以是JID。ST -&gt; BG</p>
+<p>fg <job>:将已停止或正在运行的后台作业更改为前台正在运行的作业。通过发送SIGCONT信号重新启<job>，然后在前台运行它。<job>参数可以是PID，也可以是JID。ST -&gt; FG，BG -&gt; FG</p>
+</blockquote>
+<p>fg和bg必须要有参数，而且这两个指令都有输出，以下是参考输出</p>
+<pre><code class="bash">tsh&gt; ./bogus
+./bogus: Command not found
+tsh&gt; ./myspin 4 &amp;
+[1] (26326) ./myspin 4 &amp;
+tsh&gt; fg
+fg command requires PID or %jobid argument
+tsh&gt; bg
+bg command requires PID or %jobid argument
+tsh&gt; fg a
+fg: argument must be a PID or %jobid
+tsh&gt; bg a
+bg: argument must be a PID or %jobid
+tsh&gt; fg 9999999
+(9999999): No such process
+tsh&gt; bg 9999999
+(9999999): No such process
+tsh&gt; fg %2
+%2: No such job
+tsh&gt; fg %1
+Job [1] (26326) stopped by signal 20
+tsh&gt; bg %2
+%2: No such job
+tsh&gt; bg %1
+[1] (26326) ./myspin 4 &amp;
+tsh&gt; jobs
+[1] (26326) Running ./myspin 4 &amp;
+</code></pre>
+<p>下面给出函数实现。</p>
+<pre><code class="c">void do_bgfg(char **argv) &#123;
+    
+    int id;
+    struct job_t* obj;
+    //如果没有参数，打印以下内容
+    if (argv[1] == NULL) &#123; 
+        printf(&quot;%s command requires PID or %%jobid argument\n&quot;, argv[0]);
+        return;
+    &#125;
+
+    //检测参数
+    if (argv[1][0] == &#39;%&#39;) &#123;//如果是jid
+
+        if (sscanf(&amp;argv[1][1], &quot;%d&quot;, &amp;id) != 1) &#123;
+            printf(&quot;%s: argument must be a PID or %%jobid\n&quot;, argv[0]); //读取失败，打印
+            return;
+        &#125;
+
+        if ((obj = getjobjid(jobs, id)) == NULL) &#123;
+            printf(&quot;%%%d: No such process\n&quot;, id);  //jid找不到进程
+            return;
+        &#125;
+
+    &#125;
+    else &#123;//如果是pid
+        if (sscanf(&amp;argv[1][0], &quot;%d&quot;, &amp;id) != 1) &#123;
+            printf(&quot;%s: argument must be a PID or %%jobid\n&quot;, argv[0]);//读取失败，打印
+            return;
+        &#125;
+
+        if ((obj = getjobpid(jobs, id)) == NULL) &#123;
+            printf(&quot;(%d): No such process\n&quot;, id); //pid找不到进程
+            return;
+        &#125;
+    &#125;
+    //参数检测完成
+
+    //如果是bg，则在后台运行
+    if (!strcmp(argv[0], &quot;bg&quot;)) &#123;
+        
+        obj-&gt;state = BG;  //设置状态
+
+        if (kill(-obj-&gt;pid, SIGCONT) &lt; 0) &#123;  //使用-pid表示整个进程组
+            unix_error(&quot;kill error&quot;);
+        &#125;
+        printf(&quot;[%d] (%d) %s&quot;, obj-&gt;jid, obj-&gt;pid, obj-&gt;cmdline);
+    &#125;
+    //如果是fg，则在前台运行
+    else if (!strcmp(argv[0], &quot;fg&quot;)) &#123;
+
+        obj-&gt;state = FG; //设置状态
+        if (kill(-obj-&gt;pid, SIGCONT) &lt; 0) &#123; //使用-pid表示整个进程组
+            unix_error(&quot;kill error&quot;);
+        &#125;
+        //前台运行的程序应该等待其运行结束
+        waitfg(obj-&gt;pid);
+    &#125;
+    else &#123;
+        exit(0);
+    &#125;
+    return;
+&#125;
+</code></pre>
+<h2 id="waitfg"><a href="#waitfg" class="headerlink" title="waitfg"></a>waitfg</h2><p>waitfg - Block until process pid is no longer the foreground process</p>
+<pre><code class="c">void waitfg(pid_t pid) &#123;
+    struct job_t* obj;
+    sigset_t mask, prev_mask;
+
+    //阻塞信号的集合
+    if (sigemptyset(&amp;mask) &lt; 0) &#123;
+        unix_error(&quot;sigemptyset error&quot;);
+    &#125;
+    if (sigaddset(&amp;mask, SIGINT) &lt; 0) &#123;
+        unix_error(&quot;sigaddset error&quot;);
+    &#125;
+    if (sigaddset(&amp;mask, SIGTSTP) &lt; 0) &#123;
+        unix_error(&quot;sigaddset error&quot;);
+    &#125;
+    if (sigaddset(&amp;mask, SIGCHLD) &lt; 0) &#123;
+        unix_error(&quot;sigaddset error&quot;);
+    &#125;
+    //阻塞信号
+    if (sigprocmask(SIG_BLOCK, &amp;mask, &amp;prev_mask) &lt; 0) &#123;
+        unix_error(&quot;sigprocmask error&quot;);
+    &#125;
+
+    obj = getjobpid(jobs, pid);
+   //如果前台进程没有结束
+    if (obj) &#123;
+        while (obj-&gt;state == FG) &#123;
+            sigsuspend(&amp;prev_mask); //通过sigsuspend来实现显式等待信号（如果当前子进程的状态没有发生改变，则休眠）
+            //sleep(1);
+        &#125;
+    &#125;
+    //解除阻塞
+    if (sigprocmask(SIG_SETMASK, &amp;prev_mask, NULL) &lt; 0) &#123;
+        unix_error(&quot;sigprocmask error&quot;);
+    &#125;
+    return;
+&#125;
+</code></pre>
+<p>我们通过sigsuspend来实现显式等待信号。</p>
+<h2 id="sigchld-handler"><a href="#sigchld-handler" class="headerlink" title="sigchld_handler"></a>sigchld_handler</h2><p>要求：当子进程终止（变为僵尸进程）或因接收到<code>SIGSTOP</code>或<code>SIGTSTP</code>信号而停止时，内核会向shell发送一个<code>SIGCHLD</code>信号。该处理程序会收获所有可用的僵尸子进程，但<strong>不会等待任何其他当前正在运行的子进程终止</strong>。</p>
+<p>使用waitpid，其中选项为WNOHANG，表示当子进程中没有终止的进程时，返回0，另一个选项是WUNTRACED，表示当子进程除了终止，停止的时候也会返回子进程的pid。因为子进程停止的时候，也会发送SIGCHILD信号。</p>
+<p>我们也要使用教材里提供的异步信号安全的Sio函数</p>
+<p>而且也要保存全局变量errno的值</p>
+<pre><code class="c">void sigchld_handler(int sig) &#123;
+
+    int olderrno = errno;  //由于该信号处理函数使用系统调用，所以要保存全局变量errno的值
+
+    pid_t pid;
+    int status, jid;
+    struct job_t* obj;
+
+    //WNOHANG:若子进程仍然在运行，则返回0 （可以实现“不会等待运行的子进程终止，而仅仅只处理僵尸进程”）
+    //WUNTRACED : 如果子进程由于传递信号而停止，则马上返回pid（可以实现，当有子进程停止的时候也会返回其pid）
+    while ((pid = waitpid(-1, &amp;status, WNOHANG | WUNTRACED)) &gt; 0) &#123;
+        
+        //当子进程的job已经删除了，表示有错误发生
+        if ((obj = getjobpid(jobs, pid)) == NULL) &#123;
+            Sio_puts(&quot;lack job\n&quot;);
+            errno = olderrno; //返回前重新设置errno
+            return;
+        &#125;
+
+        //接下来判断子进程发送信号时的状态
+        jid = obj-&gt;jid;
+
+        //子进程暂停了
+        if (WIFSTOPPED(status)) &#123;
+            obj-&gt;state = ST;   //设置挂起状态
+            Sio_puts(&quot;Job [&quot;);  //使用异步信号安全的输出函数
+            Sio_putl(jid);
+            Sio_puts(&quot;] (&quot;);
+            Sio_putl(pid);
+            Sio_puts(&quot;) stopped by signal &quot;);
+            Sio_putl(WSTOPSIG(status));
+            Sio_puts(&quot;\n&quot;);
+        &#125;
+        //子进程调用exit或者从main返回导致终止，不输出内容
+        else if (WIFEXITED(status)) &#123;
+            deletejob(jobs, pid);
+        &#125;
+
+        //子进程收到信号而终止
+        else if (WIFSIGNALED(status)) &#123;
+            deletejob(jobs, pid);
+            Sio_puts(&quot;Job [&quot;);
+            Sio_putl(jid);
+            Sio_puts(&quot;] (&quot;);
+            Sio_putl(pid);
+            Sio_puts(&quot;) terminated by signal &quot;);
+            Sio_putl(WTERMSIG(status));
+            Sio_puts(&quot;\n&quot;);
+        &#125;
+    &#125;
+    //返回前重新设置errno
+    errno = olderrno;
+    return;
+&#125;
+</code></pre>
+<h2 id="sigint-handler"><a href="#sigint-handler" class="headerlink" title="sigint_handler"></a>sigint_handler</h2><p>当用户在键盘上按下 <code>ctrl-c</code> 时，内核会向 shell 发送一个 <code>SIGINT</code> 信号。捕获这个信号并将其传递给前台作业。</p>
+<p>这个简单</p>
+<pre><code class="c">void sigint_handler(int sig) &#123;  
+    pid_t pid;
+    int olderrno = errno;//保护errno
+    //得到前台进程的pid
+    pid = fgpid(jobs);
+
+    if (pid) &#123;
+        //向前台进程组发送信号
+        if (kill(-pid, SIGINT) &lt; 0)
+            unix_error(&quot;kill (sigint) error&quot;);
+    &#125;
+
+    errno = olderrno;
+    return;
+&#125;
+</code></pre>
+<h2 id="sigtstp-handler"><a href="#sigtstp-handler" class="headerlink" title="sigtstp_handler"></a>sigtstp_handler</h2><p>当用户在键盘上按下 <code>ctrl-z</code> 时，内核会向 shell 发送一个 <code>SIGTSTP</code> 信号。捕获这个信号，并通过向前台作业发送一个 <code>SIGTSTP</code> 信号来挂起它。</p>
+<pre><code class="c">void sigtstp_handler(int sig) 
+&#123;
+    pid_t pid;
+    int olderrno = errno; //保护errno
+    //得到前台进程的pid
+    pid = fgpid(jobs);
+
+    if (pid) &#123;
+        //向前台进程组发送信号
+        if (kill(-pid, SIGTSTP) &lt; 0)
+            unix_error(&quot;kill (sigtstp) error&quot;);
+    &#125;
+    errno = olderrno;
+    return;
+&#125;
+</code></pre>
+<p>这样，一个个测试样例即可，应该是都可以过的。</p>
+
     </div>
     
     
