@@ -1,0 +1,510 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>IA-32/Linux内存管理 | Frun1na &#39;s blog</title>
+    <meta name="author" content="Frun1na" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <link rel="icon" href="/images/avatar.jpg" />
+    <link rel="preconnect" href="https://s4.zstatic.net" />
+<script src="https://s4.zstatic.net/ajax/libs/vue/3.3.7/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.cn" />
+<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.cn/css2?family=Fira+Code:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap"
+/>
+<script> const mixins = {}; </script>
+
+<script src="https://polyfill.alicdn.com/v3/polyfill.min.js?features=default"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+<link
+    rel="stylesheet"
+    href="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+/>
+<script src="/js/lib/highlight.js"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+<script src="/js/lib/math.js"></script>
+
+
+<script src="/js/lib/preview.js"></script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/main.css" />
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div id="layout">
+        <transition name="fade">
+            <div id="loading" v-show="loading">
+                <div id="loading-circle">
+                    <h2>LOADING</h2>
+                    <p>加载过慢请开启缓存 浏览器默认开启</p>
+                    <img src="/images/loading.gif" />
+                </div>
+            </div>
+        </transition>
+        <div id="menu" :class="{ hidden: hiddenMenu, 'menu-color': menuColor}">
+    <nav id="desktop-menu">
+        <a class="title" href="/">
+            <span>FRUN1NA &#39;S BLOG</span>
+        </a>
+        
+        <a href="/">
+            <i class="fa-solid fa-house fa-fw"></i>
+            <span>&ensp;Home</span>
+        </a>
+        
+        <a href="/about">
+            <i class="fa-solid fa-id-card fa-fw"></i>
+            <span>&ensp;About</span>
+        </a>
+        
+        <a href="/archives">
+            <i class="fa-solid fa-box-archive fa-fw"></i>
+            <span>&ensp;Archives</span>
+        </a>
+        
+        <a href="/categories">
+            <i class="fa-solid fa-bookmark fa-fw"></i>
+            <span>&ensp;Categories</span>
+        </a>
+        
+        <a href="/tags">
+            <i class="fa-solid fa-tags fa-fw"></i>
+            <span>&ensp;Tags</span>
+        </a>
+        
+    </nav>
+    <nav id="mobile-menu">
+        <div class="title" @click="showMenuItems = !showMenuItems">
+            <i class="fa-solid fa-bars fa-fw"></i>
+            <span>&emsp;FRUN1NA &#39;S BLOG</span>
+        </div>
+        <transition name="slide">
+            <div class="items" v-show="showMenuItems">
+                
+                <a href="/">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-house fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Home</div>
+                    </div>
+                </a>
+                
+                <a href="/about">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-id-card fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">About</div>
+                    </div>
+                </a>
+                
+                <a href="/archives">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-box-archive fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Archives</div>
+                    </div>
+                </a>
+                
+                <a href="/categories">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-bookmark fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Categories</div>
+                    </div>
+                </a>
+                
+                <a href="/tags">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-tags fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Tags</div>
+                    </div>
+                </a>
+                
+            </div>
+        </transition>
+    </nav>
+</div>
+<transition name="fade">
+    <div id="menu-curtain" @click="showMenuItems = !showMenuItems" v-show="showMenuItems"></div>
+</transition>
+
+        <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
+            <div class="article">
+    <div>
+        <h1>IA-32/Linux内存管理</h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2024/10/26
+        </span>
+        
+        
+    </div>
+    
+    <div class="content" v-pre>
+        <h1 id="IA-32-Linux中的存储管理"><a href="#IA-32-Linux中的存储管理" class="headerlink" title="IA-32&#x2F;Linux中的存储管理"></a>IA-32&#x2F;Linux中的存储管理</h1><span id="more"></span>
+
+<p>存储地址采用<strong>逻辑地址</strong>、<strong>线性地址</strong>和<strong>物理地址</strong>来进行描述，其中，逻辑地址和线性地址是虚拟地址的两种不同表示形式，描述的都是4GB虚拟地址空间中的一个存储地址</p>
+<ul>
+<li><strong>逻辑地址</strong>由48位组成，包含16位段选择符和32位段内偏移量（即有效地址）</li>
+<li><strong>线性地址</strong>32位（其位数由虚拟地址空间大小决定）</li>
+<li><strong>物理地址</strong>32位（其位数由存储器总线中的地址线条数决定）</li>
+</ul>
+<p><strong>分段</strong>过程实现将逻辑地址转换为线性地址（<strong>早期的，现在兼容，但是不用</strong>）</p>
+<p><strong>分页</strong>过程实现将线性地址转换为物理地址</p>
+<h1 id="逻辑地址到线性地址的变换"><a href="#逻辑地址到线性地址的变换" class="headerlink" title="逻辑地址到线性地址的变换"></a>逻辑地址到线性地址的变换</h1><h2 id="最早的处理器——8086"><a href="#最早的处理器——8086" class="headerlink" title="最早的处理器——8086"></a>最早的处理器——8086</h2><p>而，8086这种早期的处理器，寄存器都是16位的。</p>
+<p>这些寄存器支持的寻址方式：</p>
+<p>A：地址段偏移量</p>
+<p>B：基址寄存器</p>
+<p>I：变址寄存器（除SP）</p>
+<p>S：比例因子</p>
+<p>EA：有效地址</p>
+<table>
+<thead>
+<tr>
+<th><strong>寻址方式</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>位移</td>
+<td>EA  &#x3D; <em>A</em></td>
+</tr>
+<tr>
+<td>基址寻址</td>
+<td>EA  &#x3D; (B)</td>
+</tr>
+<tr>
+<td>基址加位移</td>
+<td>EA  &#x3D; (B) + <em>A</em></td>
+</tr>
+<tr>
+<td>比例变址加位移</td>
+<td>EA  &#x3D; (I) * <em>S</em> + <em>A</em></td>
+</tr>
+<tr>
+<td>基址加变址加位移</td>
+<td>EA  &#x3D; (B) + (I) + <em>A</em></td>
+</tr>
+<tr>
+<td>基址加比例变址加位移</td>
+<td>EA  &#x3D; (B) + (I) * <em>S</em>  + <em>A</em></td>
+</tr>
+</tbody></table>
+<p>此时，支持的寻址空间为2^16，共64K。</p>
+<p>这是非常小的，所以要想一个办法，在16位的情况下，扩充地址空间</p>
+<h2 id="实模式"><a href="#实模式" class="headerlink" title="实模式"></a>实模式</h2><p><strong>引入段寄存器</strong>开辟更大的寻址空间</p>
+<p>在现在的内存中，都可以将一个物理内存看成一个数组，以这种方式组织内存</p>
+<p>但是，在最早的处理器——8086时期，科技人员却不是这样设计内存的</p>
+<p>在物理内存中开辟4片空间</p>
+<ul>
+<li>[0…N-1]，存储全部的代码</li>
+<li>[0…N-1]，存储所有的栈</li>
+<li>存储所有的数据（变量等）</li>
+<li>存储其他数据，如字符串常量等</li>
+</ul>
+<p>他们分别属于不同的地址空间，称为“段”</p>
+<p>这是一种二维的地址空间</p>
+<p>其中cpu中有一些段寄存器存储的就是这些地址的基地址，然后如果要访问对应段的内容，只需要一个偏移量即可。</p>
+<p>其中，CS为代码段寄存器，SS为栈寄存器，DS为数据段寄存器，ES为其他寄存器（16位段寄存器）</p>
+<p><strong>物理访存地址 &#x3D; (段寄存器 &lt;&lt; 4) + 有效地址</strong></p>
+<table>
+<thead>
+<tr>
+<th><strong>寻址方式</strong></th>
+<th><strong>说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>位移</td>
+<td>LA  &#x3D; (SR&lt;&lt;4) + <em>A</em></td>
+</tr>
+<tr>
+<td>基址寻址</td>
+<td>LA  &#x3D; (SR&lt;&lt;4) + (B)</td>
+</tr>
+<tr>
+<td>基址加位移</td>
+<td>LA  &#x3D; (SR&lt;&lt;4) + (B) + <em>A</em></td>
+</tr>
+<tr>
+<td>比例变址加位移</td>
+<td>LA  &#x3D; (SR&lt;&lt;4) + (I) * <em>S</em>  + <em>A</em></td>
+</tr>
+<tr>
+<td>基址加变址加位移</td>
+<td>LA  &#x3D; (SR&lt;&lt;4) + (B) + (I) + <em>A</em></td>
+</tr>
+<tr>
+<td>基址加比例变址加位移</td>
+<td>LA  &#x3D; (SR&lt;&lt;4) + (B) + (I) * <em>S</em>  + <em>A</em></td>
+</tr>
+</tbody></table>
+<p>寻址空间变为：2^20 &#x3D; 1MB，此时物理地址称为<strong>线性地址</strong></p>
+<p>1MB在当时，足够了。</p>
+<p>当然，这种分段机制仅限很早期的cpu，因为16位的寄存器已经变成了历史，而32位的寄存器已经差不多够了，更何况现在都是64位，这就非常足够了。</p>
+<p>在这种分段模式下工作，叫“<strong>实模式</strong>”</p>
+<p>在现在的虚拟地址模式下工作，叫“<strong>保护模式</strong>”</p>
+<p>不过现在的处理器<strong>依然兼容</strong>实模式。</p>
+<h2 id="IA—32"><a href="#IA—32" class="headerlink" title="IA—32"></a>IA—32</h2><p>IA-32，既80386已经使用了32位寄存器，既32位的计算机。</p>
+<p>可是，虽然32位的寻址空间达到了4GB但是依然要保留段寄存器，为了兼容。（不支持兼容的产品注定会被市场淘汰）</p>
+<p>因此IA-32支持<strong>两种工作模式</strong></p>
+<p>实模式：IA-32处理器加电或复位时处于这一模式，此时相当于8086&#x2F;8088处理器，32位地址线中的A31～A20不起作用，<strong>所有访存地址都是物理地址</strong>（实地址）。上电后，首先执行<strong>bios</strong>的代码，此时，就是实模式。</p>
+<p>保护模式：完成系统初始化后，进入该模式，此时32位地址线全部起作用，<strong>访存地址为逻辑地址</strong>（虚拟地址），进入虚拟存储器管理方式。</p>
+<p>这两种工作模式切换的“开关”，在CR0寄存器里面的一个二进制位</p>
+<p><img src="https://frun1na.netlify.app//20241025212458.png"></p>
+<p>计算机加电或复位时，PE &#x3D; 0，IA-32处理器处于实模式。当PE &#x3D; 1时，IA-32处理器进入保护模式，而且<strong>不能切换回实模式</strong></p>
+<p>进入保护模式之后，如何利用这些段寄存器？</p>
+<h2 id="IA-32分段机制"><a href="#IA-32分段机制" class="headerlink" title="IA-32分段机制"></a>IA-32分段机制</h2><p>保护模式下，段寄存器的使用：</p>
+<img src="https://frun1na.netlify.app//20241025213807.png" style="zoom:50%;" />
+
+<p>进入IA-32时代，我们希望段地址也是32位的，还可以灵活设置各种段属性，但段寄存器只有16位，连32位段基址也放不下，怎么办？</p>
+<p>采用一个数据结构：段描述符，用来描述一个段所有属性的数据结构，每个段对应一个段描述符</p>
+<h2 id="段描述符"><a href="#段描述符" class="headerlink" title="段描述符"></a>段描述符</h2><img src="https://frun1na.netlify.app//20241025214535.png" style="zoom: 33%;" />
+
+<p>这是一个8字节的数据结构</p>
+<p>段基址：在线性地址下的基地址（共32位）</p>
+<p>限界：段的总长度（共16位）</p>
+<p>DPL：表示一个段所在的特权级别(后面介绍)</p>
+<p>段基址 + 限界 &#x3D; 描述符的最后一个位置</p>
+<p>段描述符占64位，段寄存器根本放不下，怎么办？——放到主存中</p>
+<p>怎么在主存中找到一个描述符？——利用指针</p>
+<p>IA-32中指针是32位的，段寄存器还是放不下即使能放下，如果想切换到其他段的时候，如何知道描述符在什么地方？</p>
+<p>——把内存中的某一连续空间解释成一个数组，称为<strong>段描述符表</strong>，数组中每个元素对应一个段描述符，段寄存器存放数组下标，<strong>段描述符表基地址</strong>用另一个寄存器</p>
+<h2 id="段描述符表"><a href="#段描述符表" class="headerlink" title="段描述符表"></a>段描述符表</h2><p>简称段表，由OS负责填写，包括三种类型：</p>
+<ul>
+<li>全局描述符<strong>表</strong>（GDT）：只有一个，用来保存系统中每个任务都可以访问的段描述符，如内核代码段、数据段，用户代码段、数据段等</li>
+<li>局部描述符<strong>表</strong>（LDT）：存放某一用户进程专用的描述符，保存在GDT中（Linux已经不用了，因为有分页）</li>
+<li>中断描述符<strong>表</strong>（IDT）：独立于GDT的段表，包含中断门、陷阱门等描述符（写NEMU不用管）</li>
+</ul>
+<p>GDT的首地址由<strong>全局描述符表寄存器（GDTR）</strong>提供</p>
+<p>通过<strong>索引（数组下标）</strong>可找到所需的描述符，该索引保存在段寄存器中，称为<strong>段选择符</strong></p>
+<h2 id="全局描述符表寄存器"><a href="#全局描述符表寄存器" class="headerlink" title="全局描述符表寄存器"></a>全局描述符表寄存器</h2><p><img src="https://frun1na.netlify.app/20241025220743.png"></p>
+<p>GDTR由基地址和限界两部分组成，共48位</p>
+<p>GDTR中保存的首地址是线性地址，为什么不是逻辑地址？（因为要翻译成线性地址，否则就循环了）</p>
+<p>GDTR对用户进程不可见，仅可由OS内核通过一条<strong>特权指令</strong>（lgdt  m16&amp;32）将GDT的首地址和限界装载到GDTR中，启动分段机制</p>
+<h2 id="段选择符和段寄存器"><a href="#段选择符和段寄存器" class="headerlink" title="段选择符和段寄存器"></a><strong>段选择符和段寄存器</strong></h2><p>段寄存器（16位），用于存放段选择符，其绑定规则：</p>
+<ul>
+<li>CS(代码段)：程序代码所在段</li>
+<li>SS(栈段)：栈区所在段</li>
+<li>DS(数据段)：全局静态数据区所在段</li>
+<li>其他3个段寄存器ES、GS和FS可指向任意数据段</li>
+</ul>
+<p><strong>段选择符各字段含义：</strong></p>
+<p><img src="https://frun1na.netlify.app/20241025221435.png"></p>
+<p>TI&#x3D;0，选择全局描述符表(GDT)，TI&#x3D;1，选择局部描述符表(LDT)</p>
+<p>RPL表示请求特权级（后面介绍）</p>
+<p>高13位索引用来确定当前使用的段描述符在描述表中的位置</p>
+<p>GDT最多可容纳多少段描述符？2^13 &#x3D; 8192 &#x3D; 8K</p>
+<h2 id="可见性"><a href="#可见性" class="headerlink" title="可见性"></a>可见性</h2><img src="https://frun1na.netlify.app/20241025232027.png" style="zoom:67%;" />
+
+<p>虚线框内的对用户不可见，仅可通过OS内核调用特权指令对GDTR，LDTR和IDTR进行读写</p>
+<h2 id="地址翻译"><a href="#地址翻译" class="headerlink" title="地址翻译"></a>地址翻译</h2><h2 id="TI-0"><a href="#TI-0" class="headerlink" title="TI&#x3D;0"></a><strong>TI&#x3D;0</strong></h2><img src="https://frun1na.netlify.app//20241025233026.png" style="zoom:50%;" />
+
+<p>1.通过段寄存器中的段选择符TI位决定在哪个表中查找。</p>
+<p>2.根据GDTR读出段描述符表的首地址。</p>
+<p>3.根据段寄存器中的段选择符index位在表中进行索引，找到一个段描述符。</p>
+<p>4.在段描述符中读出段的基地址，和逻辑地址相加，得到线性地址。</p>
+<p>在计算线性地址的过程中，可根据段描述符中的限界和访问权限判断是否“地址越界”或“访问越权”，以实现存储保护</p>
+<h2 id="TI-1"><a href="#TI-1" class="headerlink" title="TI&#x3D;1"></a><strong>TI&#x3D;1</strong></h2><img src="https://frun1na.netlify.app//20241025233141.png" style="zoom:50%;" />
+
+<p>局部描述符表存在全局描述符表中</p>
+<h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><p><strong>逻辑地址到线性地址的变换</strong></p>
+<p>在CR0的PE位为“1”时，进入保护模式，启动分段机制；</p>
+<p>通过段寄存器中段选择符的TI位决定在哪个段表中查找；</p>
+<p>通过GDTR读出段表的首地址；</p>
+<p>根据段寄存器中段选择符的索引，找到一个段描述符；</p>
+<p>在段描述符中读出段基址，和有效地址相加得到线性地址</p>
+<h1 id="NEMU操作系统中设置GDT并启动分段"><a href="#NEMU操作系统中设置GDT并启动分段" class="headerlink" title="NEMU操作系统中设置GDT并启动分段"></a><strong>NEMU操作系统中设置GDT并启动分段</strong></h1><pre><code class="assembly">#define GDT_ENTRY(n) ((n) &lt;&lt; 3)
+#define MAKE_NULL_SEG_DESC   \
+    .word 0, 0;          \
+    .byte 0, 0, 0, 0
+#define MAKE_SEG_DESC(type,base,lim)                            \
+    .word (((lim) &gt;&gt; 12) &amp; 0xffff), ((base) &amp; 0xffff);      \
+    .byte (((base) &gt;&gt; 16) &amp; 0xff), (0x90 | (type)),         \
+    (0xC0 | (((lim) &gt;&gt; 28) &amp; 0xf)), (((base) &gt;&gt; 24) &amp; 0xff)
+
+.globl start
+start:
+    lgdt    va_to_pa(gdtdesc)
+    movl    %cr0,  %eax
+    orl     $0x1,  %eax  #或运算，将cr0的最低位置一，开启保护模式
+    movl    %eax,  %cr0
+.p2align 2
+gdt:
+    MAKE_NULL_SEG_DESC                   # empty segment
+    MAKE_SEG_DESC(0xA, 0x0, 0xffffffff)  # code
+    MAKE_SEG_DESC(0x2, 0x0, 0xffffffff)  # data
+gdtdesc:
+    .word   (gdtdesc - gdt - 1)    # limit = sizeof(gdt) - 1
+    .long   va_to_pa(gdt)          # address of GDT
+</code></pre>
+<p>上面是用汇编语言写的。</p>
+<p>其中，gdt里面在一个物理空间里面将code和data段重叠了（基地址设为0，限界设为最大值），所以偏移量就是实际地址。</p>
+<p>而LINUX就是这么实现的，因为它认为段已经没有用了。而且此时描述符cache也不会进行替换，性能可以认为没有损失。这种模式叫做“扁平模式”</p>
+<h1 id="存储保护"><a href="#存储保护" class="headerlink" title="存储保护"></a>存储保护</h1><h2 id="环保护机制"><a href="#环保护机制" class="headerlink" title="环保护机制"></a><strong>环保护机制</strong></h2><p>内核工作在“0”环</p>
+<p>用户工作在“3”环</p>
+<p>其它环留给中间件</p>
+<p>特权级由高到低：0～3</p>
+<p>内环可以访问外环，但外环不能进入内环</p>
+<p>大多数操作系统，如Linux仅用第0环和第3环</p>
+<img src="https://frun1na.netlify.app/20241026005705.png" style="zoom:33%;" />
+
+<p>在80386中，存在0～3四个特权级别，0特权级最高，3特权级最低。<strong>特权级n所能访问的资源，在特权级0～n也能访问</strong>。不同特权级之前的关系就形成了一个环</p>
+<h2 id="权限检查（基于环保护机制）"><a href="#权限检查（基于环保护机制）" class="headerlink" title="权限检查（基于环保护机制）"></a><strong>权限检查（基于环保护机制）</strong></h2><p><strong>DPL：</strong>位于段描述符中，表示一个段所在的特权级别。</p>
+<p><strong>RPL：</strong>位于段选择符中，表示请求者所在的特权级别。</p>
+<p><strong>CPL：</strong>表示当前进程的特权级别，一般与CS寄存器指向的段描述符的DPL 字段相同。</p>
+<p>1.假如你到银行找工作人员办理取款业务，你就相当于“请求者”，你的账户相当于“目标段”，工作人员相当于“当前进程”。业务办理成功是因为：</p>
+<p>  a. 你有权访问自己的账户（target_descriptor.DPL &gt;&#x3D; requestor.RPL）</p>
+<p>  b. 工作人员也有权对你的账户进行操作（target_descriptor.DPL &gt;&#x3D; CPL）</p>
+<p>2.如果你想从别人的账户取钱，虽然工作人员有权访问别人的账户（target_descriptor.DPL &gt;&#x3D; CPL），但你却没有权利访问（target_descriptor.DPL &lt; requestor.RPL），业务办理失败</p>
+<p>3.如果你打算亲自操作银行系统来取款，虽然账户是你的（target_descriptor.DPL &gt;&#x3D; requestor.RPL），但你却没有权限直接对你的账户金额进行操作（target_descriptor.DPL &lt; CPL）这样你会被保安抓起来。</p>
+<img src="https://frun1na.netlify.app/20241026010754.png" style="zoom:50%;" />
+
+<p>计算机中也有类似的情况：用户进程（请求者）想对自己拥有的数据（段描述符所描述的段）进行一些没有权限的操作（比如，输入），它就要请求有权的进程（通常是操作系统）来完成这个操作，于是就出现了“内核代表用户进程进行操作”的场景。当然，在真正进行操作前，也要检查这些数据是不是真的是用户进程有权使用的数据。</p>
+<pre><code class="c">const char str[] = &quot;Hello, world!\n&quot;;
+
+int main() &#123;
+    asm volatile ( &quot;movl $4, %eax;&quot; // system call ID, 4 = SYS_write
+    &quot;movl $1, %ebx;&quot; // file descriptor, 1 = stdout
+    &quot;movl $str, %ecx;&quot; // buffer address
+    &quot;movl $14, %edx;&quot; // length
+    &quot;int $0x80&quot;);
+    return 0;
+
+&#125;
+</code></pre>
+<p>通常，内核运行在ring 0， CPL &#x3D; 0</p>
+<p>用户进程运行在ring 3，CPL &#x3D; 3</p>
+<p>只要操作系统将GDT，页表等重要信息放在ring 0段中，恶意程序永远无法篡改它们（除非恶意程序获得操作系统权限）</p>
+<p>IA-32中的环保护和特权级可有效辨别非法操作，让恶意程序无所遁形，维护计算机的“和谐社会”</p>
+<h1 id="线性地址到物理地址的变换"><a href="#线性地址到物理地址的变换" class="headerlink" title="线性地址到物理地址的变换"></a>线性地址到物理地址的变换</h1><h2 id="IA-32中的控制寄存器"><a href="#IA-32中的控制寄存器" class="headerlink" title="IA-32中的控制寄存器"></a>IA-32中的控制寄存器</h2><p>保存机器的各种控制和状态信息。</p>
+<p>操作系统进行任务控制或存储管理时使用控制寄存器</p>
+<p>CR0：控制寄存器（开启分页机制的开关）</p>
+<p>​		① PE: 1为保护模式。一旦在保护模式，不能再将PE清0，只能重启系统以回到实模式。</p>
+<p>​		② PG：1-启用分页；0-禁止分页，此时线性地址被直接作为物理地址使用。若启用分页机制，则PE和PG都要置1</p>
+<p>CR2：页故障（page fault）线性地址寄存器</p>
+<p>​		存放引起页故障的线性地址。只有在CR0中的PG&#x3D;1时，CR2才有效</p>
+<p>CR3：页目录基址寄存器 </p>
+<p>​		保存页目录表的起始地址。只有当CR0中的PG&#x3D;1时，CR3才有效。</p>
+<h2 id="Linux中线性地址空间划分"><a href="#Linux中线性地址空间划分" class="headerlink" title="Linux中线性地址空间划分"></a>Linux中线性地址空间划分</h2><p>4GB&#x3D;1K个子空间 × 1K个页面&#x2F;子空间 × 4KB&#x2F;页</p>
+<p>采用两级页表</p>
+<p><img src="https://frun1na.netlify.app/20241026101630.png"></p>
+<p>线性地址由3个字段组成，分别是10位页目录索引，10位页表索引，12位页内偏移</p>
+<p>根据控制寄存器CR3中给出的页目录表首地址找到页目录表</p>
+<p>由DIR字段提供的10位页目录索引找到对应的页目录项，每个页目录项大小为4B</p>
+<p>根据页目录项中20位基地址指出页表首地址找到对应的页表，在根据线性地址中间的页表索引（PAGE字段）找到页表中的页表项</p>
+<p>将页表项中的20位基地址和线性地址中的12位页内偏移组合成32位物理地址。</p>
+<p>在这个转换过程中，页目录索引和页表索引都要乘以4，因为每个页目录项和页表项都是32位，占4个字节。</p>
+<h2 id="页目录项和页表项的格式"><a href="#页目录项和页表项的格式" class="headerlink" title="页目录项和页表项的格式"></a>页目录项和页表项的格式</h2><p><img src="https://frun1na.netlify.app//20241026102112.png"></p>
+<p><strong>P</strong>：1表示页表或页在主存中；P&#x3D;0表示页表或页不在主存，即缺页，此时需将页故障线性地址保存到CR2。</p>
+<p><strong>R&#x2F;W</strong>：0表示页表或页只能读不能写；1表示可读可写。</p>
+<p><strong>U&#x2F;S</strong>：0表示用户进程不能访问；1表示允许访问。</p>
+<p><strong>PWT</strong>：控制页表或页的cache写策略是写直通还是回写（Write Back）。</p>
+<p><strong>PCD</strong>：控制页表或页能否被缓存到cache中。</p>
+<p><strong>A</strong>：1表示指定页表或页被访问过，初始化时OS将其清0。利用该标志，OS可清楚了解哪些页表或页正在使用，一般选择长期未用的页或近来最少使用的页调出主存。由MMU在进行地址转换时将该位置1。</p>
+<p><strong>D</strong>：修改位(脏位dirty bit)。页目录项中无意义，只在页表项中有意义。初始化时OS将其清0，由MMU在进行写操作的地址转换时将该位置1。</p>
+<p>高20位是页表或页在主存中的首地址对应的页框号，即首地址的高20位。每个页表的起始位置都按4KB对齐。</p>
+<h1 id="总结：-1"><a href="#总结：-1" class="headerlink" title="总结："></a>总结：</h1><p><img src="https://frun1na.netlify.app//20241026104513.png"></p>
+
+    </div>
+    
+    
+    
+    
+    <div id="comment">
+        <div id="giscus-container" class="giscus"></div>
+    </div>
+    
+    
+    
+    
+</div>
+
+            <footer id="footer">
+    <div id="footer-wrap">
+        <div>
+            &copy;
+            2024 - 2024 Frun1na &#39;s blog
+            <span id="footer-icon">
+                <i class="fa-solid fa-font-awesome fa-fw"></i>
+            </span>
+            &commat;Frun1na
+        </div>
+        <div>
+            Based on the <a target="_blank" rel="noopener" href="https://hexo.io">Hexo Engine</a> &amp;
+            <a target="_blank" rel="noopener" href="https://github.com/theme-particlex/hexo-theme-particlex">ParticleX Theme</a>
+        </div>
+        
+    </div>
+</footer>
+
+        </div>
+        
+        <transition name="fade">
+            <div id="preview" ref="preview" v-show="previewShow">
+                <img id="preview-content" ref="previewContent" />
+            </div>
+        </transition>
+        
+    </div>
+    <script src="/js/main.js"></script>
+    
+    
+<script
+    src="https://giscus.app/client.js"
+    data-repo="Frun1na/Frun1na.github.io"
+    data-repo-id="R_kgDOMv7m6Q"
+    data-category="General"
+    data-category-id="DIC_kwDOMv7m6c4CiZjQ"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="zh-CN"
+    crossorigin
+    async
+></script>
+
+
+
+
+
+    
+</body>
+</html>
