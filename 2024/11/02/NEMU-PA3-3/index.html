@@ -1,0 +1,460 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>NEMU PA3 阶段三、四（实现分页机制） | Frun1na &#39;s blog</title>
+    <meta name="author" content="Frun1na" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <link rel="icon" href="/images/avatar.jpg" />
+    <link rel="preconnect" href="https://s4.zstatic.net" />
+<script src="https://s4.zstatic.net/ajax/libs/vue/3.3.7/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.cn" />
+<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.cn/css2?family=Fira+Code:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap"
+/>
+<script> const mixins = {}; </script>
+
+<script src="https://polyfill.alicdn.com/v3/polyfill.min.js?features=default"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+<link
+    rel="stylesheet"
+    href="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+/>
+<script src="/js/lib/highlight.js"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+<script src="/js/lib/math.js"></script>
+
+
+<script src="/js/lib/preview.js"></script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/main.css" />
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div id="layout">
+        <transition name="fade">
+            <div id="loading" v-show="loading">
+                <div id="loading-circle">
+                    <h2>LOADING</h2>
+                    <p>加载过慢请开启缓存 浏览器默认开启</p>
+                    <img src="/images/loading.gif" />
+                </div>
+            </div>
+        </transition>
+        <div id="menu" :class="{ hidden: hiddenMenu, 'menu-color': menuColor}">
+    <nav id="desktop-menu">
+        <a class="title" href="/">
+            <span>FRUN1NA &#39;S BLOG</span>
+        </a>
+        
+        <a href="/">
+            <i class="fa-solid fa-house fa-fw"></i>
+            <span>&ensp;Home</span>
+        </a>
+        
+        <a href="/about">
+            <i class="fa-solid fa-id-card fa-fw"></i>
+            <span>&ensp;About</span>
+        </a>
+        
+        <a href="/archives">
+            <i class="fa-solid fa-box-archive fa-fw"></i>
+            <span>&ensp;Archives</span>
+        </a>
+        
+        <a href="/categories">
+            <i class="fa-solid fa-bookmark fa-fw"></i>
+            <span>&ensp;Categories</span>
+        </a>
+        
+        <a href="/tags">
+            <i class="fa-solid fa-tags fa-fw"></i>
+            <span>&ensp;Tags</span>
+        </a>
+        
+    </nav>
+    <nav id="mobile-menu">
+        <div class="title" @click="showMenuItems = !showMenuItems">
+            <i class="fa-solid fa-bars fa-fw"></i>
+            <span>&emsp;FRUN1NA &#39;S BLOG</span>
+        </div>
+        <transition name="slide">
+            <div class="items" v-show="showMenuItems">
+                
+                <a href="/">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-house fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Home</div>
+                    </div>
+                </a>
+                
+                <a href="/about">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-id-card fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">About</div>
+                    </div>
+                </a>
+                
+                <a href="/archives">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-box-archive fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Archives</div>
+                    </div>
+                </a>
+                
+                <a href="/categories">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-bookmark fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Categories</div>
+                    </div>
+                </a>
+                
+                <a href="/tags">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-tags fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Tags</div>
+                    </div>
+                </a>
+                
+            </div>
+        </transition>
+    </nav>
+</div>
+<transition name="fade">
+    <div id="menu-curtain" @click="showMenuItems = !showMenuItems" v-show="showMenuItems"></div>
+</transition>
+
+        <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
+            <div class="article">
+    <div>
+        <h1>NEMU PA3 阶段三、四（实现分页机制）</h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2024/11/2
+        </span>
+        
+        
+    </div>
+    
+    <div class="content" v-pre>
+        <h1 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h1><span id="more"></span>
+
+<p>(1)</p>
+<blockquote>
+<p>添加CR3寄存器。</p>
+</blockquote>
+<p>已经添加完了</p>
+<p>(2)</p>
+<blockquote>
+<p>为CR0寄存器添加PG位的功能。装载CR0后, 如果发现CR0的PE位和 PG 位均为 1, 则开启 IA-32 分页机制, 从此所有线性地址的访问(包括 lnaddr_read(), lnaddr_write())都需要经过页级地址转换。在 restart()函数 中对CR0寄存器进行初始化时, PG位要被置0。</p>
+</blockquote>
+<p>已经实现</p>
+<p>(3)</p>
+<blockquote>
+<p>为了实现页级地址转换, 你需要对 lnaddr_read()和 lnaddr_write()函数作 少量修改。</p>
+</blockquote>
+<pre><code class="c">//线性地址
+hwaddr_t page_translate(lnaddr_t addr) &#123;
+    return addr;
+&#125;
+
+uint32_t lnaddr_read(lnaddr_t addr, size_t len) &#123;
+    assert(len == 1 || len == 2 || len == 4);
+    hwaddr_t a = page_translate(addr);
+    hwaddr_t b = page_translate(addr + len);
+    if (a != b) &#123; // 两页，直接终止
+        assert(0);
+    &#125;
+    else &#123;
+        hwaddr_t hwaddr = a;
+        return hwaddr_read(hwaddr, len);
+    &#125;
+&#125;
+
+void lnaddr_write(lnaddr_t addr, size_t len, uint32_t data) &#123;
+    assert(len == 1 || len == 2 || len == 4);
+    if (0) &#123; // 两页
+        assert(0);
+    &#125;
+    else &#123;
+        hwaddr_t hwaddr = page_translate(addr);
+        return hwaddr_write(hwaddr, len, data);
+    &#125;
+&#125;
+</code></pre>
+<p>(4)</p>
+<blockquote>
+<p>需要在 kernel 中加入分页管理相关的代码, 你只需要在 kernel&#x2F;include&#x2F;common.h 中 定 义 宏 IA32_PAGE, 然后修改 kernel&#x2F;Makefile.part 中的链接选项</p>
+</blockquote>
+<p>很简单，不多说</p>
+<p>(5)</p>
+<blockquote>
+<p>你需要理解页级地址转过的过程, 然后实现page_translate()</p>
+</blockquote>
+<pre><code class="c">hwaddr_t page_translate(lnaddr_t addr) &#123;
+    if (!cpu.cr0.protect_enable || !cpu.cr0.paging) return addr;
+    /* addr = 10 dictionary + 10 page + 12 offset */
+    uint32_t dictionary = addr &gt;&gt; 22;
+    uint32_t page = (addr &gt;&gt; 12) &amp; 0x3ff;
+    uint32_t offset = addr &amp; 0xfff;
+    /* 读取页表信息 */
+    uint32_t tmp = (cpu.cr3.page_directory_base &lt;&lt; 12) + dictionary * 4;		// 页目录基地址 + 页目录号 * 页表项大小
+    PDE dictionary_;
+    PTE page_;
+    dictionary_.val = hwaddr_read(tmp, 4);
+    tmp = (dictionary_.addr &lt;&lt; 12) + page * 4;									// 二级页表基地址 + 页号 + 页表项大小
+    page_.val = hwaddr_read(tmp, 4);
+    Assert(dictionary_.present == 1, &quot;dirctionary present&quot;);
+    Assert(page_.present == 1, &quot;second present&quot;);
+    return (page_.page_frame &lt;&lt; 12) + offset;
+&#125;
+</code></pre>
+<p>直接用给的PDE,PTE即可。</p>
+<p>接下来解决跨页的问题</p>
+<pre><code class="c">if ((int64_t)(offset + len) &gt; 0x1000) &#123;	// 跨页
+    size_t l = 0xfff - offset + 1;		// 低位最多几个字节同页
+    uint32_t down_val = lnaddr_read(addr, l);			// 低位
+    uint32_t up_val = lnaddr_read(addr + l, len - l);	//高位
+    return (up_val &lt;&lt; (l * 8)) | down_val;
+&#125;
+</code></pre>
+<p>另一个写内存的同理</p>
+<p>发现存在没有实现的指令，为cld与std</p>
+<p>实现一下即可，这两个很容易。</p>
+<p>(6)</p>
+<p>为用户进程分配虚拟空间</p>
+<p>在kernel&#x2F;src&#x2F;elf&#x2F;elf.c&#x2F;loader()里面添加即可<code>ph -&gt; p_vaddr = mm_malloc(ph -&gt; p_vaddr,ph -&gt; p_memsz);</code></p>
+<h1 id="选做二"><a href="#选做二" class="headerlink" title="选做二"></a>选做二</h1><p>ADDR的指令的函数，在memory.c中</p>
+<pre><code class="c">hwaddr_t cmd_page(lnaddr_t addr) &#123;	// 简易调试器
+    if(!cpu.cr0.protect_enable || !cpu.cr0.paging) return addr;
+    /* addr = 10 dictionary + 10 page + 12 offset */
+    uint32_t dictionary = addr &gt;&gt; 22, page = (addr &gt;&gt; 12) &amp; 0x3ff, offset = addr &amp; 0xfff;
+    /* 读取页表信息 */
+    uint32_t tmp = (cpu.cr3.page_directory_base &lt;&lt; 12) + dictionary * 4;		// 页目录基地址 + 页目录号 * 页表项大小
+    Page_info dictionary_, page_;
+    dictionary_.val = hwaddr_read(tmp, 4);
+    tmp = (dictionary_.addr &lt;&lt; 12) + page * 4;									// 二级页表基地址 + 页号 + 页表项大小
+    page_.val = hwaddr_read(tmp, 4);
+    if(dictionary_.p != 1) &#123;
+        printf(&quot;dirctionary present != 1\n&quot;);
+        return 0;
+    &#125;
+    if(page_.p != 1) &#123;
+        printf(&quot;second page table present != 1\n&quot;);
+        return 0;
+    &#125;
+    return (page_.addr &lt;&lt; 12) + offset;
+&#125;
+</code></pre>
+<p>在ui.c中：</p>
+<pre><code class="c">hwaddr_t cmd_page(lnaddr_t addr);
+static int cmd_translate(char* args) &#123;
+    if (args == NULL) &#123; printf(&quot;parameter invalid!\n&quot;); return 0; &#125;
+    uint32_t addr;
+    sscanf(args, &quot;%x&quot;, &amp;addr);
+    hwaddr_t ans = cmd_page(addr);
+    if (ans) printf(&quot;Addr is 0x%08x\n&quot;, ans);
+    return 0;
+&#125;
+</code></pre>
+<h1 id="必做4"><a href="#必做4" class="headerlink" title="必做4"></a>必做4</h1><p>实现tlb</p>
+<p>tlb.h</p>
+<pre><code class="c">#ifndef __TLB_H__
+#define __TLB_H__
+
+#include &quot;common.h&quot;
+/******************************
+ * TLB 总共有 64 项
+ * fully associative
+ * 标志位只需要 valid bit
+ * 替换算法采用随机方式
+ * tag有20位, 即虚拟页号
+ ******************************/
+
+#define TLB_SIZE 64
+
+typedef struct&#123;
+    bool valid;         // 有效位
+    uint32_t tag, data; // tag是虚拟页号 data是物理页号
+&#125; TLB;
+
+TLB tlb[TLB_SIZE];
+void init_tlb();
+
+int read_tlb(lnaddr_t addr);
+void write_tlb(lnaddr_t addr, hwaddr_t haaddr);
+
+#endif
+</code></pre>
+<p>tlb.c</p>
+<pre><code class="c">#include &quot;memory/tlb.h&quot;
+#include &quot;burst.h&quot;
+#include &lt;time.h&gt;
+#include &lt;stdlib.h&gt;
+
+void init_tlb()&#123;
+    int i;
+    for (i = 0; i &lt; TLB_SIZE; i++) tlb[i].valid = 0;
+    srand(clock());
+&#125;
+
+// 如果有，返回index，没有返回-1
+int read_tlb(lnaddr_t addr) &#123;
+    int tag = addr &gt;&gt; 12;
+    int i;
+    for (i = 0; i &lt; TLB_SIZE; ++ i) &#123;
+        if (tlb[i].tag == tag &amp;&amp; tlb[i].valid) return i;
+    &#125;
+    return -1; // tlb里没有
+&#125;
+
+// 参数：虚拟地址，物理地址
+void write_tlb(lnaddr_t addr, hwaddr_t addr_)&#123;
+    int tag = addr &gt;&gt; 12, i;
+    addr_ &gt;&gt;= 12;
+    for (i = 0; i &lt; TLB_SIZE; i++) &#123;
+        if(!tlb[i].valid)&#123;
+            tlb[i].tag = tag, tlb[i].data = addr_, tlb[i].valid = 1;
+            return ;
+        &#125;
+    &#125;
+    // 没有空闲的了， 替换
+    i = rand() % TLB_SIZE;
+    tlb[i].tag = tag, tlb[i].data = addr_, tlb[i].valid = 1;
+&#125;
+</code></pre>
+<p>然后在page_translate里面修改即可:</p>
+<pre><code class="c">if (index != -1) 
+    return (tlb[index].data &lt;&lt; 12) + offset;
+</code></pre>
+<p>如果命中，直接返回</p>
+<p>没有命中，翻译之后写入tlb</p>
+<pre><code class="c">hwaddr_t addr_ = (page_.page_frame &lt;&lt; 12) + offset;
+write_tlb(addr, addr_);
+return addr_;
+</code></pre>
+<h1 id="选做3"><a href="#选做3" class="headerlink" title="选做3"></a>选做3</h1><pre><code class="c">void create_video_mapping() &#123;
+    /* TODO: create an identical mapping from virtual memory area 
+     * [0xa0000, 0xa0000 + SCR_SIZE) to physical memory area 
+     * [0xa0000, 0xa0000 + SCR_SIZE) for user program. You may define
+     * some page tables to create this mapping.
+     */
+    PDE* pdir = (PDE*)va_to_pa(get_updir());
+    pdir[0].val = make_pde(va_to_pa(ptable));
+    uint32_t i, start, end;
+    start = VMEM_ADDR / PAGE_SIZE;
+    end = start + SCR_SIZE / PAGE_SIZE;
+    if (SCR_SIZE % PAGE_SIZE) 
+        end++;
+    for (i = start; i &lt;= end; i++) &#123;
+        ptable[i].val = make_pte(i &lt;&lt; 12);
+    &#125;
+&#125;
+</code></pre>
+
+    </div>
+    
+    
+    
+    
+    <div id="comment">
+        <div id="giscus-container" class="giscus"></div>
+    </div>
+    
+    
+    
+    
+</div>
+
+            <footer id="footer">
+    <div id="footer-wrap">
+        <div>
+            &copy;
+            2024 - 2024 Frun1na &#39;s blog
+            <span id="footer-icon">
+                <i class="fa-solid fa-font-awesome fa-fw"></i>
+            </span>
+            &commat;Frun1na
+        </div>
+        <div>
+            Based on the <a target="_blank" rel="noopener" href="https://hexo.io">Hexo Engine</a> &amp;
+            <a target="_blank" rel="noopener" href="https://github.com/theme-particlex/hexo-theme-particlex">ParticleX Theme</a>
+        </div>
+        
+    </div>
+</footer>
+
+        </div>
+        
+        <transition name="fade">
+            <div id="preview" ref="preview" v-show="previewShow">
+                <img id="preview-content" ref="previewContent" />
+            </div>
+        </transition>
+        
+    </div>
+    <script src="/js/main.js"></script>
+    
+    
+<script
+    src="https://giscus.app/client.js"
+    data-repo="Frun1na/Frun1na.github.io"
+    data-repo-id="R_kgDOMv7m6Q"
+    data-category="General"
+    data-category-id="DIC_kwDOMv7m6c4CiZjQ"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="zh-CN"
+    crossorigin
+    async
+></script>
+
+
+
+
+
+    
+</body>
+</html>

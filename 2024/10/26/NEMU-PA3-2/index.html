@@ -179,6 +179,271 @@
 
 <p>前置知识在上一篇文章：IA-32&#x2F;Linux内存管理</p>
 <p>这里要开始看指导手册了。</p>
+<p>首先在kernel&#x2F;include&#x2F;common.h 中定义宏 IA32_SEG, 然后重新编译 kernel</p>
+<p>make run之后，si 1，发现第一个指令就执行不了了</p>
+<p>查看指导手册</p>
+<blockquote>
+<p>1.设置GDTR </p>
+<p>2.将 CR0的PE位置1, 切换到保护模式  </p>
+<p>3.使用ljmp 设置CS寄存器  </p>
+<p>4.设置DS, ES, SS 寄存器  </p>
+<p>5.为 C代码设置堆栈  </p>
+<p>6.跳转到init()函数继续进行初始化工作</p>
+</blockquote>
+<p>(1)</p>
+<blockquote>
+<p>在 CPU_state 结构中添加GDTR, CR0和各种段寄存器, 包括CS, DS, ES,  SS, 其具体结构请参考i386手册。80386中还引入了两个新的段寄存器GS 和FS, 不过我们不会用到它们, 因此可以不模拟它们的功能。LDT我们也不 会用到, 和LDT相关的内容也不必模拟。你还需要在restart()函数中对CR0 寄存器进行初始化, 让模拟的计算机在”开机”的时候运行在”实模式”下。</p>
+</blockquote>
+<p>首先实现段寄存器</p>
+<pre><code class="c">typedef struct&#123;
+    uint16_t selector;				// 段选择符
+    uint32_t base, limit, type;		// 段描述符高速缓存 段描述符的信息
+&#125; S_reg;
+</code></pre>
+<p>说实话我也不知道为啥这么写</p>
+<p>然后在cpu_state里面声明S_reg类型的变量</p>
+<pre><code class="c">union&#123; // 段选择符
+        struct&#123;
+            S_reg sreg[4];	// 为了方便swaddr_read和seg_translate
+        &#125;;
+        struct&#123;
+            S_reg CS, DS, SS, ES;	// 代码段，数据段，堆栈，扩展
+        &#125;;
+    &#125;;
+</code></pre>
+<p>注：union（联合体）在c&#x2F;c++是一种数据结构，这里面的所有成员共享一块内存，内存的大小是最大成员的大小。在这里，union的成员是两个结构体，由于共享一块内存，cpu.sreg[0]就相当于cpu.CS的引用，cpu.serg[1]就相当于cpu.DS的引用，…</p>
+<p>添加枚举类型<code>enum &#123; R_CS, R_DS, R_SS, R_ES&#125;;</code></p>
+<p>实现CR0可以看libcommon&#x2F;x86-inc&#x2F;cpu.h里面，这里有CR0和CR3，我们不用自己写了。因此直接在NEMU2021&#x2F;nemu&#x2F;include&#x2F;cpu&#x2F;reg.h文件里面include这个头文件即可。</p>
+<p><code>#include &quot;../../lib-common/x86-inc/cpu.h&quot;</code></p>
+<p>然后在cpu_state里面声明cr0和cr3的变量即可。<code>CR0 cr0;</code> <code>CR3 cr3;</code></p>
+<p>还有GDTR寄存器(在cpu_state里面)</p>
+<pre><code class="c">struct &#123;
+ uint32_t base, limit;	// GDT的 首地址 和 长度
+&#125; GDTR;
+</code></pre>
+<p>以及读取GDT的结构：</p>
+<pre><code class="c">typedef struct&#123;
+    union&#123;
+        struct&#123;
+            uint16_t lim1, b1;
+        &#125;;
+        uint32_t p1;
+    &#125;;
+    union&#123;
+        struct&#123;
+            uint32_t b2: 8, a: 1, type: 3, s: 1, dpl: 2, p: 1, lim2: 4;
+            uint32_t avl: 1, : 1,x: 1, g: 1,b3: 8;
+        &#125;;
+        uint32_t p2;
+    &#125;;
+&#125;Sreg_info;	// 用于读取DGT的内容(相当于段寄存器的描述符cache)
+Sreg_info sreg_info;
+</code></pre>
+<p>然后回忆以下restart()在monitor.c中，在这里面初始化CR0</p>
+<p>一开始工作在实模式，且不启用分页</p>
+<pre><code class="c">static void init_cr0()&#123;
+    cpu.cr0.protect_enable = 0; // 实模式
+    cpu.cr0.paging = 0;			// 不分页
+&#125;
+</code></pre>
+<p>添加到restart即可。</p>
+<p>(2)</p>
+<blockquote>
+<p>添加lgdt指令。</p>
+</blockquote>
+<img src="https://frun1na.netlify.app//20241101181549.png" style="zoom: 50%;" />
+
+<p>查看i386手册330页</p>
+<p>图中的LIDT为：加载中断描述符表，nemu中我们不会用到</p>
+<p>&#x2F;2表示opcode后面跟一个ModR&#x2F;M字节，且上两位，中间三位，下三位里面的中间三位解释为opcode，为2</p>
+<p>可能是16位，也可能是32位，所以我们直接用_v后缀读取操作数即可。</p>
+<pre><code class="c">#ifndef __LGDT_H__
+#define __LGDT_H__
+
+make_helper(lgdt_rm_v);
+
+#endif
+</code></pre>
+<pre><code class="c">#include &quot;cpu/exec/helper.h&quot;
+
+#define DATA_BYTE 2
+#include &quot;lgdt-template.h&quot;
+#undef DATA_BYTE
+
+#define DATA_BYTE 4
+#include &quot;lgdt-template.h&quot;
+#undef DATA_BYTE
+
+make_helper_v(lgdt_rm)
+</code></pre>
+<pre><code class="c">#include &quot;cpu/exec/template-start.h&quot;
+
+#define instr lgdt
+
+static void do_execute() &#123;
+    /* 目标地址共有 6Bytes 的内容，存放limit和base */
+    // 16位操作数：16bits limit + 24bits base | 2+3 Bytes
+    // 32位操作数：16bits limit + 32bits base | 2+4 Bytes(最高字节存放 高位基址位)
+    cpu.GDTR.limit = swaddr_read(op_src -&gt; addr, 2, R_DS);
+    if (op_src -&gt; size == 2)
+        cpu.GDTR.base = swaddr_read(op_src -&gt; addr + 2, 3, R_DS);
+    else&#123;
+        cpu.GDTR.base = swaddr_read(op_src -&gt; addr + 2, 4, R_DS);
+    &#125;
+    print_asm_template1();
+&#125;
+
+make_instr_helper(rm);
+
+#include &quot;cpu/exec/template-end.h&quot;
+</code></pre>
+<p>这是三个文件里面的代码，就是将那个地址里面的内容读到寄存器里面。地址里面的前两个字节表示限界，后3&#x2F;4个字节表示基地址</p>
+<p>别忘了<code>#include &quot;data-mov/lgdt.h&quot;</code></p>
+<p>以及将exec.c对应位置的指令修改一下。由于0F开头，在第二个组里面，由于是01，所以在group7，由于是&#x2F;2，所以在group7里面的第三个位置。</p>
+<p>(3)</p>
+<blockquote>
+<p>添加opcode为0F 20和0F 22的mov指令, 使得我们可以设置&#x2F;读出CR0。 设置CR0后, 如果发现CR0的PE位为1, 则进入IA-32保护模式, 从此所 有虚拟地址的访问(包括swaddr_read()和swaddr_write())都需要经过段级地址转换。</p>
+</blockquote>
+<p><img src="https://frun1na.netlify.app/20241102094619.png"></p>
+<p>在对应的指令文件（mov-template）中添加：</p>
+<pre><code class="c">#if DATA_BYTE == 4
+
+make_helper(mov_cr2r) &#123;
+    uint8_t tmp = instr_fetch(eip+1, 1);
+    uint8_t cr = (tmp &gt;&gt; 3) &amp; 7;	// 倒数4~6位
+    uint8_t reg = tmp &amp; 7;			// 后3位
+    if(cr == 0) &#123;
+        reg_l(reg) = cpu.cr0.val;
+        print_asm(&quot;mov cr0 %%%s&quot;, REG_NAME(reg));
+    &#125;
+    else if(cr == 3) &#123;
+        reg_l(reg) = cpu.cr3.val;
+        print_asm(&quot;mov cr3 %%%s&quot;, REG_NAME(reg));
+    &#125;
+    return 2;
+&#125;
+make_helper(mov_r2cr) &#123;
+    uint8_t tmp = instr_fetch(eip+1, 1);
+    uint8_t cr = (tmp &gt;&gt; 3) &amp; 7;	// 倒数4~6位
+    uint8_t reg = tmp &amp; 7;			// 后3位
+    if(cr == 0) &#123;
+        cpu.cr0.val = reg_l(reg);
+        print_asm(&quot;mov %%%s cr0&quot;, REG_NAME(reg));
+    &#125;
+    else if(cr == 3) &#123;
+        cpu.cr3.val = reg_l(reg);
+        print_asm(&quot;mov %%%s cr3&quot;, REG_NAME(reg));
+    &#125;
+    return 2;
+&#125;
+
+#endif
+</code></pre>
+<p>以及在mov.h中添加。</p>
+<p>(4)</p>
+<blockquote>
+<p>为了实现段级地址转换, 你需要对swaddr_read()和swaddr_write()函数作 少量修改。其中 sreg 记录了当前段级地址转换所用到的段寄存器的编码, 关于段寄存器的 编码, 请查阅 i386 手册。你需要理解段级地址转过的过程, 然后实现 seg_translate()函数。再次提醒, 在 NEMU中, 只有进入保护模式之后才会进行 段级地址转换。 </p>
+</blockquote>
+<p>在include里面的memory.h里面先把函数声明修改了。</p>
+<p><code>void swaddr_write(swaddr_t, size_t, uint32_t, uint8_t);</code>以及 <code>uint32_t swaddr_read(swaddr_t, size_t, uint8_t);</code></p>
+<p>以及MEM宏</p>
+<pre><code class="c">#define MEM_R(addr, sreg) swaddr_read(addr, DATA_BYTE, sreg)                // 添加了sreg
+#define MEM_W(addr, data, sreg) swaddr_write(addr, DATA_BYTE, data, sreg)
+</code></pre>
+<p>在memory中修改swaddr_read以及swaddr_write</p>
+<pre><code class="c">/*虚拟地址*/
+/* 虚拟地址-&gt;线性地址 */
+lnaddr_t seg_translate(swaddr_t addr, size_t len, uint8_t sreg) &#123; 
+    if (cpu.cr0.protect_enable == 0) return addr;
+    return cpu.sreg[sreg].base + addr;
+&#125;
+//读虚拟地址
+uint32_t swaddr_read(swaddr_t addr, size_t len, uint8_t sreg) &#123;
+    assert(len == 1 || len == 2 || len == 4);
+    lnaddr_t lnaddr = seg_translate(addr, len, sreg);
+    return lnaddr_read(lnaddr, len);
+&#125;
+//写虚拟地址
+void swaddr_write(swaddr_t addr, size_t len, uint32_t data, uint8_t sreg) &#123;
+    assert(len == 1 || len == 2 || len == 4);
+    lnaddr_t lnaddr = seg_translate(addr, len, sreg);
+    lnaddr_write(lnaddr, len, data);
+&#125;
+</code></pre>
+<p>(5)</p>
+<blockquote>
+<p>为了实现段寄存器的捆绑规则, 你还需要</p>
+<p>1.在 Operand 结构体中添加成员sreg。</p>
+<p>2.修改read_ModR_M()中的代码, 以确定是和DS, SS中的哪一个进行捆绑,  然后设置rm-&gt;sreg, 这样swaddr_read()和swaddr_write()就可以使用正确的 段寄存器了。</p>
+<p>3.修改宏 MEM_W()和 MEM_R(), 以及所有调用 swaddr_read()和  swaddr_write()的代码, 为它们添加段寄存器的参数。</p>
+<p>特别地：opcode为A0 , A1, A2, A3的mov指令使用DS寄存器。一些堆栈操作指令会隐式使用SS寄存器。instr_fetch()总是使用CS寄存器。在monitor中, x和p命令读出内存时, 使用DS寄存器；bt命令打 印栈帧链时, 使用SS寄存器。关于字符串操作指令使用的段寄存器, 请查阅i386手册。</p>
+</blockquote>
+<p>在nemu&#x2F;include&#x2F;cpu&#x2F;decode&#x2F;operand.h里面修改结构体</p>
+<pre><code class="c">struct &#123;
+    swaddr_t addr;
+    uint8_t sreg;
+&#125;;
+</code></pre>
+<p>nemu&#x2F;src&#x2F;cpu&#x2F;decode&#x2F;modrm.c里面设置<code>rm-&gt;sreg</code></p>
+<p>在readModRM里面：</p>
+<pre><code class="c">if (rm-&gt;reg == R_EBP || rm-&gt;reg == R_ESP) &#123; // 栈相关，用SS
+    rm-&gt;sreg = R_SS;
+&#125;
+else rm-&gt;sreg = R_DS;
+rm-&gt;val = swaddr_read(rm-&gt;addr, rm-&gt;size, rm-&gt;sreg);	// swaddrr改了，这里要改
+</code></pre>
+<p>接下来，修改所有使用swaddr的地方即可。</p>
+<p>(6)</p>
+<blockquote>
+<p>添加opcode为8E的mov指令, 使得我们可以设置段寄存器。设置段寄存 器时, 还需要将段的一些属性读入到段寄存器的描述符cache部分(在i386 手册中被称为”隐藏部分”, invisible part), 我们只需要读入段的 base 和 limit 就可以了, 其它属性在NEMU中不使用.</p>
+<p>另外还有两点需要注意:</p>
+<p>GDTR 中存放的GDT首地址是线性地址。</p>
+<p> IA-32 中规定不能使用mov指令设置CS寄存器, 但切换到保护模式之后,  下一条指令的取指就要用到CS寄存器了。解决这个问题的一种方式是在restart() 函数中对CS寄存器的描述符cache部分进行初始化, 将base初始化为0, limit 初始化为0xffffffff 即可</p>
+</blockquote>
+<p>我们先来实现mov</p>
+<pre><code class="c">make_helper(mov_sreg2rm) &#123;
+    uint8_t modrm = instr_fetch(eip + 1, 1);
+    uint8_t sreg = (modrm &gt;&gt; 3) &amp; 7;
+    uint8_t reg = (modrm &amp; 7);
+    cpu.sreg[sreg].selector = reg_w(reg);
+    sreg_set(sreg);									// 更新段描述符高速缓存
+    print_asm(&quot;mov %s sreg%d&quot;, REG_NAME(reg), sreg);
+    return 2;
+&#125;
+</code></pre>
+<p>以及在reg.c中的更新描述符cache（不知道啥是描述符cache，看IA-32&#x2F;Linux内存管理）</p>
+<pre><code class="c">void sreg_set(uint8_t id) &#123;	// 根据段描述符 更新 段描述符高速缓存
+    lnaddr_t chart_addr = cpu.GDTR.base + ((cpu.sreg[id].selector &gt;&gt; 3) &lt;&lt; 3);	//段描述符地址
+    sreg_info.p1 = lnaddr_read(chart_addr, 4);
+    sreg_info.p2 = lnaddr_read(chart_addr + 4, 4);
+    cpu.sreg[id].base = sreg_info.b1 + (sreg_info.b2 &lt;&lt; 16) + (sreg_info.b3 &lt;&lt; 24);
+    cpu.sreg[id].limit = sreg_info.lim1 + (sreg_info.lim2 &lt;&lt; 16) + (0xfff &lt;&lt; 24);
+    if (sreg_info.g == 1) &#123;	//粒度位（G）：0表示段界限单位是B；1表示4KB
+        cpu.sreg[id].limit &lt;&lt;= 12;
+    &#125;
+&#125;
+</code></pre>
+<p>在monitor.c里面初始化CS</p>
+<pre><code class="c">static void init_cs() &#123;
+    cpu.CS.base = 0, cpu.CS.limit = 0xffffffff;
+&#125;
+</code></pre>
+<p>(7)</p>
+<blockquote>
+<p>为了设置CS寄存器, 你需要实现ljmp指令, 即JMP ptr16:32形式的jmp 指令, 其作用是”Jump intersegment, 6-byte immediate address”, 更多 信息请查阅i386手册。</p>
+</blockquote>
+<pre><code class="c">#if DATA_BYTE == 4
+make_helper(ljmp)&#123;
+    cpu.eip = instr_fetch(cpu.eip + 1, 4, R_CS) - 7;                  // 后面eip会+7，所以先-7
+    cpu.CS.selector = instr_fetch(cpu.eip + 1 + 4, 2, R_CS);          // 设置CS寄存器
+    sreg_set(R_CS);                                             // 更新CS描述符高速缓存
+    print_asm(&quot;ljmp 0x%x 0x%x&quot;,instr_fetch(cpu.eip + 1 + 4, 2, R_CS), instr_fetch(cpu.eip+1, 4), R_CS);
+    return 7;
+&#125;
+#endif
+</code></pre>
+<p>直接在jmp里面写即可。</p>
+<p>至此，分段机制已经完成，阶段二结束。</p>
 
     </div>
     
