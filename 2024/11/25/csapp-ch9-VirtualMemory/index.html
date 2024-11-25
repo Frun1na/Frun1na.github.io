@@ -1,0 +1,812 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>csapp-ch9-VirtualMemory | Frun1na &#39;s blog</title>
+    <meta name="author" content="Frun1na" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <link rel="icon" href="/images/avatar.jpg" />
+    <link rel="preconnect" href="https://s4.zstatic.net" />
+<script src="https://s4.zstatic.net/ajax/libs/vue/3.3.7/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.cn" />
+<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.cn/css2?family=Fira+Code:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap"
+/>
+<script> const mixins = {}; </script>
+
+<script src="https://polyfill.alicdn.com/v3/polyfill.min.js?features=default"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+<link
+    rel="stylesheet"
+    href="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+/>
+<script src="/js/lib/highlight.js"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+<script src="/js/lib/math.js"></script>
+
+
+<script src="/js/lib/preview.js"></script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/main.css" />
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div id="layout">
+        <transition name="fade">
+            <div id="loading" v-show="loading">
+                <div id="loading-circle">
+                    <h2>LOADING</h2>
+                    <p>加载过慢请开启缓存 浏览器默认开启</p>
+                    <img src="/images/loading.gif" />
+                </div>
+            </div>
+        </transition>
+        <div id="menu" :class="{ hidden: hiddenMenu, 'menu-color': menuColor}">
+    <nav id="desktop-menu">
+        <a class="title" href="/">
+            <span>FRUN1NA &#39;S BLOG</span>
+        </a>
+        
+        <a href="/">
+            <i class="fa-solid fa-house fa-fw"></i>
+            <span>&ensp;Home</span>
+        </a>
+        
+        <a href="/about">
+            <i class="fa-solid fa-id-card fa-fw"></i>
+            <span>&ensp;About</span>
+        </a>
+        
+        <a href="/archives">
+            <i class="fa-solid fa-box-archive fa-fw"></i>
+            <span>&ensp;Archives</span>
+        </a>
+        
+        <a href="/categories">
+            <i class="fa-solid fa-bookmark fa-fw"></i>
+            <span>&ensp;Categories</span>
+        </a>
+        
+        <a href="/tags">
+            <i class="fa-solid fa-tags fa-fw"></i>
+            <span>&ensp;Tags</span>
+        </a>
+        
+    </nav>
+    <nav id="mobile-menu">
+        <div class="title" @click="showMenuItems = !showMenuItems">
+            <i class="fa-solid fa-bars fa-fw"></i>
+            <span>&emsp;FRUN1NA &#39;S BLOG</span>
+        </div>
+        <transition name="slide">
+            <div class="items" v-show="showMenuItems">
+                
+                <a href="/">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-house fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Home</div>
+                    </div>
+                </a>
+                
+                <a href="/about">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-id-card fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">About</div>
+                    </div>
+                </a>
+                
+                <a href="/archives">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-box-archive fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Archives</div>
+                    </div>
+                </a>
+                
+                <a href="/categories">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-bookmark fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Categories</div>
+                    </div>
+                </a>
+                
+                <a href="/tags">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-tags fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Tags</div>
+                    </div>
+                </a>
+                
+            </div>
+        </transition>
+    </nav>
+</div>
+<transition name="fade">
+    <div id="menu-curtain" @click="showMenuItems = !showMenuItems" v-show="showMenuItems"></div>
+</transition>
+
+        <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
+            <div class="article">
+    <div>
+        <h1>csapp-ch9-VirtualMemory</h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2024/11/25
+        </span>
+        
+        
+    </div>
+    
+    <div class="content" v-pre>
+        <h1 id="虚拟内存-课程内容已完结"><a href="#虚拟内存-课程内容已完结" class="headerlink" title="虚拟内存(课程内容已完结)"></a>虚拟内存(课程内容已完结)</h1><span id="more"></span>
+
+<p>进程提供的两个重要的抽象，分别是逻辑控制和独立的私有地址空间。其中逻辑控制流由上下文切换来实现，进程自己感知不到这种切换。而独立的私有地址空间则是可以保证进程之间的地址互不干扰。例如，一个进程A的一个野指针，指向另一个进程的地址，而如果进程A访问这个指针所指区域，就会触发段错误，而不是将其他进程的地址修改掉。</p>
+<p>虚拟存储器实现了这一点。它有两个条件：cpu要支持这种机制，同时操作系统要配合cpu来实现。</p>
+<h1 id="物理和虚拟寻址"><a href="#物理和虚拟寻址" class="headerlink" title="物理和虚拟寻址"></a>物理和虚拟寻址</h1><h2 id="主存组织："><a href="#主存组织：" class="headerlink" title="主存组织："></a>主存组织：</h2><p>程序根据地址引用数据，概念上，可将其想象为一个非常大的<strong>字节</strong>数组，事实上不是，但可以这么认为。地址就像数组的下标，用指针来存储地址。</p>
+<p>系统为每个进程提供了一个私有地址空间，一个进程可以访问自身的数据，但不能破 坏其他进程的数据</p>
+<h2 id="物理寻址"><a href="#物理寻址" class="headerlink" title="物理寻址"></a>物理寻址</h2><p>cpu直接通过物理地址来访问数据</p>
+<img src="https://frun1na.netlify.app//20241016171801.png" style="zoom:50%;" />
+
+<p>在一些简单的系统中应用这种方式进行寻址，如 汽车（不是现在的电动汽车主控，它使用的是虚拟寻址）、电梯和数码相框中的嵌入式微控制器</p>
+<p>这种寻址不适合多任务场景，不过对于单任务场景，这是非常有用的。</p>
+<h2 id="虚拟寻址"><a href="#虚拟寻址" class="headerlink" title="虚拟寻址"></a>虚拟寻址</h2><p>如果是多任务场景，另一个进程把数据存储到当前进程所使用的内存中怎么办</p>
+<p>所以，加入了一个<strong>间接层</strong>（在计算机科学中，没有什么是引入一个间接层不能解决的）</p>
+<p>每个进程具有自己私有的内存空间，表现出是一个私有的、完整的内存空间，这解决了“如何选择内存”以及“其他人不会干扰当 前进程内存”的问题。</p>
+<p>实现：<strong>透明</strong>的地址翻译过程（透明表示：这一层看不到，直接透到下一层）</p>
+<p>即增加了一个映射函数，将（进程的）私有地址映射到物理地址，在每一次内存加载和存储时都会发生</p>
+<p>地址映射是虚拟内存的核心技术</p>
+<img src="https://frun1na.netlify.app//20241016172737.png" style="zoom:50%;" />
+
+<p>在现代的服务器、桌面、笔记本 电脑和绝大多数的智能手机中， 都使用虚拟寻址系统</p>
+<p>在现代cpu中，一般都把MMU放在cpu里面</p>
+<h1 id="地址空间"><a href="#地址空间" class="headerlink" title="地址空间"></a>地址空间</h1><p><strong>线性地址空间</strong>：连续的非负整数地址的有序集合（为了简化，假设使用的是线性地址空间）<br>$$<br>\left { 0, 1, 2, 3 …  \right }<br>$$<br><strong>虚拟地址空间</strong>（Virtual address space）：N &#x3D; 2ⁿ个虚拟地址所构成的集合（注：这不是虚拟的地址空间，而是虚拟地址的空间）<br>$$<br>\left { 0, 1, 2, 3, …, N-1 \right }<br>$$<br>一个地址空间的大小是由表示最大地址所需要的位数来描述的。例如，一个包含N&#x3D; 2”个地址的虚拟地址空间就叫做一个n 位地址空间。现代系统通常支持32位或者64位虚拟地址空间。</p>
+<p><strong>物理地址空间</strong>（physical address space)，对应于系统中物理内存的 M个字节：<br>$$<br>\left { 0, 1, 2, 3, …, M-1 \right }<br>$$<br>M不要求是2的幂，但是为了简化讨论，我们假设M&#x3D;2^m</p>
+<p>请注意区分数据（字节）和它的属性（地址）</p>
+<p>现在，每个数据可能会有多个地址，主存中的每个字节：一个物理地址，一个或多 个虚拟地址</p>
+<p><strong>为什么需要虚拟内存？</strong></p>
+<p>更加有效率的利用主存，将DRAM作为缓存，用于缓冲虚拟地址空间中的部分数据。（高频访问的数据放在dram，低频访问的数据放在磁盘）</p>
+<p>简化内存管理：每个进程都能够获得相同的、一致的、线性的地址空间。（链接器实现起来更加容易）</p>
+<p>独立的地址空间：一个进程不会影响另一个进程的内存，用户程序不能够访问内核私有的数据和代码</p>
+<h1 id="虚拟内存作为缓存的工具"><a href="#虚拟内存作为缓存的工具" class="headerlink" title="虚拟内存作为缓存的工具"></a>虚拟内存作为缓存的工具</h1><p>虚拟内存是一个包含N个连续字节的数组，可以被存储在磁盘上。磁盘上的数组被缓存在物理内存中（DRAM 缓存），这些缓存块被称为“页”（大小为P&#x3D; 2^p字节）</p>
+<p>VM系统通过将虚拟内存分割为称为虚拟页（Virtual Page, VP)。类似地，物理内存被分割为物理页（Physical Page, PP)，大小也为P字节（物理页也被称为页帧（page frame))。</p>
+<p>在任意时刻，虚拟页面的集合都分为三个不相交的子集：</p>
+<ul>
+<li>未分配的：VM系统还未分配(或者创建）的页。未分配的块没有任何数据和它们相关联，因此也就不占用任何磁盘空间。</li>
+<li>缓存的：当前已缓存在物理内存中的已分配页。</li>
+<li>未缓存的：未缓存在物理内存中的已分配页。</li>
+</ul>
+<img src="https://frun1na.netlify.app//20241016180329.png" style="zoom:50%;" />
+
+<h2 id="DRAM缓存的组织结构"><a href="#DRAM缓存的组织结构" class="headerlink" title="DRAM缓存的组织结构"></a>DRAM缓存的组织结构</h2><p>使用术语<strong>SRAM</strong>缓存来表示位于CPU和主存之间的L1， L2和L3高速缓存，并且用术语<strong>DRAM</strong>缓存来表示虚拟内存系统的缓存，它在主存中缓存虚拟页。</p>
+<p>DRAM缓存组织设计时主要的考虑因素是巨大的未命中惩罚，因为DRAM约比SRAM慢10倍（所以SRAM未命中的惩罚较小），而磁盘约比DRAM慢100,000倍（DRAM不命中的惩罚极其大）</p>
+<p>所以说，DRAM缓存的组织结构完全是由巨大的不命中开销驱动的。</p>
+<p>导致：</p>
+<ul>
+<li>更大的页（块）大小：典型值4KB~2MB</li>
+<li>全相联：任意的虚拟页（VP）可以被缓存到任意的物理页（PP）中。与CPU的高速缓存不同，这需要一个大的映射函数</li>
+<li>高度复杂的、代价更大的页替换算法（满了，把哪个替换掉？）：替换算法复杂且无限制，所以不能用硬件实现</li>
+<li>采用回写策略，而不是直写策略</li>
+</ul>
+<p>这里解释一下为什么全相联可以达到这种任意物理页可以映射到虚拟页的特点。</p>
+<p>我们在cache那里已经学过了，全相联的缓存只有一个set，因此组索引位为0。因而每个页都可以被映射到任意的位置。</p>
+<img src="https://frun1na.netlify.app//20240916151402.png" style="zoom: 33%;" />
+
+<p>而如果是直接映射的，也就是行数只有1，那么组索引位是有的，因此，只有特定的组索引位的地址值可以映射到特定的组，这并不是任意的映射的。</p>
+<p><strong>磁盘和DRAM混合组成了虚拟存储器</strong></p>
+<h2 id="页表"><a href="#页表" class="headerlink" title="页表"></a>页表</h2><p>虚拟内存系统必须有某种方法来<strong>判定</strong>一个虚拟页是否缓存在 DRAM中的某个地方。如果是，系统还必须确定这个虚拟页存放在哪个物理页中。如果 不命中，系统必须判断这个虚拟页存放在磁盘的哪个位置，在物理内存中选择一个牺牲页，并将虚拟页从磁盘复制到DRAM中，替换这个牺牲页。</p>
+<p>这些功能是由软硬件联合提供的，包括叫做页表（page table)的数据结构</p>
+<img src="https://frun1na.netlify.app//20241018180407.png" style="zoom:50%;" />
+
+<p>页表是一个<strong>页表项（PTE）</strong>的数组，用于建立虚拟页到物理页的映射</p>
+<p><strong>每个进程</strong>在内核中都会存在这样的一个数据结构，存储在DRAM中</p>
+<p>有效位（valid bit)：1表示已缓存，0表示未缓存或未分配</p>
+<p> n 位地址字段：表示物理页号或磁盘地址，如果为NULL，表示未分配</p>
+<p><strong>虚拟页有多少，页表项就有多少。不论有没有分配</strong></p>
+<p>在引用一个内存地址的时候，会发生两种可能：命中，缺页</p>
+<p><strong>页命中</strong>：此时所引用的虚拟内存数据恰好存储在物理内存中（DRAM缓存命中）</p>
+<p>除了查表，在很久以前还有其他的虚拟内存的方式，但是，查表是最省事，效率最高的。</p>
+<h2 id="缺页"><a href="#缺页" class="headerlink" title="缺页"></a><strong>缺页</strong></h2><p>此时所引用的虚拟内存数据没有存储在物理内存中（DRAM缓存未命中，有效位为0）</p>
+<p>有效位为0，MMU无法翻译为物理地址，触发一个缺页故障异常。缺页异常调用内核中的异常处理程序，将对应表项读入，将磁盘加载到内存（如果内存满了，使用页面置换算法进行页面置换，操作系统课程详细介绍，同时检测是否进行了修改，以进行回写），修改页表，然后异常处理函数返回引发故障的指令，重新执行。</p>
+<p>这种一直等待，直到有不命中发生才进行页面调度的方法，称为“按需页面调度（demand paging)“。所有现代系统都使用的是这种调度的方式。</p>
+<p>另一种方法是，先预测，如果可能不命中，那就在实际引用之前先换入页面。</p>
+<p>如果引用的地址既不在磁盘，也不在内存，即对应表项的地址为NULL，同样引发缺页异常，不过此时，操作系统给引发异常的进程发送SIGSEV，默认行为是打印段错误，然后退出。当然，你也可以注册信号处理函数，忽略掉这个错误。</p>
+<h2 id="分配页面"><a href="#分配页面" class="headerlink" title="分配页面"></a>分配页面</h2><p>当操作系统分配一个 新的虚拟内存页时，在磁盘上创建空间并更新 PTE，使它指向磁盘上这个新创建的页面</p>
+<h2 id="又是局部性救了我们"><a href="#又是局部性救了我们" class="headerlink" title="又是局部性救了我们"></a>又是局部性救了我们</h2><p>虽然虚拟内存的不命中惩罚很大，但是虚拟内存机制能够有效工作，这是因为局部性原理。</p>
+<p>在任意时刻，程序总是会频繁访问一个由活跃的虚拟页组成的集合，这个集合称为<strong>工作集</strong>，如果程序有很好的的时间局部性特征，那么它的工作集会更小。当工作集稳定下来之后，每次访问就不需要引起磁盘的流量了。</p>
+<p>如果：工作集大小&lt;主存容量，在一个进程经历了一系列必要的缺页后，会获得比较好的性能</p>
+<p>如果：所有进程的工作集的总大小&gt; 主存容量，<strong>抖动</strong>：页面可能会出现连续的换入和换出，这会导致性能的下降</p>
+<blockquote>
+<p>你可以利用Linux的 getrusage函数监测缺页的数量（以及许多其他的信息）</p>
+</blockquote>
+<h1 id="虚拟内存作为内存管理的工具"><a href="#虚拟内存作为内存管理的工具" class="headerlink" title="虚拟内存作为内存管理的工具"></a>虚拟内存作为内存管理的工具</h1><p>核心思想：每个进程都拥有属于它们自己的虚拟地址空间，操作系统为<strong>每个进程</strong>都提供了一个独立的页表</p>
+<p>映射函数可以将地址分散地映射到物理内存上（以页为基本单位）</p>
+<p>一种经过优秀设计的映射方法可以简化内存的分配和管理</p>
+<img src="https://frun1na.netlify.app/20241019114158.png" style="zoom:50%;" />
+
+<h2 id="简化内存分配"><a href="#简化内存分配" class="headerlink" title="简化内存分配"></a><strong>简化内存分配</strong></h2><p>每一个虚拟页可以映射到任意的物理页，一个虚拟页，可能在不同的时间点，被存 储在不同的物理页中</p>
+<p>因此，如果使用malloc函数等，操作系统提供连续的虚拟页面，而它们映射的物理页面却不必要连续。</p>
+<h2 id="共享进程间的代码和数据"><a href="#共享进程间的代码和数据" class="headerlink" title="共享进程间的代码和数据"></a><strong>共享进程间的代码和数据</strong></h2><p>在一些情况中，需要进程来共享代码和数据。例如，每个进程必须调用相同的操作系统内核代码，而每个C程序都会调用C标准库中的程序，比如printf 。操作系统通过将不同进程中适当的虚拟页面映射到相同的物理页面，从而安排多个进程共享这部分代码的一个副本，而不是在每个进程中都包括单独的内核和C标准库的副本，</p>
+<h2 id="简化链接"><a href="#简化链接" class="headerlink" title="简化链接"></a><strong>简化链接</strong></h2><p>每一个进程都具有相似的虚拟地址空间，代码、栈和共享库总是从相同的位置开始，因此链接器按照这个固定的格式链接。</p>
+<p>我们只要考虑虚拟地址空间中是这样的，而不必要考虑实际的物理地址。</p>
+<img src="https://frun1na.netlify.app/20241019114909.png" style="zoom:50%;" />
+
+<h2 id="简化加载"><a href="#简化加载" class="headerlink" title="简化加载"></a><strong>简化加载</strong></h2><p>要把目标文件中.text和.data节加载到一个新创建的进程中。</p>
+<p>Linux加载器为代码和数据段分配虚拟页，把它们标记为无效的（即未被缓存的），将页表条目指向目标文件中（磁盘中）适当的位置。</p>
+<p>但是加载器从不从磁盘到内存实际复制任何数据。</p>
+<p>在每个页初次被引用时（要么是CPU取指令时引用的，要么是一条正在执行的指令引用一个内存位置时引用的）虚拟内存系统会按照需要自动地调人数据页。</p>
+<p>所以就是，直接往入口位置跳转，就可以自动加载了。</p>
+<h1 id="虚拟内存作为内存保护的工具"><a href="#虚拟内存作为内存保护的工具" class="headerlink" title="虚拟内存作为内存保护的工具"></a>虚拟内存作为内存保护的工具</h1><p>页表项中增加了权限位，在每一次内存访问时MMU都会检查这些权限位</p>
+<img src="https://frun1na.netlify.app/20241019115522.png" style="zoom:50%;" />
+
+<p>SUP位表示进程是否必须运行在内核(超级用户）模式下才能访问该页。运行在内核模式中的进程可以访问任何页面，但是运行在用户模式中的进程只允许访问SUP为0的页面</p>
+<p>READ位和WRITE位控制对页面的读和写访问。</p>
+<p>EXEC表示是否有执行权限。</p>
+<p>虚拟内存对系统性能带来负面影响，不过可以接受。</p>
+<h1 id="地址翻译"><a href="#地址翻译" class="headerlink" title="地址翻译"></a>地址翻译</h1><p>那么这个页表具体怎么查，怎么用？</p>
+<p>地址翻译将一个虚拟地址翻译为<strong>一个物理地址</strong>或者<strong>翻译不成功</strong>。（只有这两种可能）、</p>
+<h2 id="地址翻译中用到的符号（可以简单看看）"><a href="#地址翻译中用到的符号（可以简单看看）" class="headerlink" title="地址翻译中用到的符号（可以简单看看）"></a>地址翻译中用到的符号（可以简单看看）</h2><p>基本参数</p>
+<p>​	N &#x3D; 2^n :  虚拟地址空间的地址数量</p>
+<p>​	M &#x3D; 2^m : 物理地址空间的地址数量</p>
+<p>​	P &#x3D; 2^p :   页大小（字节）</p>
+<p>虚拟地址的组成</p>
+<p>​	VPO：虚拟页偏移量(Virtual page offset)</p>
+<p>​	VPN：虚拟页号(Virtual page number)</p>
+<p>​	TLBI：TLB组索引(TLB index)</p>
+<p>​	TLBT：TLB标记(TLB tag)</p>
+<p>物理地址的组成</p>
+<p>​	PPO：物理页偏移量（和VPO相同）</p>
+<p>​	PPN：物理页号</p>
+<p>​	CO：缓存块偏移量</p>
+<p>​	CI：缓存组索引(Cache index)</p>
+<p>​	CT：缓存标识</p>
+<h2 id="使用页表翻译地址"><a href="#使用页表翻译地址" class="headerlink" title="使用页表翻译地址"></a>使用页表翻译地址</h2><img src="https://frun1na.netlify.app//20241019204955.png" style="zoom: 50%;" />
+
+<p>如图所示，CPU中的一个寄存器，页表基址寄存器（Page Table Base Register PTBR)指向当前页表</p>
+<p>n位的虚拟地址包含两个部分: 一个p位的虚拟页面偏移（VPO)和一个 n - p 位的虚拟页号（VPN)</p>
+<p>其中</p>
+<p>Va &#x2F; P &#x3D; VPN</p>
+<p>Va % P &#x3D; VPO</p>
+<p>base + sizeof(PTE) * VPN可以得到对应的页表项</p>
+<p>而物理页偏移量不需要翻译，因为一个虚拟页是映射一个物理页，这两个相等。</p>
+<p>于是得到了物理地址。</p>
+<p>于是，有一个问题：页表基地址寄存器里面存的是虚拟地址还是物理地址？只能是物理地址</p>
+<p>在查表过程中，有两种可能：页命中，缺页</p>
+<h2 id="页命中"><a href="#页命中" class="headerlink" title="页命中"></a>页命中</h2><ol>
+<li>处理器发送虚拟地址至MMU</li>
+<li>MMU从内存中取出页表项（PTE）</li>
+<li>MMU向高速缓存&#x2F;内存发送物理地址</li>
+<li>高速缓存&#x2F;内存发送数据至处理器</li>
+</ol>
+<p><img src="https://frun1na.netlify.app/20241019210237.png"></p>
+<h2 id="缺页-1"><a href="#缺页-1" class="headerlink" title="缺页"></a>缺页</h2><ol>
+<li>处理器发送虚拟地址至MMU</li>
+<li>MMU从内存中取出页表项（PTE）</li>
+<li>有效位为0，MMU触发缺页故障异常</li>
+<li>异常处理程序选择一个页换出（如果有脏标志位置位，页将写回磁盘）</li>
+<li>异常处理程序返回至原进程，重新执行引起故障 异常的指令</li>
+</ol>
+<p><img src="https://frun1na.netlify.app/20241019210351.png"></p>
+<h2 id="把虚拟内存和高速缓存结合起来"><a href="#把虚拟内存和高速缓存结合起来" class="headerlink" title="把虚拟内存和高速缓存结合起来"></a>把虚拟内存和高速缓存结合起来</h2><p>在既使用虚拟内存又使用SRAM髙速缓存的系统中，高速缓存使用虚拟寻址还是物理寻址？这个问题的讨论不在本课程范围内，不过，大部分使用的是物理寻址，即地址翻译在cache之前。</p>
+<p><img src="https://frun1na.netlify.app/20241019210601.png"></p>
+<h2 id="利用TLB加速地址翻译"><a href="#利用TLB加速地址翻译" class="headerlink" title="利用TLB加速地址翻译"></a>利用TLB加速地址翻译</h2><p>每次CPU产生一个虚拟地址，MMU就必须查阅PTE，以便将虚拟地址翻译为物理地址。</p>
+<p>如果PTE存在cache中，查的快，而如果不在cache中，就查得慢。</p>
+<p>怎样保证速度?</p>
+<p>在MMU中包括了一个关于PTE的小的缓存，称为翻译后备缓冲器（Translation Lookaside Buffer, TLB)，内部包含少量完整的页表项，记录虚拟页号与物理页号间的映射关系</p>
+<h3 id="访问TLB"><a href="#访问TLB" class="headerlink" title="访问TLB"></a>访问TLB</h3><img src="https://frun1na.netlify.app//20241019211748.png" style="zoom:50%;" />
+
+<p>方式和cache很像</p>
+<p><strong>TLB命中</strong></p>
+<p>这会减少一次内存访问</p>
+<img src="https://frun1na.netlify.app/20241019212331.png" style="zoom:50%;" />
+
+<p><strong>TLB未命中</strong></p>
+<p>MMU必须从L1缓存中取出相应的PTE，新取出的PTE存放在TLB中，可能会覆盖一个已经存在的条目</p>
+<p>幸运的是，TLB未命中这种情况非常罕见，为什么？局部性</p>
+<p>而且，TLB中如果命中，那么一定被缓存了。不可能出现命中，而且引发缺页。</p>
+<p>如果有效位为0表示的是不命中，而不是命中，但是没缓存。</p>
+<img src="https://frun1na.netlify.app/20241019212348.png" style="zoom:50%;" />
+
+<h2 id="多级页表"><a href="#多级页表" class="headerlink" title="多级页表"></a>多级页表</h2><p>假设：页大小为4KB；48位地址空间；页表项大小：8字节（48位和64位在现在都够用，为了好实现，使用48位的）</p>
+<p>于是，需要的存储空间为：2^48 &#x2F; 2^12 * 2^3 &#x3D; 2^39bytes，每个页表需要512G！</p>
+<p>常见的解决方案：多级页表</p>
+<p><strong>例如</strong>：两级页表</p>
+<p>一级页表：每个页表项指向一个页表（在内存中常驻）</p>
+<p>二级页表：每个页表项指向一个页（向其他数据一样可以在内存中换入换出）</p>
+<img src="https://frun1na.netlify.app//20241025191751.png" style="zoom:50%;" />
+
+<p>使用k级页表进行地址翻译</p>
+<p>把vpn分为若干个段</p>
+<img src="https://frun1na.netlify.app//20241025192338.png" style="zoom:67%;" />
+
+<p>注：这个结构不是链表，而是一颗B+树，在查找页表时，即使是最长的时间也是常数的时间复杂度的。</p>
+<p>x86-64为4级页表</p>
+<p>x86-32为2级页表</p>
+<h2 id="举例：简单的内存系统"><a href="#举例：简单的内存系统" class="headerlink" title="举例：简单的内存系统"></a>举例：简单的内存系统</h2><p>通过一个具体的地址翻译示例综合一下我们刚学过的 这些内容。</p>
+<p>寻址：14位虚拟地址，12位物理地址，页大小：64字节</p>
+<img src="https://frun1na.netlify.app//20241025194646.png" style="zoom:50%;" />
+
+<h3 id="TLB系统"><a href="#TLB系统" class="headerlink" title="TLB系统"></a>TLB系统</h3><p> 16个项，四路组相联</p>
+<img src="https://frun1na.netlify.app//20241025194742.png" style="zoom:50%;" />
+
+<img src="https://frun1na.netlify.app//20241025194755.png" style="zoom:50%;" />
+
+<h3 id="Page-Table"><a href="#Page-Table" class="headerlink" title="Page Table"></a>Page Table</h3><p>只给出了前16个项，共256项</p>
+<img src="https://frun1na.netlify.app//20241025194859.png" style="zoom:50%;" />
+
+<h3 id="Cache"><a href="#Cache" class="headerlink" title="Cache"></a>Cache</h3><p>共16行（块），块大小：4字节</p>
+<p>物理寻址</p>
+<p>直接映射</p>
+<img src="https://frun1na.netlify.app//20241025194950.png" style="zoom:50%;" />
+
+<img src="https://frun1na.netlify.app//20241025195008.png" style="zoom: 50%;" />
+
+<h3 id="地址翻译示例-1"><a href="#地址翻译示例-1" class="headerlink" title="地址翻译示例#1"></a>地址翻译示例#1</h3><img src="https://frun1na.netlify.app//20241025195130.png" style="zoom:50%;" />
+
+<p>VPN：？   TLBI：？ TLBT：？  TLB Hit ?  Page Fault ？  PPN  ？</p>
+<p>Physical Address ？</p>
+<p>CO：？    CI：？     CT：？   Cache Hit ？ Byte ？</p>
+<h3 id="地址翻译示例-2"><a href="#地址翻译示例-2" class="headerlink" title="地址翻译示例#2"></a>地址翻译示例#2</h3><img src="https://frun1na.netlify.app//20241025195511.png" style="zoom:50%;" />
+
+<p>答案：</p>
+<p>(1)</p>
+<img src="https://frun1na.netlify.app//20241025195542.png" style="zoom:50%;" />
+
+<p>(2)</p>
+<img src="https://frun1na.netlify.app//20241025195616.png" style="zoom:50%;" />
+
+<h1 id="案例研究：Core-i7-Linux-内存系统"><a href="#案例研究：Core-i7-Linux-内存系统" class="headerlink" title="案例研究：Core i7&#x2F;Linux 内存系统"></a>案例研究：Core i7&#x2F;Linux 内存系统</h1><p>这里我们也可以通过NEMU的pa3来学习。（不在这篇文章）</p>
+<p><img src="https://frun1na.netlify.app/20241031184654.png"></p>
+<p>这是英特尔的i7处理器的基本结构。</p>
+<p>支持48位虚拟地址空间和52位物理地址空间，还有一个兼容模式，支持32位(4GB)虚拟和物理地址空间</p>
+<p>有4级页表，以及64位地址空间</p>
+<h2 id="地址翻译-1"><a href="#地址翻译-1" class="headerlink" title="地址翻译"></a>地址翻译</h2><h3 id="第1-3级页表项："><a href="#第1-3级页表项：" class="headerlink" title="第1-3级页表项："></a><strong>第1-3级页表项：</strong></h3><p><img src="https://frun1na.netlify.app//20241031185312.png"></p>
+<p>p表示有效位，1为已缓存，0表示未缓存（此时将地址空间给操作系统，用于存储文件在磁盘中的位置）。</p>
+<p>每1个页表项包括4k个子表项</p>
+<p> R&#x2F;W：0表示只读，1表示可读写</p>
+<p>U&#x2F;S：0表示用户模式，1表示root用户（内核模式）</p>
+<p> WT：直写&#x2F;回写</p>
+<p>CD：是否被缓存到cache，因为已经有TLB了，所以如果再缓存可能性能会下降</p>
+<p>A :1表示指定页表或页被访问过，初始化时OS将其清0。利用该标志，OS可清楚了解哪些页表或页正在使用，一般选择长期未用的页或近来最少使用的页调出主存。由MMU在进行地址转换时将该位置1。</p>
+<p>Page table physical base address：下一级页表的物理地址</p>
+<p> PS：是否开启大页，一个大页有4M的大小(只在第一级页表有这个位）。多用于服务器上（物理内存更大），可以更少的缺页，优化性能</p>
+<p>G：与大页有关的另一个参数</p>
+<p>XD：可执行权限</p>
+<h3 id="第4级页表项"><a href="#第4级页表项" class="headerlink" title="第4级页表项"></a><strong>第4级页表项</strong></h3><p><img src="https://frun1na.netlify.app/20241031190238.png"></p>
+<p> D：脏位</p>
+<p>G：全局页（在上下文切换时，不从TLB中驱逐出去）</p>
+<h3 id="页表翻译"><a href="#页表翻译" class="headerlink" title="页表翻译"></a>页表翻译</h3><p><img src="https://frun1na.netlify.app/20241031191112.png"></p>
+<p>CR3为页表基地址寄存器（在这个特定的例子中）</p>
+<h3 id="加速一级缓存访问速度的技巧"><a href="#加速一级缓存访问速度的技巧" class="headerlink" title="加速一级缓存访问速度的技巧"></a>加速一级缓存访问速度的技巧</h3><p>1)MMU将虚拟 地址翻译成物理地址</p>
+<p>2)将物理地址传送到 L1高速缓存</p>
+<p>这两步按理说是先后的，但是一种巧妙的办法可以同时进行这两步，以加速访问速度。</p>
+<img src="https://frun1na.netlify.app//20241031191438.png" style="zoom:50%;" />
+
+<blockquote>
+<p>CI和CO，即组索引和块内偏移量的位数和VPO相同，于是可以做到，一边VPN拿去翻译，另一边VPO拿去查找高速缓存的组(set)，得到PPN之后，再根据cache tag 查找即可。</p>
+</blockquote>
+<p>这里CI，CO都是6位，那么想要增加高速缓存容量，只能增加一个set的块的数量了。（组数量，块大小，不能改变）</p>
+<h2 id="Linux-虚拟内存系统"><a href="#Linux-虚拟内存系统" class="headerlink" title="Linux 虚拟内存系统"></a>Linux 虚拟内存系统</h2><p>一个实际的操作系统是如何组织虚 拟内存，如何处理缺页?</p>
+<p>Linux 为每个进程维护了一个单独的虚拟地址空间，形式如图</p>
+<img src="https://frun1na.netlify.app//20241031192254.png" style="zoom:50%;" />
+
+<p>Linux 也将一组连续的虚拟页面 (大小等于系统中DRAM的总量）映射到相应的一组连续的物理页面。这就为内核提供了一种便利的方法来访问物理内存中任何特定的位置（此时，虚拟地址 + offset &#x3D; 物理地址）</p>
+<p>粉色区域不能被用户代码访问</p>
+<p>下面一块被所有的进程共享，在物理内存中只有一块，但是每个用户虚拟地址空间都有一份，都映射到这个唯一的物理页面。用于用户执行系统调用等。</p>
+<p>上面一块是每个进程一些信息。包括一些数据结构（task_struct）</p>
+<img src="https://frun1na.netlify.app//20241031193506.png" style="zoom:50%;" />
+
+<p>里面的元素包含内核运行该进程所需要的所有信息（例如，PID，指向用户栈的指针、可执行目标文件的名字，以及程序计数器）</p>
+<p>其中，mm指向mm_struct，描述了虚拟内存的当前状态。</p>
+<p>里面有两个内容：pgd, mmap</p>
+<p>pgd指向页表基地址（第一级），每次进程切换，都要将这个pgd加载到页表基地址寄存器。</p>
+<p>mmap指向一个vm_area_struct 结构的链表。每个链表节点描述了此进程虚拟地址空间的一个区域。用于进程地址空间的管理，操作系统用这个结构的效率比查表快很多。</p>
+<p>vm_start: 指向这个区域的起始处。</p>
+<p>vm_end:指向这个区域的结束处。</p>
+<p>vm_prot: 描述这个区域内包含的所有页的读写许可权限</p>
+<p>vm_flags共享页&#x2F;私有页标识</p>
+<p> vm_next指向链表中下一个区域结构。</p>
+<h3 id="Linux中的缺页故障处理"><a href="#Linux中的缺页故障处理" class="headerlink" title="Linux中的缺页故障处理"></a>Linux中的缺页故障处理</h3><img src="https://frun1na.netlify.app//20241031195002.png" style="zoom:50%;" />
+
+<p>翻译某个虚拟地址A时，触发了一个缺页。<strong>之后</strong>，操作系统做以下事情</p>
+<p>1.虚拟地址A是合法的吗？缺页处理程序搜索链表，把A和每个vm_start和vm _end 做比较。如果这个指令不合法，那么缺页处理程序就触发一个段错误，终止这个进程</p>
+<p>因为一个进程可以创建任意数量的虚拟内存区域，所以顺序搜索链表的花销会很大。因此在实际中，Linux使用某些我们没有显示出来的字段，Linux在链表中构建了一棵树，并在这棵树上进行査找。</p>
+<p>2.进程是否有读、写或者执行这个区域 内页面的权限？如果试图进行的访问是不合法的，那么缺页处理程序会触发一个保护异常，从而终止这个进程</p>
+<h1 id="内存映射"><a href="#内存映射" class="headerlink" title="内存映射"></a>内存映射</h1><p>内存区与磁盘映射<code>-&gt;</code>修改内存就可以修改文件<code>-&gt;</code>新的文件访问方法</p>
+<p>虚拟内存区域可以映射两种类型</p>
+<p><strong>磁盘上的常规文件</strong>（例如，可执行对象文件）：操作系统会将文件指定区间的数据读到物理页中，然后在页表中把虚拟页映射到物理页。这样，进程就可以通过虚拟地址直接访问文件的数据，而无需进行传统的文件读写操作。</p>
+<p><strong>匿名文件</strong>（例如，空文件）：首次缺页将分配一个由0填充的物理页面（需求零页面），一旦页面被写入（脏页），它就像任何其他页面一样</p>
+<p>一个虚拟页面被初始化了，它就在一个由内核维护的专门的交换文件（swap file)之间换来换去。交换文件也叫做交换空间（swap space)或者交换区域 (swap area)。 在任何时刻，交换空间都限制着当前运行着的进程能够分配的虚拟页面的总数。</p>
+<p>在创建内存映射时，操作系统会在进程的用户虚拟地址空间中分配一个虚拟内存区域。当进程第一次访问这个虚拟内存区域的某个页时，如果该页尚未与物理内存页建立映射，则会产生缺页异常。操作系统会处理这个异常，为虚拟页分配物理页，并建立映射关系。</p>
+<h2 id="再看共享对象"><a href="#再看共享对象" class="headerlink" title="再看共享对象"></a>再看共享对象</h2><p>进程1映射了共享对象：</p>
+<img src="https://frun1na.netlify.app//20241031201040.png" style="zoom:50%;" />
+
+<p>进程2映射了共享对象。 请注意：虚拟地址可以是不同的。(因为每个对象都有一个唯一的文件名，内核可以迅速地判定进程1已经映射了这个对 象，而且可以使进程2中的页表条目指向相应的物理页面)  (即使对象被映射到 了多个共享区域，物理内存中也只需要存放共享对象的一个副本。为了方便，我们将物理页面显示为连续的，但是在一般情况下当然不是这样的)</p>
+<img src="https://frun1na.netlify.app//20241031201113.png" style="zoom:50%;" />
+
+<p>两个进程映射一个私有 写时复制 （Copy-on-write，COW）对象。 区域标记为私有写时复制。 私有区域的页表项（PTEs）被标记为只读。（如果p1没修改，p2映射到相同位置，p2修改，先复制一份到另一个区域，再修改）</p>
+<img src="https://frun1na.netlify.app//20241031201331.png" style="zoom:50%;" />
+
+<p>指令写入私有页面引发保护故障异常，故障处理程序创建新的读写页面，指令在处理程序返回时重新启动，以尽可能推迟复制的时机（提高性能）</p>
+<h2 id="再看fork系统调用"><a href="#再看fork系统调用" class="headerlink" title="再看fork系统调用"></a>再看fork系统调用</h2><p>虚拟内存和内存映射解释了fork如何为每个进程提供私有地址空间</p>
+<p>为新进程创建虚拟地址的步骤：</p>
+<ul>
+<li>创建当前mm_struct、vm_area_struct和页表的精确副本。 </li>
+<li>将两个进程中的每个页面标记为只读。 </li>
+<li>将两个进程中的每个vm_area_struct标记为私有写时复制（COW）。</li>
+</ul>
+<p><strong>物理内存不进行复制</strong></p>
+<p>fork返回时，每个进程都具有虚拟内存的精确副本。</p>
+<p>随后的写入使用写时复制（COW）机制<strong>创建新页面</strong></p>
+<h2 id="再看execve系统调用"><a href="#再看execve系统调用" class="headerlink" title="再看execve系统调用"></a>再看execve系统调用</h2><p>使用execve加载和运行当前进程中的新程序（a.out）:</p>
+<ul>
+<li>释放旧区域的vm_area_struct和页表。</li>
+<li>为新区域创建vm_area_struct和页表（程序和初始化数据由目标文件支持，.bss和堆栈由匿名文件支持）。</li>
+<li>将PC设置为.text中的入口点（后续根据需要引发代码和数据页面缺页故障）</li>
+</ul>
+<img src="https://frun1na.netlify.app//20241108194509.png" style="zoom: 50%;" />
+
+<p>.bss节存储的是没有初始化的全局变量，在映射时，为请求二进制0的页面，因此，我们说，定义全局变量，不初始化，自动初始化。但是一定要注意：<strong>这不是C&#x2F;C++的特性，而是操作系统的</strong>，因此，写代码为了可移植性，定义全局变量还是要初始化的。</p>
+<h2 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h2><p>内存映射解决：操作系统如何为进程分配空间？</p>
+<p><img src="https://frun1na.netlify.app/20241108194951.png"></p>
+<p>将进程的虚拟地址空间和ELF可执行文件构建一个映射，text节和data节对应到地址空间里面，由于stack没有文件可以对应，因此使用匿名文件，注意此时还没有复制到真正的物理内存中，只有访问的时候，发生缺页异常时，才会访问磁盘文件。当内存中的数据长时间不用时，或者物理内存不足以满足当前运行程序的需求时，操作系统会将部分不常用的内存数据移动到<strong>交换文件（磁盘文件）</strong>中，以释放物理内存空间供其他程序使用。<strong>内存可以看成快速访问磁盘的缓存，cache看成快速访问内存的缓存。</strong></p>
+<p>假设双击了一个可执行文件两次，那么这个程序就映射到两个进程，就会自动创建共享对象，两个进程的虚拟地址映射到相同的物理地址，同时在data节在进程2中标记为只读，作为COW对象，而text节，由于事实上是只读的，所以不会创建COW对象。当进程2写入内存时，复制该页，再进行写入。</p>
+<h2 id="使用mmap函数的用户级内存映射"><a href="#使用mmap函数的用户级内存映射" class="headerlink" title="使用mmap函数的用户级内存映射"></a>使用mmap函数的用户级内存映射</h2><p>Linux 进程可以使用mmap函数来创建新的虚拟内存区域，并将对象映射到这些区域中。</p>
+<pre><code class="c">#include&lt;unistd.h&gt;
+#include&lt;sys/mman.h&gt;
+
+void *mmap(void *start, int len, int prot, int flags, int fd, int offset);
+//返回：若成功时则为指向映射区域的指针，若出错则为 MAP_FAILED(-1)
+</code></pre>
+<p>内核创建一个新的<strong>虚拟内存区域</strong>，最好是从地址 start开始的一个区域，并将文件描述符fd指定的对象的一个连续的片（chunk）映射到这个新的区域。连续的对象片大小为len字节，从距文件开始处偏移量为offset字节的地方开始。start 地址仅仅是一个建议，可以是NULL，表示任意地址。由于这只是一个建议，所以返回实际的地址。</p>
+<p>prot：新映射的虚拟内存区域的访问权限位（即在相应区域结构中的vm_prot位）</p>
+<ul>
+<li>PROT_EXEC：可执行</li>
+<li>PROT_READ：只读</li>
+<li>PROT_WRITE：读写</li>
+<li>PROT_NONE：不能访问</li>
+</ul>
+<p>可以使用<code>|</code>(或运算)使用多个位</p>
+<p>flags：匿名&#x2F;私有，写时复制&#x2F;共享</p>
+<ul>
+<li>MAP_ANONYMOUS：匿名对象，二进制零</li>
+<li>MAP_PRIVATE：私有的、写时复制</li>
+<li>MAP_SHARED：共享对象</li>
+</ul>
+<p>输入<code>man mmap</code>查看Lunix手册</p>
+<p>注：不是在物理内存上创建，在访问触发异常才会加载</p>
+<p><strong>munmap</strong> 函数<strong>删除</strong>虚拟内存的区域</p>
+<pre><code class="c">#include &lt;unistd&gt;
+#include &lt;sys/mman.h&gt;
+
+int munmap(void* start, size_t length);
+//返回：若成功则为0,若出错则为-1
+</code></pre>
+<p>删除从虚拟地址 start 开始，length字节组成的区域</p>
+<h1 id="动态内存分配"><a href="#动态内存分配" class="headerlink" title="动态内存分配"></a>动态内存分配</h1><p>调用一个函数依靠的是一个栈，在程序开始之前，先要初始化栈（c语言运行环境），这样才能实现函数调用，即call main</p>
+<p>和栈相似的结构，堆(heap)，但它不是由操作系统维护，而是由标准c库函数中的内存分配器维护。</p>
+<p>可以使用上一节mmap来申请虚拟内存，但是一般可以使用更加方便的动态内存分配器，它维护的就是堆</p>
+<p>特别是对于在运行时<strong>大小未知</strong>的数据结构，多用于运行时的内存分配来存储</p>
+<p>分配器将堆维护为<strong>可变大小</strong>的<strong>块</strong>的集合，这些块可以是已分配或空闲的</p>
+<p>分配器有两种基本风格：</p>
+<ul>
+<li>显式分配器：应用程序分配并释放空间，例如C中的malloc和free，C++中的new和delete</li>
+<li>隐式分配器：应用程序分配空间，但不释放，例如Java、ML和Lisp中的<strong>垃圾回收</strong>。</li>
+</ul>
+<p>自动的垃圾回收比较消耗cpu资源，因此，现在c&#x2F;c++依然有一席之地。</p>
+<p><img src="https://frun1na.netlify.app/20241108210327.png"></p>
+<p>brk是一个指针，指向堆顶</p>
+<p>理论上可以申请很大的空间，毕竟是<strong>虚拟地址</strong>。</p>
+<p>接下来将讨论简单的显式内存分配</p>
+<h2 id="malloc和free"><a href="#malloc和free" class="headerlink" title="malloc和free"></a>malloc和free</h2><pre><code class="c">#include &lt;stdlib.h&gt;
+void *malloc(size_t size);
+void free(void *p);
+</code></pre>
+<p>malloc</p>
+<p>成功时：返回一个指向至少size字节的内存块的指针，对齐到8字节（x86）或16字节（x86-64）边界，如果size为0，则返回NULL</p>
+<p>不成功时：返回NULL（0）并设置errno</p>
+<p>free</p>
+<p>将指针p指向的内存块返回到可用内存池中。</p>
+<p>p必须来自对malloc或realloc的先前调用。</p>
+<p>注：不可以<code>p = malloc，free(p + 1)</code>，只能<code>free(p)</code></p>
+<p>其他函数：</p>
+<p>calloc：分配的内存初始化为零</p>
+<p>realloc：改变一个以前已分配块的大小</p>
+<p>sbrk：</p>
+<pre><code class="c">#include &lt;unistd.h&gt;
+void *sbrk(intptr_t incr);
+//返回：若成功則为旧的brk指针，若出错則为-1
+</code></pre>
+<p>brk指针增加 incr来扩展和收缩堆，incr可以是负的，表示减小堆</p>
+<h2 id="后续的基本假设："><a href="#后续的基本假设：" class="headerlink" title="后续的基本假设："></a>后续的基本假设：</h2><p>内存是按字（word）寻址的</p>
+<p>字（word）的大小是int类型(4byte)</p>
+<h2 id="为什么要使用动态内存分配"><a href="#为什么要使用动态内存分配" class="headerlink" title="为什么要使用动态内存分配"></a>为什么要使用动态内存分配</h2><p>经常直到程序实际运行时，才知道某些数据结构的大小。</p>
+<h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><p><img src="https://frun1na.netlify.app/20241108213104.png"></p>
+<h2 id="分配器的要求和目标"><a href="#分配器的要求和目标" class="headerlink" title="分配器的要求和目标"></a>分配器的要求和目标</h2><h3 id="要求"><a href="#要求" class="headerlink" title="要求"></a>要求</h3><p><strong>处理任意请求序列</strong>：</p>
+<p>应用可以有任意的分配请求和释放请求序列，分配器不能假定所有分配都对应一个释放，也不能假定一定是分配，释放，分配，释放的顺序。</p>
+<p><strong>立即响应请求</strong></p>
+<p>分配器必须立即响应分配请求。因此，不允许分配器为了提髙性能重新排列或者缓冲请求。</p>
+<p><strong>对齐块（对齐要求）</strong></p>
+<p><strong>必须从空闲内存中分配块</strong></p>
+<p><strong>不修改已分配的块</strong></p>
+<p>一旦块被分配了， 就不允许修改或者移动它了。因此，诸如压缩已分配块这样的技术是不允许使 用的。</p>
+<h3 id="性能目标"><a href="#性能目标" class="headerlink" title="性能目标"></a>性能目标</h3><p><strong>吞吐量</strong>：</p>
+<p>对于一系列malloc和free请求</p>
+<p>单位时间内完成的请求数量。例如，如果一个分配器在1秒内完成500个分配请求和500个释放请求，那么 它的吞吐率就是每秒1000次操作。（和时间复杂度差不多但是也差点，因为时间复杂度是n趋于无穷来衡量的，而吞吐量是实际情况，因此，即使算法都是O(n)，那样差的也挺多）</p>
+<p><strong>峰值内存利用率</strong>：</p>
+<p>一个系统中被所有进程分配的虚拟内存的全部数量是受磁盘上交 换空间的数量限制的。必须高效地使用</p>
+<p>如果一个应用程序请求一个p字节的块，那么得到的已分配块的有效载荷（payload)是p 字节。在请求完成之后，聚集有效载荷（aggregate payload)表示为Pk 为当前已分配的块的有效载荷之和，而只Hk表示堆的当前的（单调非递减的）大小。</p>
+<p>那么峰值内存利用率就是Uk &#x3D; Pk &#x2F; Hk</p>
+<p>我们的目标是使这两个都大，但是这两个是相矛盾的：吞吐量最大，就直接每次分配都往后面找，但是堆的大小会增加，而前面释放之后的也没有再次利用，导致利用率减小。如果增大利用率，就要<strong>算法</strong>来查找合适的块分配，导致吞吐量减小</p>
+<h2 id="碎片"><a href="#碎片" class="headerlink" title="碎片"></a>碎片</h2><p>不佳的内存利用率会导致内存碎片化</p>
+<h3 id="内部碎片"><a href="#内部碎片" class="headerlink" title="内部碎片"></a>内部碎片</h3><p>有时已分配的块比有效载荷大</p>
+<p>已分配块大小和它们的有效载荷大小之差即内部碎片</p>
+<p>例如，申请5的空间，但是分配了8</p>
+<p>引起内部碎片的原因包括：</p>
+<ul>
+<li>维护堆数据结构的开销</li>
+<li>为了对齐目的而进行的填充</li>
+<li>分配策略导致（例如，为了满足小请求而返回一个大块）</li>
+</ul>
+<h3 id="外部碎片"><a href="#外部碎片" class="headerlink" title="外部碎片"></a>外部碎片</h3><p>空闲内存合计起来足够满足一个分配请求，但是没有一个单独的空闲块足够大可以来处理这个请求</p>
+<p>外部碎片化取决于未来请求的模式，因此难以测量</p>
+<h2 id="遇到的问题"><a href="#遇到的问题" class="headerlink" title="遇到的问题"></a>遇到的问题</h2><p>我们如何仅通过指针就能知道释放多少内存？</p>
+<p>如何跟踪空闲块？</p>
+<p>当分配的结构比放置它的空闲块小的时候，应该怎么处理额外的空间？</p>
+<p>在多个块都适合分配时，如何选择要使用的块？</p>
+<p>如何处理一个刚刚被释放的块？</p>
+<h3 id="如何知道需要释放多少内存"><a href="#如何知道需要释放多少内存" class="headerlink" title="如何知道需要释放多少内存"></a>如何知道需要释放多少内存</h3><p>标准方法:</p>
+<p>在块之前的字中保存块的长度，这个字通常被称为头字段或头</p>
+<p>对于每个已分配的块，需要额外的一个字</p>
+<p><img src="https://frun1na.netlify.app/20241108222601.png"></p>
+<h3 id="如何跟踪空闲块"><a href="#如何跟踪空闲块" class="headerlink" title="如何跟踪空闲块"></a>如何跟踪空闲块</h3><p>方法1：隐式空闲链表，使用包含了块长度的头部信息，以连接所有的块（之所以是隐式，指的是没有指针，但可以达到链表的效果）</p>
+<p>方法2：显式空闲链表，在空闲块之间使用指针连接（使用显示的指针）</p>
+<p>方法3：分离的空闲链表：为不同的大小类别使用不同的空闲链表</p>
+<p>方法4：按大小排序的块：可以使用平衡树（例如红黑树），在每个空闲块内部使用指针，并将长度用作键。</p>
+<p>下面我们分别介绍。</p>
+<h2 id="隐式空闲链表"><a href="#隐式空闲链表" class="headerlink" title="隐式空闲链表"></a>隐式空闲链表</h2><img src="https://frun1na.netlify.app//20241112194620.png" style="zoom:50%;" />
+
+<p>注意我们先前定义的一个字(word)的大小</p>
+<p>这里表示块是否分配的位是最低位</p>
+<p>块大小后面那个字的地址返回给用户。</p>
+<p>由于对齐要求，块的大小要为8字节的倍数，因此，块大小里面的低三位正好都为0，最低位用来存放分配信息。</p>
+<pre><code class="bash">blocksize = 40(0x28)
+如果为空闲块，则头部为： 0x28 | 0x0 = 0x28
+如果为分配块，头部为：   0x28 | 0x1 = 0x29
+反着读取，用&amp;运算即可。
+</code></pre>
+<p>填充可以让块与块不再紧凑，用于对齐或者方便调用realloc，这里理论上不能存数据，但是可以事实上可以越界，但是free时会出问题</p>
+<img src="https://frun1na.netlify.app/20241112200230.png" style="zoom: 50%;" />
+
+<p>在隐式链表的尾部，有一个特殊的已分配的大小为0的头部，表示链表终止。</p>
+<h3 id="放置已分配的块"><a href="#放置已分配的块" class="headerlink" title="放置已分配的块"></a>放置已分配的块</h3><p>请求一个k字节的块时，分配器搜索空闲链表，查找一个足够大可以放置所请求块的空闲块。</p>
+<p>共有三种算法：首次适配算法（First Fit），下次适配算法（Next Fit），最佳适配（Best Fit）</p>
+<h4 id="首次适配算法"><a href="#首次适配算法" class="headerlink" title="首次适配算法"></a>首次适配算法</h4><p>从链表开头开始搜索，选择第一个适合的空闲块：</p>
+<pre><code class="c">p = start; 
+while ((p &lt; end) &amp;&amp;     //not passed end
+ ((*p &amp; 1) ||           //already allocated
+ (*p &lt;= len)))          //too small 
+p = p + (*p &amp; -2);      //gotonext block (word addressed)
+</code></pre>
+<p>线性时间复杂度O(n)</p>
+<p>优点：尽量使用低地址空间，因而在高地址的空间可能会保留较大的空闲分区。所以， 大进程申请的存储空间大都能在高地址端得到满足。</p>
+<p>缺点：由于每次只简单地使用找到的第一个分区，结果可能导致将较大的空闲分区不 断地分割为较小的空闲分区。（一个大块，分配给了小的空间，就会把没分配的分割开）</p>
+<h4 id="下次适配算法"><a href="#下次适配算法" class="headerlink" title="下次适配算法"></a>下次适配算法</h4><p>类似于首次适配，但是从上次搜索结束的位置开始搜索列表</p>
+<p>通常比首次适配更快：避免重新扫描无法使用的块</p>
+<p>该算法常常会导致内存中缺乏大分区，因为它会均衡地利用空闲分区，包括分割较大的空闲分区。从而使得大进程无法装入内存运行。</p>
+<p>下次适应算法可能会导致大量的外碎片，需要较频繁地实施紧凑操作，效率较低。</p>
+<p>内存利用率要比首次适配低得多。</p>
+<h4 id="最佳适配"><a href="#最佳适配" class="headerlink" title="最佳适配"></a>最佳适配</h4><p>搜索列表，选择最佳的空闲块：适合，并且剩余字节数最少。</p>
+<p>保持碎片小——通常提高内存利用率。</p>
+<p>通常比首次适配运行得更慢。</p>
+<p>会造成大量的小碎片，碎片大小是空闲块减去请求块。当然，也可以把整个块分配过去，剩下的作为内碎片填充</p>
+<h3 id="分割空闲块"><a href="#分割空闲块" class="headerlink" title="分割空闲块"></a>分割空闲块</h3><p>我们可以把一整个空闲块分配过去，里面含有内碎片</p>
+<p>但是，如果空闲块太大了，那就必须要分割了</p>
+<p><img src="https://frun1na.netlify.app/20241116183851.png"></p>
+<pre><code class="c"> void addblock(ptr p, int len) &#123;
+     int newsize = ((len + 1) &gt;&gt; 1) &lt;&lt; 1;  // round up to even(令最低位得0)
+     int oldsize = *p &amp; -2;                // mask out low bit(忽略最低位)
+     *p = newsize | 1;                     // set new length(令最低位得1)
+     if (newsize &lt; oldsize)
+         *(p+newsize) = oldsize -newsize;   // set length in remaining
+ &#125;                                       // part of block
+</code></pre>
+<h3 id="获取额外的堆内存"><a href="#获取额外的堆内存" class="headerlink" title="获取额外的堆内存"></a>获取额外的堆内存</h3><p>分配器不能为请求块找到合适的空闲块时，通过 调用sbrk函数，向内核请求额外的堆内存</p>
+<h3 id="释放块空间"><a href="#释放块空间" class="headerlink" title="释放块空间"></a>释放块空间</h3><p>最简单的实现方式：清除“已分配”标志</p>
+<pre><code class="c">void free_block(ptr p) &#123;
+     *p = *p &amp; -2;
+ &#125;
+</code></pre>
+<p>可能导致“假碎片”</p>
+<p><img src="https://frun1na.netlify.app/20241116184911.png"></p>
+<h3 id="合并空闲块"><a href="#合并空闲块" class="headerlink" title="合并空闲块"></a>合并空闲块</h3><p>为了解决假碎片问题，任何实际的分配器都必须合并相邻的空闲块，这个过程称为合 并(coalescing)</p>
+<p>何时执行合并?</p>
+<p><strong>立即合并</strong>（immediate coalescing)， 在每次一个块被释放时，就合并（常数时间完成）</p>
+<p><strong>推迟合并</strong>（deferred coalescing)， 等到某个稍晚的时候再合并空闲块。例如，推迟合并，直到某个分配请求失败，然后扫描整个堆，合并所有的空闲块。</p>
+<p>假设使用立即合并</p>
+<h3 id="带边界标记的合并"><a href="#带边界标记的合并" class="headerlink" title="带边界标记的合并"></a>带边界标记的合并</h3><p>Knuth 提出了一种聪明而通用的技术，叫做边界标记。</p>
+<p>在空闲块的“底部”（末尾）复制大小&#x2F;分配字</p>
+<p>使我们能够向后遍历“列表”，但需要额外的空间</p>
+<p><img src="https://frun1na.netlify.app/20241116185449.png"></p>
+<p><img src="https://frun1na.netlify.app/20241116185512.png"></p>
+<h4 id="常数时间复杂度的合并：四种情况"><a href="#常数时间复杂度的合并：四种情况" class="headerlink" title="常数时间复杂度的合并：四种情况"></a><strong>常数时间复杂度的合并：四种情况</strong></h4><p><img src="https://frun1na.netlify.app/20241116185555.png"></p>
+<p>1.待释放块被前后都是已分配块</p>
+<p><img src="https://frun1na.netlify.app/20241116185631.png"></p>
+<p>2.待释放块后面是空闲块</p>
+<p><img src="https://frun1na.netlify.app/20241116185653.png"></p>
+<p>3.待释放块前面是空闲块</p>
+<p><img src="https://frun1na.netlify.app/20241116185713.png"></p>
+<p>4.待释放块前后都是空闲块</p>
+<p><img src="https://frun1na.netlify.app/20241116185734.png"></p>
+<p><strong>缺点</strong></p>
+<p>边界标记占用的额外的存储</p>
+<p>如何进行优化？</p>
+<p>只有空闲块才需要统一管理，已分配的块管不到，使用显式空闲链表提高效率</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>放置策略：首次适配、下次适配、最佳适配（在低碎片化和较低吞吐量之间进行平衡）</p>
+<p>分割策略：何时进行空闲块拆分。愿意容忍多少内部碎片。</p>
+<p>合并策略：立即合并：每次调用空闲时都进行合并，延迟合并：尝试通过延迟合并来改善free的性能。</p>
+<p><strong>隐式空闲链表</strong></p>
+<p>实现：非常简单</p>
+<p>分配成本：最坏情况下为线性时间</p>
+<p>释放成本：最坏情况下为常数时间（即使进行合并）</p>
+<p>内存使用：取决于放置策略，首次适配、下次适配或最佳适配</p>
+<p>过于简陋，现在已经不用了</p>
+<h2 id="显式空闲链表"><a href="#显式空闲链表" class="headerlink" title="显式空闲链表"></a>显式空闲链表</h2><p>维护<strong>空闲块</strong>的列表，而不是所有块</p>
+<p>“下一个”空闲块可能位于任何位置，因此，需要存储前向&#x2F;后向指针，而不仅仅是大小</p>
+<p>仍然需要边界标签进行合并</p>
+<p>幸运的是，我们只跟踪空闲块，所以我们可以使用有效载荷区域来存储指针</p>
+<p><img src="https://frun1na.netlify.app/20241116190552.png"></p>
+<p>逻辑上：</p>
+<p><img src="https://frun1na.netlify.app/20241116190615.png"></p>
+<p>物理上：块可以以任意顺序出现</p>
+<p><img src="https://frun1na.netlify.app/20241116190655.png"></p>
+<p>分配空间示意：</p>
+<img src="https://frun1na.netlify.app/20241116190739.png" style="zoom:50%;" />
+
+<p>需要思考的只有如何释放？</p>
+<h3 id="释放空闲块"><a href="#释放空闲块" class="headerlink" title="释放空闲块"></a>释放空闲块</h3><p>策略：如何在空闲列表中放置新释放的块的位置</p>
+<p><strong>后进先出</strong>（LIFO）：将释放的块插入到空闲列表的开头</p>
+<p>优点：简单且常数时间</p>
+<p>缺点：研究表明碎片化比按地址顺序更严重</p>
+<p><strong>按地址顺序</strong>：插入释放的块，使得空闲列表块始终按地址顺序排列：<code>addr(prev) &lt; addr(curr) &lt; addr(next)</code></p>
+<p>缺点：需要搜索</p>
+<p>优点：研究表明碎片化比LIFO策略更低</p>
+<p>后进先出有四种情况：</p>
+<p>待释放块被前后都是已分配块</p>
+<p><img src="https://frun1na.netlify.app/20241116191203.png"></p>
+<p>待释放块后面是空闲块</p>
+<p><img src="https://frun1na.netlify.app/20241116191356.png"></p>
+<p>待释放块前面是空闲块</p>
+<p><img src="https://frun1na.netlify.app/20241116191423.png"></p>
+<p>待释放块前后都是空闲块</p>
+<p><img src="https://frun1na.netlify.app/20241116191512.png"></p>
+<h3 id="小结-1"><a href="#小结-1" class="headerlink" title="小结"></a>小结</h3><p>与隐式空闲链表相比</p>
+<p>分配时间复杂度：在空闲块的数量的线性时间，而不是在所有块数量上的线性时间（当大部分内存用满时速度更快）</p>
+<p>分配和释放略复杂，因为需要在链表中删除块</p>
+<p>存放显式链接的指针需要额外的空间（每个块需要额外的2个字）</p>
+<p>这是否增加了内部碎片？没有，指针只在空闲块中存在</p>
+<p>显式空闲链表最常见的用法是与<strong>分离的空闲链表</strong>结合使用</p>
+<h2 id="分离的空闲链表"><a href="#分离的空闲链表" class="headerlink" title="分离的空闲链表"></a>分离的空闲链表</h2><h3 id="分配"><a href="#分配" class="headerlink" title="分配"></a>分配</h3><p>每个大小类别的块都有自己的空闲列表</p>
+<p><img src="https://frun1na.netlify.app/20241116191836.png"></p>
+<p>通常为每个小尺寸单独设置类别</p>
+<p>对于较大尺寸：按照2的幂进行分类</p>
+<p>给定一个空闲链表的数组，每个链表对应某个大小类别</p>
+<p>为了分配大小为n 的块：在适当的空闲链表中搜索大小为m &gt; n 的块，如果找到合适的块，分配空间，将剩余的空闲部分，放置在适当的链表中（可选）。如果未找到块，则尝试下一个更大的类别</p>
+<p>重复直到找到块</p>
+<p>如果没找到块：</p>
+<p>从操作系统请求额外的堆内存（使用sbrk()）</p>
+<p>从这个新内存中分配大小为n 字节的块</p>
+<p>将剩余部分作为单个空闲块放置在最大的大小类别中。</p>
+<h3 id="释放"><a href="#释放" class="headerlink" title="释放"></a>释放</h3><p>尝试合并并放置在适当的空闲链表中</p>
+<p>优势：更高的吞吐量，即时间复杂度O(log2n)，更好的内存利用率，分离的空闲列表的首次适配搜索近似于整个堆的最佳适配搜索。极端情况，为每个块分配自己的大小类别相当于最佳适配。</p>
+<p><strong>注：这里之后为自学内容</strong></p>
+<h1 id="垃圾收集（自学）"><a href="#垃圾收集（自学）" class="headerlink" title="垃圾收集（自学）"></a>垃圾收集（自学）</h1><p>如果程序员忘了释放这个块，它在程序的生命周期内都保持为已分配状态，占用堆空间</p>
+<p>垃圾回收：自动回收堆分配的存储空间，应用程序无需手动释放</p>
+<p>常见于许多动态语言：Python、Ruby、Java、Perl、ML、Lisp、Mathematica</p>
+<p>在C和C++语言中也存在着各种变体（“保守型”垃圾收集器），但是，并不一定能够收集所有的垃圾</p>
+<p>……</p>
+
+    </div>
+    
+    
+    
+    
+    <div id="comment">
+        <div id="giscus-container" class="giscus"></div>
+    </div>
+    
+    
+    
+    
+</div>
+
+            <footer id="footer">
+    <div id="footer-wrap">
+        <div>
+            &copy;
+            2024 - 2024 Frun1na &#39;s blog
+            <span id="footer-icon">
+                <i class="fa-solid fa-font-awesome fa-fw"></i>
+            </span>
+            &commat;Frun1na
+        </div>
+        <div>
+            Based on the <a target="_blank" rel="noopener" href="https://hexo.io">Hexo Engine</a> &amp;
+            <a target="_blank" rel="noopener" href="https://github.com/theme-particlex/hexo-theme-particlex">ParticleX Theme</a>
+        </div>
+        
+    </div>
+</footer>
+
+        </div>
+        
+        <transition name="fade">
+            <div id="preview" ref="preview" v-show="previewShow">
+                <img id="preview-content" ref="previewContent" />
+            </div>
+        </transition>
+        
+    </div>
+    <script src="/js/main.js"></script>
+    
+    
+<script
+    src="https://giscus.app/client.js"
+    data-repo="Frun1na/Frun1na.github.io"
+    data-repo-id="R_kgDOMv7m6Q"
+    data-category="General"
+    data-category-id="DIC_kwDOMv7m6c4CiZjQ"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="zh-CN"
+    crossorigin
+    async
+></script>
+
+
+
+
+
+    
+</body>
+</html>

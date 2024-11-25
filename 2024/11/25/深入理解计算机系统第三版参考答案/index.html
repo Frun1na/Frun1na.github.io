@@ -1,0 +1,3677 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>深入理解计算机系统第三版参考答案 | Frun1na &#39;s blog</title>
+    <meta name="author" content="Frun1na" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <link rel="icon" href="/images/avatar.jpg" />
+    <link rel="preconnect" href="https://s4.zstatic.net" />
+<script src="https://s4.zstatic.net/ajax/libs/vue/3.3.7/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.cn" />
+<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.cn/css2?family=Fira+Code:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap"
+/>
+<script> const mixins = {}; </script>
+
+<script src="https://polyfill.alicdn.com/v3/polyfill.min.js?features=default"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+<link
+    rel="stylesheet"
+    href="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+/>
+<script src="/js/lib/highlight.js"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+<script src="/js/lib/math.js"></script>
+
+
+<script src="/js/lib/preview.js"></script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/main.css" />
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div id="layout">
+        <transition name="fade">
+            <div id="loading" v-show="loading">
+                <div id="loading-circle">
+                    <h2>LOADING</h2>
+                    <p>加载过慢请开启缓存 浏览器默认开启</p>
+                    <img src="/images/loading.gif" />
+                </div>
+            </div>
+        </transition>
+        <div id="menu" :class="{ hidden: hiddenMenu, 'menu-color': menuColor}">
+    <nav id="desktop-menu">
+        <a class="title" href="/">
+            <span>FRUN1NA &#39;S BLOG</span>
+        </a>
+        
+        <a href="/">
+            <i class="fa-solid fa-house fa-fw"></i>
+            <span>&ensp;Home</span>
+        </a>
+        
+        <a href="/about">
+            <i class="fa-solid fa-id-card fa-fw"></i>
+            <span>&ensp;About</span>
+        </a>
+        
+        <a href="/archives">
+            <i class="fa-solid fa-box-archive fa-fw"></i>
+            <span>&ensp;Archives</span>
+        </a>
+        
+        <a href="/categories">
+            <i class="fa-solid fa-bookmark fa-fw"></i>
+            <span>&ensp;Categories</span>
+        </a>
+        
+        <a href="/tags">
+            <i class="fa-solid fa-tags fa-fw"></i>
+            <span>&ensp;Tags</span>
+        </a>
+        
+    </nav>
+    <nav id="mobile-menu">
+        <div class="title" @click="showMenuItems = !showMenuItems">
+            <i class="fa-solid fa-bars fa-fw"></i>
+            <span>&emsp;FRUN1NA &#39;S BLOG</span>
+        </div>
+        <transition name="slide">
+            <div class="items" v-show="showMenuItems">
+                
+                <a href="/">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-house fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Home</div>
+                    </div>
+                </a>
+                
+                <a href="/about">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-id-card fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">About</div>
+                    </div>
+                </a>
+                
+                <a href="/archives">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-box-archive fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Archives</div>
+                    </div>
+                </a>
+                
+                <a href="/categories">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-bookmark fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Categories</div>
+                    </div>
+                </a>
+                
+                <a href="/tags">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-tags fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Tags</div>
+                    </div>
+                </a>
+                
+            </div>
+        </transition>
+    </nav>
+</div>
+<transition name="fade">
+    <div id="menu-curtain" @click="showMenuItems = !showMenuItems" v-show="showMenuItems"></div>
+</transition>
+
+        <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
+            <div class="article">
+    <div>
+        <h1>深入理解计算机系统第三版参考答案</h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2024/11/25
+        </span>
+        
+        
+    </div>
+    
+    <div class="content" v-pre>
+        <p>对于csapp的学习我的建议是前三章是可以参考<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1cD4y1D7uR/?spm_id_from=333.337.search-card.all.click&vd_source=7731f99f93f1088243f8d98edf9cd39d">九曲阑干</a>的讲解课后习题可以不看（到考试时候突击），但是剩下几章的内容我建议看<a target="_blank" rel="noopener" href="https://www.bilibili.com/video/BV1dy411B76t/?spm_id_from=333.1007.top_right_bar_window_custom_collection.content.click&vd_source=7731f99f93f1088243f8d98edf9cd39d">卡耐基梅隆的公开课</a>（这个是激情版的，别的版本也可），并且课后习题以及作业一定要看要做，不然期末真真的复习不过来。</p>
+<p>后几章是真的难啃有一个<a target="_blank" rel="noopener" href="https://fengmuzi2003.gitbook.io/csapp3e/di-08-zhang-yi-chang-kong-zhi-liu">导读</a>（需要魔法加速）可以帮助你更深刻理解这本书</p>
+<p>各章节作业答案及简要解析</p>
+<span id="more"></span>
+
+<h1 id="Chapter2"><a href="#Chapter2" class="headerlink" title="Chapter2"></a>Chapter2</h1><h2 id="2-55"><a href="#2-55" class="headerlink" title="2.55"></a>2.55</h2><pre><code>plaintext
+小端机
+
+版本	Windows 10 家庭中文版
+版本号	20H2
+安装日期	‎2021/‎3/‎18
+操作系统内部版本	19042.1110
+序列号	PF1CBRHP
+体验	Windows Feature Experience Pack 120.2212.3530.0
+</code></pre>
+<h2 id="2-57"><a href="#2-57" class="headerlink" title="2.57"></a>2.57</h2><pre><code class="c">typedef unsigned char* byte_pointer;
+
+void show_bytes(byte_pointer start, size_t len) &#123;
+    size_t i;
+    for (i = 0; i &lt; len; i++)
+        printf(&quot; %.2x&quot;, start[i]);
+    printf(&quot;\n&quot;);
+&#125;
+
+void show_short(short x) &#123;
+    show_bytes((byte_pointer)&amp;x, sizeof(short));
+&#125;
+
+void show_int(int x) &#123;
+    show_bytes((byte_pointer)&amp;x, sizeof(int));
+&#125;
+
+void show_float(float x) &#123;
+    show_bytes((byte_pointer)&amp;x, sizeof(float));
+&#125;
+
+void show_long(long x) &#123;
+    show_bytes((byte_pointer)&amp;x, sizeof(long));
+&#125;
+
+void show_double(double x) &#123;
+    show_bytes((byte_pointer)&amp;x, sizeof(double));
+&#125;
+</code></pre>
+<h2 id="2-58"><a href="#2-58" class="headerlink" title="2.58"></a>2.58</h2><pre><code class="c">int is_little_endian() &#123;
+    short s = 1;
+    byte_pointer p = (byte_pointer)&amp;s;
+    return *p;
+&#125;
+</code></pre>
+<h2 id="2-59"><a href="#2-59" class="headerlink" title="2.59"></a>2.59</h2><pre><code class="c">int Problem_2_59_(int x, int y) &#123;
+    return (x &amp; 0xFF) | (y &amp; (~0xFF));
+&#125;
+</code></pre>
+<h2 id="2-60"><a href="#2-60" class="headerlink" title="2.60"></a>2.60</h2><pre><code class="c">unsigned replace_byte(unsigned x, int i, unsigned char b)
+&#123;
+    unsigned mask = 0xFF &lt;&lt; (i * 8);
+    x = x &amp; (~mask);
+    return x | (b &lt;&lt; (i * 8));
+&#125;
+</code></pre>
+<h2 id="2-61"><a href="#2-61" class="headerlink" title="2.61"></a>2.61</h2><pre><code class="c">int Problem_2_61_(int x) &#123;
+    int w = sizeof(int) &lt;&lt; 3;
+    return (x == -1) || (x == 0) || ((x &amp; 0xFF) == 0xFF) || (!((x &gt;&gt; (w - 8)) &amp; 0xFF));
+&#125;
+</code></pre>
+<h2 id="2-62"><a href="#2-62" class="headerlink" title="2.62"></a>2.62</h2><pre><code class="c">int int_shifts_are_arithmetic() &#123;
+    int x = -1;
+    return (x &gt;&gt; 1) == x;
+&#125;
+</code></pre>
+<h2 id="2-63"><a href="#2-63" class="headerlink" title="2.63"></a>2.63</h2><pre><code>c
+unsigned srl(unsigned x, int k) &#123;
+    /* Perform shift arithmetically */
+    unsigned xsra = (int)x &gt;&gt; k;
+    int w = sizeof(int) &lt;&lt; 3;
+    int mask = (1 &lt;&lt; (w - k)) - 1;
+    return mask &amp; xsra;
+&#125;
+
+int sra(int x, int k) &#123;
+    /* Perform shift logically */
+    int xsrl = (unsigned)x &gt;&gt; k;
+    int w = sizeof(int) &lt;&lt; 3;
+    int z = 1 &lt;&lt; (w - k - 1);
+    int mask = z - 1;
+    int right = mask &amp; xsrl;
+    int left = (~mask) &amp; ((~(z &amp; xsrl)) + z);
+    return right | left;
+&#125;
+</code></pre>
+<h2 id="2-64"><a href="#2-64" class="headerlink" title="2.64"></a>2.64</h2><pre><code>c
+/* Return 1 when any odd bit of x euqals 1; 0 otherwise.
+ * Assume w = 32
+ */
+int any_odd_one(unsigned x) &#123;
+    return !!(x &amp; 0xAAAAAAAA);
+&#125;
+</code></pre>
+<h2 id="2-65"><a href="#2-65" class="headerlink" title="2.65"></a>2.65</h2><pre><code>c
+/* Return 1 when x contains an odd number of 1s; 0 otherwise.
+ * Assume w = 32
+ */
+int odd_ones(unsigned x) &#123;
+    x = (x &gt;&gt; 16) ^ x;
+    x = (x &gt;&gt; 8) ^ x;
+    x = (x &gt;&gt; 4) ^ x;
+    x = (x &gt;&gt; 2) ^ x;
+    x = (x &gt;&gt; 1) ^ x;
+    return x &amp; 1;
+&#125;
+</code></pre>
+<h2 id="2-66"><a href="#2-66" class="headerlink" title="2.66"></a>2.66</h2><pre><code>c
+/* Generate mask indicating leftmost 1 in x.  Assume w = 32
+ * For example, 0xFF00 --&gt; 0x8000, and 0x6600 --&gt; 0x4000
+ * If x = 0, then return 0.
+ */
+int leftmost_ones(unsigned x) &#123;
+    x |= (x &gt;&gt; 1);
+    x |= (x &gt;&gt; 2);
+    x |= (x &gt;&gt; 4);
+    x |= (x &gt;&gt; 8);
+    x |= (x &gt;&gt; 16);
+    return x ^ (x &gt;&gt; 1);
+&#125;
+</code></pre>
+<h2 id="2-67"><a href="#2-67" class="headerlink" title="2.67"></a>2.67</h2><pre><code>c
+A. 移位应小于32位
+/* Work successfully on 32-bit machine */
+int  int_size_is_32_B() &#123;
+    int x = 1 &lt;&lt; 31;
+    return !(x &lt;&lt; 1);
+&#125;
+
+/* Work successfully on 16-bit machine */
+int  int_size_is_32_C() &#123;
+    int x = 1 &lt;&lt; 15;
+    int y = x &lt;&lt; 15;
+    return (x &lt;&lt; 1) &amp;&amp; !(y &lt;&lt; 2);
+&#125;
+</code></pre>
+<h2 id="2-68"><a href="#2-68" class="headerlink" title="2.68"></a>2.68</h2><pre><code>c
+/* 
+ * Mask with least signficant n bits set to 1
+ * Examples: n = 6 --&gt; 0x3F, n == 17 --&gt; 0x1FFFF
+ * Assume 1 &lt;= n &lt;= w
+ */
+int lower_one_mask(int n) &#123;
+    return (2 &lt;&lt; (n - 1)) - 1;
+&#125;
+</code></pre>
+<h2 id="2-69"><a href="#2-69" class="headerlink" title="2.69"></a>2.69</h2><pre><code>c
+/*
+ * Do ratating left shift.  Assume 0 &lt;= n &lt; w
+ * Examples when x = 0x12345678 and w = 32
+ *	n = 4 -&gt; 0x23456781, n = 20 -&gt; 0x67812345
+ */
+unsigned rotate_left(unsigned x, int n) &#123;
+    /* Special treatment for the case of n = 0 */
+    unsigned w = sizeof(unsigned) &lt;&lt; 3;
+    unsigned not_shift_out = ((1 &lt;&lt; (w - n + 1)) - 1) &amp; x;
+    unsigned shift_out = ((((INT_MIN) &gt;&gt; n) &lt;&lt; 1) &amp; x) &gt;&gt; (w - n);
+    unsigned rotated = (not_shift_out &lt;&lt; n) | shift_out;
+    /* If n != 0, rotated is the right answer, otherwise rotated is 0 */
+    n = (n &lt;&lt; 16) | n;
+    n = (n &lt;&lt; 8) | n;
+    n = (n &lt;&lt; 4) | n;
+    n = (n &lt;&lt; 2) | n;
+    n = (n &lt;&lt; 1) | n;
+    n = n &gt;&gt; 31;
+    /* n ? rotated : x */
+    return (n &amp; rotated) + ((~n) &amp; x);
+&#125;
+</code></pre>
+<h2 id="2-70"><a href="#2-70" class="headerlink" title="2.70"></a>2.70</h2><pre><code>c
+/*
+ * Return 1 when x can be represented as an n-bit, 2&#39;s-complement
+ * number; 0 otherwise
+ * Assume 1 &lt;= n &lt;= w
+ */
+int fits_bits(int x, int n) &#123;
+    /*
+     * If x is a positive number,
+     * ensure that x is shifted to 0 and 
+     * the highest bit of the new n-bit number is 0 
+     * 
+     * * If x is a negative number,
+     * ensure that x is shifted to -1 and 
+     * the highest bit of the new n-bit number is 1 
+     */
+    int test_bit = (1 &lt;&lt; (n - 1)) &amp; x;
+    x &gt;&gt;= n;
+    return (!x &amp;&amp; !test_bit) || (!(x + 1) &amp;&amp; test_bit);
+&#125;
+</code></pre>
+<h2 id="2-71"><a href="#2-71" class="headerlink" title="2.71"></a>2.71</h2><pre><code>c
+A. 未实现符号拓展，高位总为0
+/* Declaration of data type where 4 bytes are picked
+ * into an unsigned
+ */
+typedef unsigned packed_t;
+
+/* Extract byte from word.  Return as signed integer */
+int xbyte(packed_t word, int bytenum) &#123;
+    return ((int)(word &lt;&lt; ((3 - bytenum) &lt;&lt; 3))) &gt;&gt; 24;
+&#125;
+</code></pre>
+<h2 id="2-72"><a href="#2-72" class="headerlink" title="2.72"></a>2.72</h2><pre><code>c
+A. 表达式隐式转换为无符号数结果，故总大于等于0
+/* Copy integer into buffer if space is avaiable */
+void copy_int(int val, void* buf, int maxbytes) &#123;
+    if (maxbytes &gt; 0 &amp;&amp; (maxbytes &gt;= sizeof(val)))
+        memcpy(buf, (void*)&amp;val, sizeof(val));
+&#125;
+</code></pre>
+<h2 id="2-73"><a href="#2-73" class="headerlink" title="2.73"></a>2.73</h2><pre><code>c
+/* Addtion that saturates to TMin or Tmax */
+int saturating_add(int x, int y) &#123;
+    int w = sizeof(int) &lt;&lt; 3;
+    int z = x + y;
+    int _sign_x_ = x &gt;&gt; (w - 1);
+    int _sign_y_ = y &gt;&gt; (w - 1);
+    int _sign_z_ = z &gt;&gt; (w - 1);
+    int _sign_xor_ = (x ^ y) &gt;&gt; (w - 1);
+    /* 
+     * If x,y with different signs, addition does not overflow,
+     * ans = x + y. Otherwise ans is zero.
+     */
+    int _ans_both_positive_ = (~_sign_x_) &amp; (~_sign_y_) &amp; _sign_z_ &amp; INT_MAX;
+    int _ans_both_negative_ = _sign_x_ &amp; _sign_y_ &amp; (~_sign_z_) &amp; (INT_MIN);
+    int _ans_xor_ = _sign_xor_ &amp; (x + y);
+    return _ans_both_positive_ + _ans_both_negative_ + _ans_xor_;
+&#125;
+</code></pre>
+<h2 id="2-74"><a href="#2-74" class="headerlink" title="2.74"></a>2.74</h2><pre><code>c
+/* Determine whether arguments can be substracted without overflow */
+int tsub_ok(int x, int y) &#123;
+    int w = sizeof(int) &lt;&lt; 3;
+    int z = x - y;
+    int _sign_x_ = x &gt;&gt; (w - 1);
+    int _sign_y_ = y &gt;&gt; (w - 1);
+    int _sign_z_ = z &gt;&gt; (w - 1);
+
+    /*
+     * if x &gt;= 0, y &gt;= 0, x - y never overflow
+     * if x &gt;= 0, y &lt;  0, x - y may overflow, when overflow, _sign_z_ is all 1s
+     * if x &lt;  0, y &gt;= 0, x - y may overflow, when overflow, _sign_z_ is 0
+     * if x &lt;  0, y &lt;  0, x - y never overflow
+     */
+    int _ans_xpyn_overflow_ = (~_sign_x_) &amp; _sign_y_ &amp; _sign_z_;
+    int _ans_xnyp_overflow_ = _sign_x_ &amp; (~_sign_y_) &amp; (~_sign_z_);
+    return !(_ans_xpyn_overflow_ || _ans_xnyp_overflow_);
+&#125;
+</code></pre>
+<h2 id="2-75"><a href="#2-75" class="headerlink" title="2.75"></a>2.75</h2><pre><code>c
+int signed_high_prod(int x, int y) &#123;
+    int w = sizeof(int) &lt;&lt; 3;
+    long tmp_x = (long)x;
+    long tmp_y = (long)y;
+    return (int)((tmp_x * tmp_y) &gt;&gt; w);
+&#125;
+unsigned unsigned_high_prod(unsigned x, unsigned y) &#123;
+    int w = sizeof(int) &lt;&lt; 3;
+    unsigned x_sign = ((int)x) &gt;&gt; (w - 1);
+    unsigned y_sign = ((int)y) &gt;&gt; (w - 1);
+    unsigned ans = signed_high_prod(x, y) + (x_sign &amp; y) + (y_sign &amp; x);
+    return ans;
+&#125;
+</code></pre>
+<h2 id="2-76"><a href="#2-76" class="headerlink" title="2.76"></a>2.76</h2><pre><code>c
+void* Calloc(size_t nmemb, size_t size) &#123;
+    if (nmemb == 0 || size == 0) return NULL;
+    size_t total = nmemb * size;
+    if (total / nmemb == size) &#123;
+        void* p = malloc(total);
+        memset(p, 0, nmemb);
+        return p;
+    &#125;
+    return NULL;
+&#125;
+</code></pre>
+<h2 id="2-77"><a href="#2-77" class="headerlink" title="2.77"></a>2.77</h2><pre><code>c
+int Problem_2_77_A(int x) &#123;
+    return (x &lt;&lt; 4) + x;
+&#125;
+int Problem_2_77_B(int x) &#123;
+    return -(x &lt;&lt; 3) + x;
+&#125;
+int Problem_2_77_C(int x) &#123;
+    return (x &lt;&lt; 6) - (x &lt;&lt; 2);
+&#125;
+int Problem_2_77_D(int x) &#123;
+    return -(x &lt;&lt; 7) + (x &lt;&lt; 4);
+&#125;
+</code></pre>
+<h2 id="2-78"><a href="#2-78" class="headerlink" title="2.78"></a>2.78</h2><pre><code>c
+/* Divide by power of 2. Assume 0 &lt;= k &lt; w - 1 */
+int divide_power2(int x, int k) &#123;
+    int sign = x &gt;&gt; 31;
+    int x_is_non_negative = x &gt;&gt; k;
+    int x_is_negative = (x + ((1 &lt;&lt; k) - 1)) &gt;&gt; k;
+    return ((~sign) &amp; x_is_non_negative) + (sign &amp; x_is_negative);
+&#125;
+</code></pre>
+<h2 id="2-79"><a href="#2-79" class="headerlink" title="2.79"></a>2.79</h2><pre><code>c
+int mul3div4(int x) &#123;
+    return ((x &lt;&lt; 1) + x) &gt;&gt; 2;
+&#125;
+</code></pre>
+<h2 id="2-80"><a href="#2-80" class="headerlink" title="2.80"></a>2.80</h2><pre><code>c
+int threefourths(int x) &#123;
+    /*
+     * calculate 3/4x, no overflow, round to zero
+     *
+     * no overflow means divide 4 first, then multiple 3, diffrent from 2.79 here
+     *
+     * rounding to zero is a little complicated.
+     * every int x, equals f(first 30 bit number) plus l(last 2 bit number)
+     *
+     *   f = x &amp; ~0x3
+     *   l = x &amp; 0x3
+     *   x = f + l
+     *   threeforths(x) = f/4*3 + l*3/4
+     *
+     * f doesn&#39;t care about round at all, we just care about rounding from l*3/4
+     *
+     *   lm3 = (l &lt;&lt; 1) + l
+     *
+     * when x &gt; 0, rounding to zero is easy
+     *
+     *   lm3d4 = lm3 &gt;&gt; 2
+     *
+     * when x &lt; 0, rounding to zero acts like divide_power2 in 2.78
+     *
+     *   bias = 0x3    // (1 &lt;&lt; 2) - 1
+     *   lm3d4 = (lm3 + bias) &gt;&gt; 2
+     */
+    int is_negative = x &amp; INT_MIN;
+    /* Split x into high 30 digits and low two digits */
+    int f = x &amp; (~0b11);
+    int l = x &amp; (0b11);
+
+    int fd4 = f &gt;&gt; 2;
+    int fd4m3 = (fd4 &lt;&lt; 1) + fd4;
+
+    int lm3 = (l &lt;&lt; 1) + l;
+    int bias = (1 &lt;&lt; 2) - 1;
+    (is_negative &amp;&amp; (lm3 += bias));
+    int lm3d4 = lm3 &gt;&gt; 2;
+    
+    return fd4m3 + lm3d4;
+&#125;
+</code></pre>
+<h2 id="2-81"><a href="#2-81" class="headerlink" title="2.81"></a>2.81</h2><pre><code>c
+int Problem_2_81_A(int k) &#123;
+    int odd = k &amp; 1;
+    int ans = -1 &lt;&lt; (k &gt;&gt; 1);
+    return ans &lt;&lt; ((k &gt;&gt; 1) + odd);
+&#125;
+
+int Problem_2_81_B(int j, int k) &#123;
+    int w = sizeof(int) &lt;&lt; 3;
+    int exp = w - k;
+    int odd_left_part = exp &amp; 1;
+    int odd_right_part = j &amp; 1;
+    unsigned ans = ~0;
+    ans = (ans &gt;&gt; (exp &gt;&gt; 1)) &gt;&gt; ((exp &gt;&gt; 1) + odd_left_part);
+    return (ans &lt;&lt; (j &gt;&gt; 1)) &lt;&lt; ((j &gt;&gt; 1) + odd_right_part);
+&#125;
+</code></pre>
+<h2 id="2-82"><a href="#2-82" class="headerlink" title="2.82"></a>2.82</h2><pre><code>c
+* Problem_2_82
+* A. False (x = TMin, y = 0)
+* B. True
+* C. True
+* D. True
+* E. True
+</code></pre>
+<h2 id="2-83"><a href="#2-83" class="headerlink" title="2.83"></a>2.83</h2><pre><code>c
+* Problem_2_83
+* Let x be the value of the infinite sequence,
+* then x * (2 ^ k) = Y + x.
+* So x = Y / ((2 ^ k) - 1)
+* 
+* B(a):5/7
+* B(b):6/15
+* B(c):19/63
+</code></pre>
+<h2 id="2-84"><a href="#2-84" class="headerlink" title="2.84"></a>2.84</h2><pre><code>c
+unsigned f2u(float f) &#123;
+    byte_pointer bp = (byte_pointer)&amp;f;
+    return (unsigned)(bp[0] + (bp[1] &lt;&lt; 8) + (bp[2] &lt;&lt; 16) + (bp[3] &lt;&lt; 24));
+&#125;
+int float_le(float x, float y) &#123;
+    unsigned ux = f2u(x);
+    unsigned uy = f2u(y);
+
+    /* Get the sign bits */
+    unsigned sx = ux &gt;&gt; 31;
+    unsigned sy = uy &gt;&gt; 31;
+
+    /* Give an expression using only ux, uy, sx and sy */
+    return (sx &amp;&amp; !sy) || (sx &amp;&amp; sy &amp;&amp; (ux &gt;= uy)) || (!sx &amp;&amp; !sy &amp;&amp; (ux &lt;= uy));
+&#125;
+</code></pre>
+<h2 id="2-85"><a href="#2-85" class="headerlink" title="2.85"></a>2.85</h2><pre><code>c
+* Problem_2_85
+* bias = (2 ^ (k - 1)) - 1;
+* 
+* A. 7.0 = ((bias + 2) &lt;&lt; n) | (0b11 &lt;&lt; (n - 2))
+* B. Greatest odd integer = ((bias + n) &lt;&lt; n) | ((1 &lt;&lt; n) - 1)
+* C. reciprocal of the minimum normalized number = ((2 ^ k) - 3) &lt;&lt; n
+</code></pre>
+<h2 id="2-90"><a href="#2-90" class="headerlink" title="2.90"></a>2.90</h2><pre><code>c
+float u2f(unsigned u) &#123;
+    float f;
+    byte_pointer up = (byte_pointer)&amp;u;
+    byte_pointer fp = (byte_pointer)&amp;f;
+    for (size_t i = 0;i &lt; sizeof(unsigned);i++) &#123;
+        fp[i] = up[i];
+    &#125;
+    return f;
+&#125;
+float fpwr2(int x) &#123;
+    /* Result exponent and fraction */
+    unsigned exp, frac;
+    unsigned u;
+
+    if (x &lt; -149) &#123;
+        /* Too small.  Return 0.0 */
+        exp = 0;
+        frac = 0;
+    &#125;
+    else if (x &lt; -126) &#123;
+        /* Denormalized result */
+        exp = 0;
+        frac = 1 &lt;&lt; (149 + x);
+    &#125;
+    else if (x &lt; 128) &#123;
+        /* Normalized result */
+        exp = x + 127;
+        frac = 0;
+    &#125;
+    else &#123;
+        /* Too big.  Return Infinity*/
+        exp = 0xFF;
+        frac = 0;
+    &#125;
+
+    /* Pack exp and frac into 32 bits */
+    u = exp &lt;&lt; 23 | frac;
+    /* Return as float */
+    return u2f(u);
+&#125;
+</code></pre>
+<h2 id="2-92"><a href="#2-92" class="headerlink" title="2.92"></a>2.92</h2><pre><code>c
+/* Compute -f.  If f is NaN, then return f. */
+float_bits float_negate(float_bits f) &#123;
+    /* Decompose bit representation into parts */
+    unsigned sign = f &gt;&gt; 31;
+    unsigned exp = (f &gt;&gt; 23) &amp; 0xFF;
+    unsigned frac = f &amp; 0x7FFFFF;
+
+    if (exp == 0xFF &amp;&amp; frac) return f;
+    return ((~sign) &lt;&lt; 31) | (exp &lt;&lt; 23) | frac;
+&#125;
+</code></pre>
+<h2 id="2-93"><a href="#2-93" class="headerlink" title="2.93"></a>2.93</h2><pre><code>c
+/* Compute |f|.  If f is NaN, then return f. */
+float_bits float_absval(float_bits f) &#123;
+    /* Decompose bit representation into parts */
+    unsigned sign = f &gt;&gt; 31;
+    unsigned exp = (f &gt;&gt; 23) &amp; 0xFF;
+    unsigned frac = f &amp; 0x7FFFFF;
+
+    if (exp == 0xFF &amp;&amp; frac) return f;
+    return (exp &lt;&lt; 23) | frac;
+&#125;
+</code></pre>
+<h2 id="2-94"><a href="#2-94" class="headerlink" title="2.94"></a>2.94</h2><pre><code>c
+/* Compute 2*f.  If f is NaN, then return f. */
+float_bits float_twice(float_bits f) &#123;
+    /* Decompose bit representation into parts */
+    unsigned sign = f &gt;&gt; 31;
+    unsigned exp = (f &gt;&gt; 23) &amp; 0xFF;
+    unsigned frac = f &amp; 0x7FFFFF;
+
+    if (exp == 0xFF) return f;
+    if (exp == 0) return (sign &lt;&lt; 31) | (frac &lt;&lt; 1);
+    if (exp == 0xFE) return (sign &lt;&lt; 31) | (0xFF &lt;&lt; 23);
+    return (sign &lt;&lt; 31) | ((exp + 1) &lt;&lt; 23) | frac;
+&#125;
+</code></pre>
+<h2 id="2-95"><a href="#2-95" class="headerlink" title="2.95"></a>2.95</h2><pre><code>c
+/* Compute 0.5*f.  If f is NaN, then return f. */
+float_bits float_half(float_bits f) &#123;
+    /* Decompose bit representation into parts */
+    unsigned sign = f &gt;&gt; 31;
+    unsigned exp = (f &gt;&gt; 23) &amp; 0xFF;
+    unsigned frac = f &amp; 0x7FFFFF;
+
+    if (exp == 0xFF) return f;
+    if (exp == 0) return (sign &lt;&lt; 31) | (frac &gt;&gt; 1);
+    if (exp == 1) return (sign &lt;&lt; 31) | (frac &gt;&gt; 1) | (1 &lt;&lt; 22);
+    return (sign &lt;&lt; 31) | ((exp - 1) &lt;&lt; 23) | frac;
+&#125;
+</code></pre>
+<h2 id="2-96"><a href="#2-96" class="headerlink" title="2.96"></a>2.96</h2><pre><code>c
+/*
+ * Compute (int) f.
+ * If conversion causes overflow of f is NaN, return 0x80000000
+ */
+int float_f2i(float_bits f) &#123;
+    /* Decompose bit representation into parts */
+    unsigned sign = f &gt;&gt; 31;
+    unsigned exp = (f &gt;&gt; 23) &amp; 0xFF;
+    unsigned frac = f &amp; 0x7FFFFF;
+
+    unsigned bias = (1 &lt;&lt; 7) - 1;
+    unsigned absval = 0x80000000;
+    if (exp &gt; bias + 30) &#123;
+        /* Too big.  Return 0x80000000 */
+        return absval;
+    &#125;
+    else if (exp &gt;= bias + 23) &#123;
+        absval = ((1 &lt;&lt; 23) | frac) &lt;&lt; (exp - bias - 23);
+    &#125;
+    else if (exp &gt;= bias) &#123;
+        absval = ((1 &lt;&lt; 23) | frac) &gt;&gt; (bias + 23 - exp);
+    &#125;
+    else &#123;
+        /* f &lt; 1 */
+        return 0;
+    &#125;
+    sign &amp;&amp; (absval = (~absval) + 1);
+    return absval;
+&#125;
+</code></pre>
+<h2 id="2-97"><a href="#2-97" class="headerlink" title="2.97"></a>2.97</h2><pre><code>c
+/* Compute (float) i */
+float_bits float_i2f(int i) &#123;
+    unsigned sign = (i &gt;&gt; 31) &amp; 1;
+    unsigned bias = (1 &lt;&lt; 7) - 1;
+
+    unsigned absval = i;
+    sign &amp;&amp; (absval = (~absval) + 1);
+
+    unsigned power = 0;
+    unsigned tmpval = absval;
+    (tmpval &gt;&gt; 16) &amp;&amp; (power += 16) &amp;&amp; (tmpval &gt;&gt;= 16);
+    (tmpval &gt;&gt; 8) &amp;&amp; (power += 8) &amp;&amp; (tmpval &gt;&gt;= 8);
+    (tmpval &gt;&gt; 4) &amp;&amp; (power += 4) &amp;&amp; (tmpval &gt;&gt;= 4);
+    (tmpval &gt;&gt; 2) &amp;&amp; (power += 2) &amp;&amp; (tmpval &gt;&gt;= 2);
+    (tmpval &gt;&gt; 1) &amp;&amp; (power += 1) &amp;&amp; (tmpval &gt;&gt;= 1);
+
+    unsigned E = power + bias;
+    unsigned frac = absval - (1 &lt;&lt; power);
+    if (power &gt;= 23) &#123;
+        frac &gt;&gt;= power - 23;
+    &#125;
+    else frac &gt;&gt;= 22 - power;
+    
+    return (sign &lt;&lt; 31) | (E &lt;&lt; 23) | frac;
+&#125;
+</code></pre>
+<h1 id="Chapter3"><a href="#Chapter3" class="headerlink" title="Chapter3"></a>Chapter3</h1><h2 id="3-58"><a href="#3-58" class="headerlink" title="3.58"></a>3.58</h2><pre><code>c
+long decode2(long x, long y, long z) &#123;
+    y = y - z;
+    x = x * y;
+    return (y &amp; 1) ? ~x : x;
+&#125;
+</code></pre>
+<h2 id="3-59"><a href="#3-59" class="headerlink" title="3.59"></a>3.59</h2><pre><code>c
+typedef __int128 int128_t;
+void store_prod(int128_t *dest, int64_t x, int64_t y) &#123;
+    *dest = x * (int128_t) y;
+&#125;
+
+    X = Xhigh * 2^64 + Xlow
+    Y = Yhigh * 2^64 + Ylow
+    X * Y = (Xhigh * Yhigh * 2^128 + 2^64 * (Xhigh * Ylow + Yhigh * Xlow) + Xlow * Ylow) mod 2^128
+    X * Y = 2^64 * (Xhigh * Ylow + Yhigh * Xlow) + Xlow * Ylow
+
+store_prod:
+    movq  %rdx, %rax		;%rax = Ylow
+    cqto					;sign extend. %rdx = Yhigh, %rax = Ylow
+    movq  %rsi, %rcx		;%rcx = Xlow
+    sarq  %63 , %rcx		;%rcx = Xhigh 
+    imulq %rax, %rcx		;%rcx = Xhigh * Ylow
+    imulq %rsi, %rdx		;%rdx = Yhigh * Xlow
+    addq  %rdx, %rcx		;%rcx = Xhigh * Ylow + Yhigh * Xlow
+    mulq  %rsi				;[%rdx : %rax] = x * y
+    addq  %rcx, %rdx		;%rdx += Xhigh * Ylow + Yhigh * Xlow
+    movq  %rax, (%rdi)		
+    movq  %rdx, 8(%rdi)
+    ret
+</code></pre>
+<h2 id="3-60"><a href="#3-60" class="headerlink" title="3.60"></a>3.60</h2><pre><code>c
+long loop(long x, int n) &#123;
+    long result = 0;
+    long mask;
+    for (mask = 1; mask != 0; mask = mask &lt;&lt; n) &#123;
+        result |= x &amp; mask;
+    &#125;
+    return result;
+&#125;
+</code></pre>
+<h2 id="3-61"><a href="#3-61" class="headerlink" title="3.61"></a>3.61</h2><pre><code>c
+long cread_alt(long* xp) &#123;
+    if (xp == NULL)
+        goto FALSE;
+    return *xp;
+FALSE:
+    return 0;
+&#125;
+</code></pre>
+<h2 id="3-62"><a href="#3-62" class="headerlink" title="3.62"></a>3.62</h2><pre><code>c
+/* Enumerated type creates set of constants numbered 0 and upward */
+typedef enum &#123; MODE_A, MODE_B, MODE_C, MODE_D, MODE_E &#125; mode_t;
+long switch3(long* p1, long* p2, mode_t action) &#123;
+    long result = 0;
+    switch (action) &#123;
+    case MODE_A:
+        result = *p2;
+        *p2 = *p1;
+        break;
+    case MODE_B:
+        result = *p1 + *p2;
+        *p1 = result;
+        break;
+    case MODE_C:
+        *p1 = 59;
+        result = *p2;
+        break;
+    case MODE_D:
+        *p1 = *p2;
+        result = 27;
+        break;
+    case MODE_E:
+        result = 27;
+        break;
+    default:
+        result = 12;
+    &#125;
+    return result;
+&#125;
+</code></pre>
+<h2 id="3-63"><a href="#3-63" class="headerlink" title="3.63"></a>3.63</h2><pre><code>c
+long switch_prob(long x, long n) &#123;
+    long result = x;
+    n -= 0x3c;
+    switch (n) &#123;
+    case 0:
+    case 2:
+        result *= 8;
+        break;
+    case 3:
+        result &gt;&gt;= 3;
+        break;
+    case 4:
+        result *= 15;
+    case 5:
+        x = result * result;
+    default:
+        result = x + 0x4b;
+    &#125;
+    return result;
+&#125;
+</code></pre>
+<h2 id="3-64"><a href="#3-64" class="headerlink" title="3.64"></a>3.64</h2><pre><code>c
+#define R 7
+#define S 5
+#define T 13
+long A[R][S][T];
+long store_ele(long i, long j, long k, long* dest) &#123;
+    *dest = A[i][j][k];
+    return sizeof(A);
+&#125;
+/*
+ *	A. 
+ *  long A[R][S][T];
+ *	&amp;A[i][j][k] = X + L(i * S * T + j * T + k)
+ *  
+ *	B. R = 7, S = 5, T = 13
+ */
+</code></pre>
+<h2 id="3-65"><a href="#3-65" class="headerlink" title="3.65"></a>3.65</h2><pre><code>c
+#define M 15
+void transpose(long A[M][M]) &#123;
+    long i, j;
+    for (i = 0; i &lt; M; i++ )
+        for (j = 0; j &lt; i; j++) &#123;
+            long t = A[i][j];
+            A[i][j] = A[j][i];
+            A[j][i] = t;
+        &#125;
+&#125;
+/*
+ *	A.%rdx
+ *	B.%rax
+ *	C.M = 15
+ */
+</code></pre>
+<h2 id="3-66"><a href="#3-66" class="headerlink" title="3.66"></a>3.66</h2><pre><code>c
+#define NR(n) (3 * (n))
+#define NC(n) (4 * (n) + 1)
+long sum_col(long n, long A[NR(n)][NC(n)], long j) &#123;
+    long i;
+    long result = 0;
+    for (i = 0; i &lt; NR(n); i++)
+        result += A[i][j];
+    return result;
+&#125;
+</code></pre>
+<h2 id="3-67"><a href="#3-67" class="headerlink" title="3.67"></a>3.67</h2><pre><code>c
+A. (%rsp) = x
+  8(%rsp) = y
+ 16(%rsp) = &amp;z
+ 24(%rsp) = z
+B.  %rsp + 64
+C.  %rsp + bias
+D.  %rdi + bias
+E.  %rsp + 64 -&gt; y
+    %rsp + 72 -&gt; x
+    %rsp + 80 -&gt; z
+F. 结构体传递参数或作为返回值均为其首地址值
+</code></pre>
+<h2 id="3-68"><a href="#3-68" class="headerlink" title="3.68"></a>3.68</h2><pre><code>c
+setVal:
+    movslq	8(%rsi), %rax	;5 &lt;= B &lt;= 8
+    addq	32(%rsi), %rax	;7 &lt;= A &lt;= 10
+
+    movq	%rax, 184(%rdi)	;180 &lt;= 4 * A * B &lt;= 184
+    ret
+
+    A = 9, B = 5
+</code></pre>
+<h2 id="3-69"><a href="#3-69" class="headerlink" title="3.69"></a>3.69</h2><pre><code>c
+A. CNT = 7
+B. 
+typedef struct &#123;
+    long idx;
+    long x[4];
+&#125; a_struct;
+</code></pre>
+<h2 id="3-70"><a href="#3-70" class="headerlink" title="3.70"></a>3.70</h2><pre><code>c
+A.e1.p		0
+  e1.y		8
+  e2.x		0
+  e2.next	8
+B.16
+C.
+void proc(union ele* up) &#123;
+    up-&gt;e2.x = *(up-&gt;e2.next-&gt;e1.p) - up-&gt;e2.next-&gt;e1.y;
+&#125;
+</code></pre>
+<h2 id="3-71"><a href="#3-71" class="headerlink" title="3.71"></a>3.71</h2><pre><code>c
+#define BUF_SIZE 4
+void good_echo(void) &#123;
+    char buf[BUF_SIZE];
+    while (1) &#123;
+        char* p = fgets(buf, BUF_SIZE, stdin);
+        if (ferror(stdin) || p == NULL)
+            break;
+        fputs(buf, stdout);
+    &#125;
+&#125;
+</code></pre>
+<h2 id="3-72"><a href="#3-72" class="headerlink" title="3.72"></a>3.72</h2><pre><code>c
+A. s2 = s1 - (8 * n + 16) ;n为偶数
+   s2 = s1 - (8 * n + 24) ;n为奇数
+B.  p = (s2 + 15) &amp; 0xFFFFFFF0
+C. 使e1最小: n为奇数, s1 mod 16 = 0
+   使e1最大: n为偶数, s1 mod 16 = 1
+D. s2 保留s1的偏移量为最接近的16的倍数		p 16对齐
+</code></pre>
+<h2 id="3-73"><a href="#3-73" class="headerlink" title="3.73"></a>3.73</h2><pre><code>c
+typedef enum &#123;NEG, ZERO, POS, OTHER&#125; range_t;
+
+find_range:
+    movl		$0, %eax				;set %rax = 0
+    vxorps		%xmm1, %xmm1, %xmm1		;set %xmm1 = 0
+    vucomiss	%xmm1, %xmm0			;Compare x:0
+    jp			.L5						;If NaN
+    jz			.L6						;If x = 0
+    jc			.L7						;If x &lt; 0
+    addl		$2, %eax				;x &gt; 0
+    rep; ret
+.L5:
+    addl		$2, %eax
+.L6:
+    addl		$1, $eax
+.L7:
+    rep; ret
+</code></pre>
+<h2 id="3-74"><a href="#3-74" class="headerlink" title="3.74"></a>3.74</h2><pre><code>c
+typedef enum &#123;NEG, ZERO, POS, OTHER&#125; range_t;
+
+find_range:
+    movl		$2, %eax				;Assume x is POS	
+    vxorps		%xmm1, %xmm1, %xmm1		;set %xmm1 = 0
+    vucomiss	%xmm1, %xmm0			;Compare x:0
+    movq		$0, %rdx
+    cmovs		%rdx, %rax				;If CF = 1, %rax = 0, x may be NEG or NaN
+    movq		$1, %rdx
+    cmove		%rdx, %rax				;If ZF = 1, %rax = 1, x may be ZERO or NaN
+    movq		%3, %rdx
+    cmovp		%rdx, %rax				;If PF = 1, %rax = 3, x must be NaN
+    rep; ret
+</code></pre>
+<h2 id="3-75"><a href="#3-75" class="headerlink" title="3.75"></a>3.75</h2><pre><code>c
+A.每个复数类型参数使用两个xmm寄存器分别存储实部和虚部数值, 下标小的存实部
+B.若只单独返回实部或单独返回虚部, 将待返回值放于%xmm0寄存器中
+  若需返回整个复数,将实部放于%xmm0寄存器中,虚部放于%xmm1寄存器中
+</code></pre>
+<h1 id="Chapter4"><a href="#Chapter4" class="headerlink" title="Chapter4"></a>Chapter4</h1><h2 id="4-45"><a href="#4-45" class="headerlink" title="4.45"></a>4.45</h2><pre><code>plaintext
+A. 	不正确
+    正确的pushq应该是先存REG再减%rsp值
+       若按本题所述，pushq %rsp存储的是%rsp - 8的值，而不是原值
+B. 	movq %rsp, %rbp
+       subq $8, %rbp
+       movq REG, (%rbp)
+       subq $8, %rsp
+</code></pre>
+<h2 id="4-46"><a href="#4-46" class="headerlink" title="4.46"></a>4.46</h2><pre><code>plaintext
+A. 	不正确
+    若按本题所述，popq %rsp执行后%rsp中值为%rsp + 8，而不是原值
+B.	movq %rsp, %rbp
+    addq $8, %rsp
+    movq (%rbp), REG
+</code></pre>
+<h2 id="4-47"><a href="#4-47" class="headerlink" title="4.47"></a>4.47</h2><pre><code>c
+A.
+/* Bubble sort: Pointer version */
+void bubble_p(long* data, long count) &#123;
+    long i, last;
+    for (last = count - 1; last &gt; 0; last--) &#123;
+        for (i = 0; i &lt; last; i++) &#123;
+            if (*(data + i + 1) &lt; *(data + i)) &#123;
+                /* Swap adjacent elements */
+                long t = *(data + i + 1);
+                *(data + i + 1) = *(data + i);
+                *(data + i) = t;
+            &#125;
+        &#125;
+    &#125;
+&#125;
+plaintext
+B.
+# void bubble_p(long* data, long count)
+# data in %rdi, count in %rsi
+bubble_p:
+    irmovq $1, %r8
+    rrmovq %rsi, %r9		;%r9: last
+loop1:
+    subq %r8, %r9
+    andq %r9, %r9
+    je done
+    irmovq $0, %rax			;%rax: i 
+loop2:
+    rrmovq %rax, %r11
+    subq %r9, %r11			;%r11 = i - last
+    je next
+    rrmovq %rax, %r11		;%r11 = i
+    addq %r8, %r11			;%r11 = i + 1
+    addq %r11, %r11
+    addq %r11, %r11
+    addq %r11, %r11			;%r11 = 8 * (i + 1)
+    addq %rdi, %r11			;%r11 = &amp;*(data +i + 1)
+    mrmovq (%r11), %rbx		;%rbx = *(data + i + 1)
+    
+    rrmovq %rax, %r12		;%r12 = i
+    addq %r12, %r12
+    addq %r12, %r12
+    addq %r12, %r12			;%r12 = 8 * i
+    addq %rdi, %r12			;%r12 = &amp;*(data +i)
+    mrmovq (%r12), %rcx		;%rcx = *(data + i)
+    
+    rrmovq %rbx, %r13
+    subq %rcx, %r13			;%r13 = *(data + i + 1) - *(data + i)
+    jge	no_need
+    rmmovq %rbx, (%r12)
+    rmmovq %rcx, (%r11)
+no_need:
+    addq %r8, %rax
+    jmp loop2
+next:
+    jmp loop1
+done:
+    ret
+</code></pre>
+<h2 id="4-48"><a href="#4-48" class="headerlink" title="4.48"></a>4.48</h2><pre><code>plaintext
+rrmovq %rax, %r11		;%r11 = i
+addq %r8, %r11			;%r11 = i + 1
+addq %r11, %r11
+addq %r11, %r11
+addq %r11, %r11			;%r11 = 8 * (i + 1)
+addq %rdi, %r11			;%r11 = &amp;*(data +i + 1)
+mrmovq (%r11), %rbx		;%rbx = *(data + i + 1)
+
+rrmovq %rax, %r12		;%r12 = i
+addq %r12, %r12
+addq %r12, %r12
+addq %r12, %r12			;%r12 = 8 * i
+addq %rdi, %r12			;%r12 = &amp;*(data +i)
+mrmovq (%r12), %rcx		;%rcx = *(data + i)
+
+rrmovq %rbx, %r13
+subq %rcx, %r13			;%r13 = *(data + i + 1) - *(data + i)
+cmovl %rbx, %r13
+cmovl %rcx, %rbx
+cmovl %r13, %rcx
+mrmovq (%r11), %rbx
+mrmovq (%r12), %rcx
+</code></pre>
+<h2 id="4-49"><a href="#4-49" class="headerlink" title="4.49"></a>4.49</h2><pre><code>plaintext
+rrmovq %rax, %r11		;%r11 = i
+addq %r8, %r11			;%r11 = i + 1
+addq %r11, %r11
+addq %r11, %r11
+addq %r11, %r11			;%r11 = 8 * (i + 1)
+addq %rdi, %r11			;%r11 = &amp;*(data +i + 1)
+mrmovq (%r11), %rbx		;%rbx = *(data + i + 1)
+
+rrmovq %rax, %r12		;%r12 = i
+addq %r12, %r12
+addq %r12, %r12
+addq %r12, %r12			;%r12 = 8 * i
+addq %rdi, %r12			;%r12 = &amp;*(data +i)
+mrmovq (%r12), %rcx		;%rcx = *(data + i)
+
+rrmovq %rbx, %r13
+subq %rcx, %r13			;%r13 = *(data + i + 1) - *(data + i)
+rmmovq %rcx, (%r11)		;now, *(data + i + 1) = *(data + i)
+rrmovq %r11, %r13		;%r13 = &amp;*(data + i + 1)
+cmovl %r12, %r13		;if (initial data[i + 1] &lt; initial data[i]), %r13 = &amp;*(data + i)
+rmmovq %rbx, (%r13)		;(%r13) = initial data[i + 1]
+</code></pre>
+<h2 id="4-50"><a href="#4-50" class="headerlink" title="4.50"></a>4.50</h2><pre><code>plaintext
+;long switchv(long idx)
+;idx in %rdi
+switchv:
+    irmovq $5, %r8
+    subq %r8, %rdi
+    jg default
+    addq %rdi, %rdi
+    addq %rdi, %rdi
+    addq %rdi, %rdi
+    irmovq table, %r8
+    addq %r8, %rdi
+    pushq %rdi
+    ret
+case_0:
+    irmovq $0xaaa, %rax
+    jmp done
+case_2_5:
+    irmovq $0xbbb, %rax
+    jmp done
+case_3:
+    irmovq $0xccc, %rax
+    jmp done
+default:
+    irmovq $0xddd, %rax
+done:
+    ret
+    
+    .align 8
+table:
+    .quad	case_0
+    .quad	default
+    .quad	case_2_5
+    .quad	case_3
+    .quad	default
+    .quad	case_2_5
+</code></pre>
+<h2 id="4-51"><a href="#4-51" class="headerlink" title="4.51"></a>4.51</h2><table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>iaddq V, rB</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>取指</td>
+<td>icode:ifun &lt;– M1[PC] rA:rB &lt;– M1[PC + 1] valC &lt;– M8[PC + 2] valP &lt;– PC + 10</td>
+</tr>
+<tr>
+<td>译码</td>
+<td>valB &lt;– R[rB]</td>
+</tr>
+<tr>
+<td>执行</td>
+<td>valE &lt;– valB + valC Set CC</td>
+</tr>
+<tr>
+<td>访存</td>
+<td></td>
+</tr>
+<tr>
+<td>写回</td>
+<td>R[rB] &lt;– valE</td>
+</tr>
+<tr>
+<td>更新PC</td>
+<td>PC &lt;– valP</td>
+</tr>
+</tbody></table>
+<h2 id="4-53"><a href="#4-53" class="headerlink" title="4.53"></a>4.53</h2><p>没有pipe-stall.hcl文件，经查证本题所用文件应为pipe-nobypass.hcl</p>
+<h2 id="4-57"><a href="#4-57" class="headerlink" title="4.57"></a>4.57</h2><pre><code>plaintext
+A. 加载/转发使用冒险	 M_icode in &#123; IMRMOVQ, IPOPQ &#125; &amp;&amp; E_icode in &#123; IPUSHQ &#125; &amp;&amp; M_dstM == E_valA
+</code></pre>
+<h2 id="4-58"><a href="#4-58" class="headerlink" title="4.58"></a>4.58</h2><p>放弃</p>
+<h2 id="4-59"><a href="#4-59" class="headerlink" title="4.59"></a>4.59</h2><pre><code>plaintext
+4.49的版本好
+首先，4.47猜用跳转指令实现功能，大量的分支预测错误大幅降低效率
+而4.49相比于4.48只使用一次条件传送，效率更高
+</code></pre>
+<h1 id="Chapter5"><a href="#Chapter5" class="headerlink" title="Chapter5"></a>Chapter5</h1><h2 id="5-14"><a href="#5-14" class="headerlink" title="5.14"></a>5.14</h2><pre><code>c
+/* 6 x 1 loop unrolling */
+void inner5(vec_ptr u, vec_ptr v, data_t* dest) &#123;
+    long i;
+    long length = vec_length(u);
+    data_t* updata = get_vec_start(u);
+    data_t* vdata = get_vec_start(v);
+    data_t sum = (data_t) 0;
+    
+    if (length &gt;= 6) &#123;
+        /* Combine 6 elements at a time */
+        for (i = 0; i &lt; length; i += 6) &#123;
+        sum += udata[i] * vdata[i]; 
+        sum += udata[i + 1] * vdata[i + 1]; 
+        sum += udata[i + 2] * vdata[i + 2]; 
+        sum += udata[i + 3] * vdata[i + 3]; 
+        sum += udata[i + 4] * vdata[i + 4]; 
+        sum += udata[i + 5] * vdata[i + 5]; 
+        &#125;
+    &#125;
+    
+    
+    /* Finish any remaining elements */
+    for (; i &lt; length; i++)
+        sum += updata[i] * vdata[i];
+    *dest = sum;
+&#125;
+</code></pre>
+<h2 id="5-15"><a href="#5-15" class="headerlink" title="5.15"></a>5.15</h2><pre><code>c
+/* 6 x 6 loop unrolling */
+void inner6(vec_ptr u, vec_ptr v, data_t* dest) &#123;
+    long i;
+    long length = vec_length(u);
+    data_t* updata = get_vec_start(u);
+    data_t* vdata = get_vec_start(v);
+    data_t sum1 = (data_t) 0;
+    data_t sum2 = (data_t) 0;
+    data_t sum3 = (data_t) 0;
+    data_t sum4 = (data_t) 0;
+    data_t sum5 = (data_t) 0;
+    data_t sum6 = (data_t) 0;
+    
+    if (length &gt;= 6) &#123;
+        /* Combine 6 elements at a time */
+        for (i = 0; i &lt; length; i += 6) &#123;
+        sum1 += udata[i] * vdata[i]; 
+        sum2 += udata[i + 1] * vdata[i + 1]; 
+        sum3 += udata[i + 2] * vdata[i + 2]; 
+        sum4 += udata[i + 3] * vdata[i + 3]; 
+        sum5 += udata[i + 4] * vdata[i + 4]; 
+        sum6 += udata[i + 5] * vdata[i + 5]; 
+        &#125;
+    &#125;
+    
+    
+    /* Finish any remaining elements */
+    for (; i &lt; length; i++)
+        sum1 += updata[i] * vdata[i];
+    *dest = sum1 + sum2 + sum3 +sum4 +sum5 +sum6;
+&#125;
+</code></pre>
+<h2 id="5-16"><a href="#5-16" class="headerlink" title="5.16"></a>5.16</h2><pre><code>c
+/* 6 x 1a loop unrolling */
+void inner5(vec_ptr u, vec_ptr v, data_t* dest) &#123;
+    long i;
+    long length = vec_length(u);
+    data_t* updata = get_vec_start(u);
+    data_t* vdata = get_vec_start(v);
+    data_t sum = (data_t) 0;
+    
+    if (length &gt;= 6) &#123;
+        /* Combine 6 elements at a time */
+        for (i = 0; i &lt; length; i += 6) &#123;
+        sum += udata[i] * vdata[i] + udata[i + 1] * vdata[i + 1] +
+               udata[i + 2] * vdata[i + 2] + udata[i + 3] * vdata[i + 3] +
+               udata[i + 4] * vdata[i + 4] + udata[i + 5] * vdata[i + 5];
+        &#125;
+    &#125;
+    
+    
+    /* Finish any remaining elements */
+    for (; i &lt; length; i++)
+        sum += updata[i] * vdata[i];
+    *dest = sum;
+&#125;
+</code></pre>
+<h2 id="5-17"><a href="#5-17" class="headerlink" title="5.17"></a>5.17</h2><pre><code>c
+void* optimized_memset(void* s, int c, size_t n) &#123;
+    size_t cnt = 0;
+    unsigned long i, j, longc, K = sizeof(unsigned long);
+    unsigned char* schar = s;
+    unsigned char charc = (unsigned char)c;
+    for (i = 8, j = K &lt;&lt; 3, longc = charc; i &lt; j; i *= 2) &#123;
+        longc = (longc &lt;&lt; i) | longc;
+    &#125;
+    while ((unsigned long)s % K != 0 &amp;&amp; cnt &lt; n) &#123;
+        *schar++ = charc;
+        cnt++;
+    &#125;
+    unsigned long* p = (unsigned long*)s;
+    if (n &gt;= cnt + K)
+    &#123;
+        for (; cnt &lt; n; cnt += K) &#123;
+            *p++ = longc;
+        &#125;
+    &#125;
+    schar = (unsigned char*)p;
+    while (cnt &lt; n) &#123;
+        *schar++ = charc;
+        cnt++;
+    &#125;
+    return s;
+&#125;
+</code></pre>
+<h2 id="5-18"><a href="#5-18" class="headerlink" title="5.18"></a>5.18</h2><pre><code>c
+double polyh(double a[], double x, long degree) &#123;
+    long i;
+    double acc1 = a[0], acc2 = 0, acc3 = 0, acc4 = 0, result;
+    double xpwr = x, xpwr_1, xpwr_2, xpwr_3;
+    double xp1 = x;
+    double xp2 = x * x;
+    double xp3 = x * x * x;
+    double xp4 = x * x * x * x;
+
+    for (i = 4; i &lt;= degree; i += 4) &#123;
+        xpwr_1 = xpwr * xp1;
+        xpwr_2 = xpwr * xp2;
+        xpwr_3 = xpwr * xp3;
+        acc1 += a[i - 3] * xpwr;       
+        acc2 += a[i - 2] * xpwr_1;
+        acc3 += a[i - 1] * xpwr_2;
+        acc4 += a[i] * xpwr_3;
+        xpwr *= xp4;
+    &#125;
+    i -= 3;
+    while (i &lt;= degree) &#123;
+        acc1 += a[i++] * xpwr;
+        xpwr *= x;
+    &#125;
+    result = acc1 + acc2 + acc3 + acc4;
+    return result;
+&#125;
+</code></pre>
+<h2 id="5-19"><a href="#5-19" class="headerlink" title="5.19"></a>5.19</h2><pre><code>c
+void psum1(float a[], float p[], long n) &#123;
+    long i;
+    float acc0 = a[0], acc1 = a[0];
+    p[0] = a[0];
+    for (i = 2; i &lt; n; i += 2) &#123;
+        acc0 += a[i - 1];
+        acc1 += a[i - 1] + a[i];
+        p[i- 1] = acc0;
+        p[i] = acc1;
+        acc0 += a[i];
+    &#125;
+    i--;
+    while (i &lt; n) &#123;
+        p[i] = p[i - 1] + a[i++];
+    &#125;
+&#125;
+</code></pre>
+<h1 id="Chapter6"><a href="#Chapter6" class="headerlink" title="Chapter6"></a>Chapter6</h1><h2 id="6-22"><a href="#6-22" class="headerlink" title="6.22"></a>6.22</h2><pre><code>plaintext
+圆洞周长：2 * pi * x * r
+磁道数正比于: 1 - x
+容量： 2 * pi * x * r * (1 - x) = 2 * pi * x * r - 2 * pi * (x^2) * r
+当x = 0.5时磁盘容量最大
+</code></pre>
+<h2 id="6-23"><a href="#6-23" class="headerlink" title="6.23"></a>6.23</h2><p>$T_{avg seek} &#x3D; 4ms$</p>
+<p>$T_{avg rotation} &#x3D; \frac{1}{2} * \frac{60s}{15000} * \frac{1000ms}{1s} &#x3D; 2ms$</p>
+<p>$T_{avg transfer} &#x3D; \frac{1}{15000} * \frac{1}{800} * \frac{60s}{1min} * \frac{1000ms}{1s} &#x3D; 0.005ms$</p>
+<p>$T_{access} &#x3D; T_{avg seek} + T_{avg rotation} + T_{avg transfer} &#x3D; 6.005ms$</p>
+<h2 id="6-24"><a href="#6-24" class="headerlink" title="6.24"></a>6.24</h2><p>$T_{avg seek} &#x3D; 4ms$</p>
+<p>$T_{avg rotation} &#x3D; \frac{1}{2} * \frac{60s}{15000} * \frac{1000ms}{1s} &#x3D; 2ms$</p>
+<p>2MB大小的文件，一个逻辑块存放512字节，需要4096个逻辑块</p>
+<p>最好情况：$T &#x3D; T_{avg seek} + T_{avg rotation} + \frac{4096}{1000} * T_{max ratation} &#x3D; 22.384ms$</p>
+<p>最坏情况：$T &#x3D; (T_{avg seek} + T_{avg rotation}) * 4096 * \frac{1s}{1000ms} &#x3D; 24.576s$</p>
+<h2 id="6-25"><a href="#6-25" class="headerlink" title="6.25"></a>6.25</h2><table>
+<thead>
+<tr>
+<th>高速缓存</th>
+<th>m</th>
+<th>C</th>
+<th>B</th>
+<th>E</th>
+<th>S</th>
+<th>t</th>
+<th>s</th>
+<th>b</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.</td>
+<td>32</td>
+<td>1024</td>
+<td>4</td>
+<td>4</td>
+<td>64</td>
+<td>24</td>
+<td>6</td>
+<td>2</td>
+</tr>
+<tr>
+<td>2.</td>
+<td>32</td>
+<td>1024</td>
+<td>4</td>
+<td>256</td>
+<td>2</td>
+<td>29</td>
+<td>1</td>
+<td>2</td>
+</tr>
+<tr>
+<td>3.</td>
+<td>32</td>
+<td>1024</td>
+<td>8</td>
+<td>1</td>
+<td>128</td>
+<td>22</td>
+<td>7</td>
+<td>3</td>
+</tr>
+<tr>
+<td>4.</td>
+<td>32</td>
+<td>1024</td>
+<td>8</td>
+<td>128</td>
+<td>1</td>
+<td>29</td>
+<td>0</td>
+<td>3</td>
+</tr>
+<tr>
+<td>5.</td>
+<td>32</td>
+<td>1024</td>
+<td>32</td>
+<td>1</td>
+<td>32</td>
+<td>22</td>
+<td>5</td>
+<td>5</td>
+</tr>
+<tr>
+<td>6.</td>
+<td>32</td>
+<td>1024</td>
+<td>32</td>
+<td>4</td>
+<td>8</td>
+<td>24</td>
+<td>3</td>
+<td>5</td>
+</tr>
+</tbody></table>
+<h2 id="6-26"><a href="#6-26" class="headerlink" title="6.26"></a>6.26</h2><table>
+<thead>
+<tr>
+<th>高速缓存</th>
+<th>m</th>
+<th>C</th>
+<th>B</th>
+<th>E</th>
+<th>S</th>
+<th>t</th>
+<th>s</th>
+<th>b</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.</td>
+<td>32</td>
+<td>2048</td>
+<td>8</td>
+<td>1</td>
+<td>256</td>
+<td>21</td>
+<td>8</td>
+<td>3</td>
+</tr>
+<tr>
+<td>2.</td>
+<td>32</td>
+<td>2048</td>
+<td>4</td>
+<td>8</td>
+<td>128</td>
+<td>23</td>
+<td>7</td>
+<td>2</td>
+</tr>
+<tr>
+<td>3.</td>
+<td>32</td>
+<td>1024</td>
+<td>2</td>
+<td>8</td>
+<td>64</td>
+<td>25</td>
+<td>6</td>
+<td>1</td>
+</tr>
+<tr>
+<td>4.</td>
+<td>32</td>
+<td>1024</td>
+<td>32</td>
+<td>2</td>
+<td>16</td>
+<td>23</td>
+<td>4</td>
+<td>5</td>
+</tr>
+</tbody></table>
+<h2 id="6-27"><a href="#6-27" class="headerlink" title="6.27"></a>6.27</h2><pre><code>plaintext
+A. 0x8a4 ~ 0x8a7, 0xe04 ~ 0xe07
+B. 0x1238 ~ 0x123b
+</code></pre>
+<h2 id="6-28"><a href="#6-28" class="headerlink" title="6.28"></a>6.28</h2><pre><code>plaintext
+A. NONE
+B. 0x18f0 ~ 0x18f3
+C. 0xb0 ~ 0xb3
+D. 0x1bdc ~ 0x1bdf
+</code></pre>
+<h2 id="6-29"><a href="#6-29" class="headerlink" title="6.29"></a>6.29</h2><table>
+<thead>
+<tr>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CI</th>
+<th>CI</th>
+<th>CO</th>
+<th>CO</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>地址</th>
+<th>命中？</th>
+<th>读出的值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>读</td>
+<td>0x834</td>
+<td>miss</td>
+<td>0xFE</td>
+</tr>
+<tr>
+<td>写</td>
+<td>0x836</td>
+<td>hit</td>
+<td>—-</td>
+</tr>
+<tr>
+<td>读</td>
+<td>0xFFD</td>
+<td>hit</td>
+<td>0xC0</td>
+</tr>
+</tbody></table>
+<h2 id="6-30"><a href="#6-30" class="headerlink" title="6.30"></a>6.30</h2><p>$C &#x3D; B * E * S &#x3D; 128$</p>
+<table>
+<thead>
+<tr>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CT</th>
+<th>CI</th>
+<th>CI</th>
+<th>CI</th>
+<th>CO</th>
+<th>CO</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h2 id="6-31"><a href="#6-31" class="headerlink" title="6.31"></a>6.31</h2><table>
+<thead>
+<tr>
+<th>0</th>
+<th>0</th>
+<th>1</th>
+<th>1</th>
+<th>1</th>
+<th>0</th>
+<th>0</th>
+<th>0</th>
+<th>1</th>
+<th>1</th>
+<th>0</th>
+<th>1</th>
+<th>0</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CO</td>
+<td>0x2</td>
+</tr>
+<tr>
+<td>CI</td>
+<td>0x6</td>
+</tr>
+<tr>
+<td>CT</td>
+<td>0x38</td>
+</tr>
+<tr>
+<td>命中？</td>
+<td>hit</td>
+</tr>
+<tr>
+<td>返回的高速缓存字节</td>
+<td>0xEB</td>
+</tr>
+</tbody></table>
+<h2 id="6-32"><a href="#6-32" class="headerlink" title="6.32"></a>6.32</h2><table>
+<thead>
+<tr>
+<th>1</th>
+<th>0</th>
+<th>1</th>
+<th>1</th>
+<th>0</th>
+<th>1</th>
+<th>1</th>
+<th>1</th>
+<th>0</th>
+<th>1</th>
+<th>0</th>
+<th>0</th>
+<th>0</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CO</td>
+<td>0x0</td>
+</tr>
+<tr>
+<td>CI</td>
+<td>0x2</td>
+</tr>
+<tr>
+<td>CT</td>
+<td>0xB7</td>
+</tr>
+<tr>
+<td>命中？</td>
+<td>miss</td>
+</tr>
+<tr>
+<td>返回的高速缓存字节</td>
+<td>—-</td>
+</tr>
+</tbody></table>
+<h2 id="6-33"><a href="#6-33" class="headerlink" title="6.33"></a>6.33</h2><pre><code>plaintext
+0x1788 ~ 0x178b, 0x16c8 ~ 0x16cb
+</code></pre>
+<h2 id="6-34"><a href="#6-34" class="headerlink" title="6.34"></a>6.34</h2><p>dst数组</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>col0</th>
+<th>col1</th>
+<th>col2</th>
+<th>col3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>row0</td>
+<td>m</td>
+<td>m</td>
+<td>m</td>
+<td>m</td>
+</tr>
+<tr>
+<td>row1</td>
+<td>m</td>
+<td>m</td>
+<td>m</td>
+<td>m</td>
+</tr>
+<tr>
+<td>row2</td>
+<td>m</td>
+<td>m</td>
+<td>m</td>
+<td>m</td>
+</tr>
+<tr>
+<td>row3</td>
+<td>m</td>
+<td>m</td>
+<td>m</td>
+<td>m</td>
+</tr>
+</tbody></table>
+<p>src数组</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>col0</th>
+<th>col1</th>
+<th>col2</th>
+<th>col3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>row0</td>
+<td>m</td>
+<td>m</td>
+<td>h</td>
+<td>m</td>
+</tr>
+<tr>
+<td>row1</td>
+<td>m</td>
+<td>h</td>
+<td>m</td>
+<td>h</td>
+</tr>
+<tr>
+<td>row2</td>
+<td>m</td>
+<td>m</td>
+<td>h</td>
+<td>m</td>
+</tr>
+<tr>
+<td>row3</td>
+<td>m</td>
+<td>m</td>
+<td>h</td>
+<td>m</td>
+</tr>
+</tbody></table>
+<h2 id="6-35"><a href="#6-35" class="headerlink" title="6.35"></a>6.35</h2><p>dst数组</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>col0</th>
+<th>col1</th>
+<th>col2</th>
+<th>col3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>row0</td>
+<td>m</td>
+<td>h</td>
+<td>h</td>
+<td>h</td>
+</tr>
+<tr>
+<td>row1</td>
+<td>m</td>
+<td>h</td>
+<td>h</td>
+<td>h</td>
+</tr>
+<tr>
+<td>row2</td>
+<td>m</td>
+<td>h</td>
+<td>h</td>
+<td>h</td>
+</tr>
+<tr>
+<td>row3</td>
+<td>m</td>
+<td>h</td>
+<td>h</td>
+<td>h</td>
+</tr>
+</tbody></table>
+<p>src数组</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>col0</th>
+<th>col1</th>
+<th>col2</th>
+<th>col3</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>row0</td>
+<td>m</td>
+<td>h</td>
+<td>h</td>
+<td>h</td>
+</tr>
+<tr>
+<td>row1</td>
+<td>m</td>
+<td>h</td>
+<td>h</td>
+<td>h</td>
+</tr>
+<tr>
+<td>row2</td>
+<td>m</td>
+<td>h</td>
+<td>h</td>
+<td>h</td>
+</tr>
+<tr>
+<td>row3</td>
+<td>m</td>
+<td>h</td>
+<td>h</td>
+<td>h</td>
+</tr>
+</tbody></table>
+<h2 id="6-36"><a href="#6-36" class="headerlink" title="6.36"></a>6.36</h2><pre><code>plaintext
+A. 100%
+B. 25%
+C. 25%
+D. 不能，所有的未命中都是冷缓存导致的
+E. 能，如果块更大，能减少部分未命中次数
+</code></pre>
+<h2 id="6-37"><a href="#6-37" class="headerlink" title="6.37"></a>6.37</h2><table>
+<thead>
+<tr>
+<th>函数</th>
+<th>N&#x3D;64</th>
+<th>N&#x3D;60</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sumA</td>
+<td>25%</td>
+<td>25%</td>
+</tr>
+<tr>
+<td>sumB</td>
+<td>100%</td>
+<td>25%</td>
+</tr>
+<tr>
+<td>sumC</td>
+<td>50%</td>
+<td>25%</td>
+</tr>
+</tbody></table>
+<h2 id="6-38"><a href="#6-38" class="headerlink" title="6.38"></a>6.38</h2><pre><code>plaintext
+A. 1024
+B. 128
+C. 12.5%
+</code></pre>
+<h2 id="6-39"><a href="#6-39" class="headerlink" title="6.39"></a>6.39</h2><pre><code>plaintext
+A. 1024
+B. 256
+C. 25%
+</code></pre>
+<h2 id="6-40"><a href="#6-40" class="headerlink" title="6.40"></a>6.40</h2><pre><code>plaintext
+A. 1024
+B. 256
+C. 25%
+</code></pre>
+<h2 id="6-41"><a href="#6-41" class="headerlink" title="6.41"></a>6.41</h2><p>25%</p>
+<h2 id="6-42"><a href="#6-42" class="headerlink" title="6.42"></a>6.42</h2><p>25%</p>
+<h2 id="6-43"><a href="#6-43" class="headerlink" title="6.43"></a>6.43</h2><p>100%</p>
+<h2 id="6-44"><a href="#6-44" class="headerlink" title="6.44"></a>6.44</h2><h2 id="6-45"><a href="#6-45" class="headerlink" title="6.45"></a>6.45</h2><pre><code>c
+void transpose(int* dst, int* src, int dim) &#123;
+    int i, j, acc0, acc1, acc2, acc3, m, n;
+    for (i = 0; i &lt; dim; i++) &#123;
+        m = i * dim;
+        for (j = 3; j &lt; dim; j += 4) &#123;
+            n = j * dim;
+            acc0 = src[m + j - 3];
+            acc1 = src[m + j - 2];
+            acc2 = src[m + j - 1];
+            acc3 = src[m + j];
+            dst[n - dim - dim - dim + i - 3] = acc0;
+            dst[n - dim - dim + i - 2] = acc1;
+            dst[n - dim + i - 1] = acc2;
+            dst[n + i] = acc3;
+        &#125;
+        j -= 3;
+        for (; j &lt; dim; j++)
+            dst[j * dim + i] = src[m + j];
+    &#125;
+&#125;
+</code></pre>
+<h2 id="6-46"><a href="#6-46" class="headerlink" title="6.46"></a>6.46</h2><pre><code>c
+void col_convert(int* G, int dim) &#123;
+    int i, j, k, acc0, acc1, acc2, acc3;
+    
+    for (i = 1; i &lt; dim; i++) &#123;
+        k = i * dim;
+        for (j = 3; j &lt; i; j += 4) &#123;
+            acc0 = G[k + j - 3];
+            acc1 = G[k + j - 2];
+            acc2 = G[k + j - 1];
+            acc3 = G[k + j];
+            G[(j - 3) * dim + i] |= acc0;
+            G[(j - 2) * dim + i] |= acc1;
+            G[(j - 1) * dim + i] |= acc2;
+            G[j * dim + i] |= acc3;
+        &#125;
+        j -= 3;
+        for (; j &lt; i; j++)
+            G[j * dim + i] |= G[k + j];
+    &#125;
+    
+    
+    for (i = 0; i &lt; dim; i++) &#123;
+        k = i * dim;
+        for (j = i + 4; j &lt; dim; j += 4) &#123;
+            G[k + j - 3] = G[(j - 3) * dim + i];
+            G[k + j - 2] = G[(j - 2) * dim + i];
+            G[k + j - 1] = G[(j - 1) * dim + i];
+            G[k + j - 0] = G[(j - 0) * dim + i];
+        &#125;
+        j -= 3;
+        for (; j &lt; dim; j++)
+            G[k + j] = G[j * dim + i];
+    &#125;
+&#125;
+</code></pre>
+<h1 id="Chapter7"><a href="#Chapter7" class="headerlink" title="Chapter7"></a>Chapter7</h1><h2 id="7-6"><a href="#7-6" class="headerlink" title="7.6"></a>7.6</h2><table>
+<thead>
+<tr>
+<th>符号</th>
+<th>.symtabl条目</th>
+<th>符号类型</th>
+<th>在哪个模块种定义</th>
+<th>节</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>buf</td>
+<td>是</td>
+<td>外部</td>
+<td>m.o</td>
+<td>.data</td>
+</tr>
+<tr>
+<td>bufp0</td>
+<td>是</td>
+<td>全局</td>
+<td>swap.o</td>
+<td>.data</td>
+</tr>
+<tr>
+<td>bufp1</td>
+<td>是</td>
+<td>局部</td>
+<td>swap.o</td>
+<td>.bss</td>
+</tr>
+<tr>
+<td>incr</td>
+<td>是</td>
+<td>局部</td>
+<td>swap.o</td>
+<td>.text</td>
+</tr>
+<tr>
+<td>count</td>
+<td>是</td>
+<td>局部</td>
+<td>swap.o</td>
+<td>.bss</td>
+</tr>
+<tr>
+<td>swap</td>
+<td>是</td>
+<td>全局</td>
+<td>swap.o</td>
+<td>.text</td>
+</tr>
+<tr>
+<td>temp</td>
+<td>否</td>
+<td>—-</td>
+<td>—-</td>
+<td>—-</td>
+</tr>
+</tbody></table>
+<h2 id="7-7"><a href="#7-7" class="headerlink" title="7.7"></a>7.7</h2><pre><code>c
+/* foo5.c */
+#include&lt;stdio.h&gt;
+void f(void);
+
+int y = 15212;
+int x = 15213;
+
+int main()
+&#123;
+    f();
+    printf(&quot;x = 0x%x y = 0x%x \n&quot;, x, y);
+    return 0;
+&#125;
+
+/* bar5.c */
+double x;
+
+void f()
+&#123;
+    x = 996948845.0;
+&#125;
+</code></pre>
+<h2 id="7-8"><a href="#7-8" class="headerlink" title="7.8"></a>7.8</h2><pre><code>plaintext
+A. a.REF(main.1)-&gt;DEF(main.1)
+   b.REF(main.2)-&gt;DEF(main.1)
+
+B. a.REF(x.1)-&gt;DEF(未知)
+   b.REF(x.2)-&gt;DEF(未知)
+   
+C. a.REF(x.1)-&gt;DEF(错误)
+   b.REF(x.2)-&gt;DEF(错误)
+</code></pre>
+<h2 id="7-9"><a href="#7-9" class="headerlink" title="7.9"></a>7.9</h2><p>两个模块都定义有main,foo模块中的main是一个函数，为强符号；bar中的main是未定义的全局变量，为弱符号，链接器将选择foo模块中的main</p>
+<h2 id="7-10"><a href="#7-10" class="headerlink" title="7.10"></a>7.10</h2><pre><code>plaintext
+A.	gcc p.o libx.a
+B.	gcc p.o libx.a liby.a libx.a
+C.	gcc p.o libx.a liby.a libx.a libz.a
+</code></pre>
+<h2 id="7-11"><a href="#7-11" class="headerlink" title="7.11"></a>7.11</h2><p>该段中剩下的8个字节对应于运行时将被初始化为0的.bss数据</p>
+<h2 id="7-12"><a href="#7-12" class="headerlink" title="7.12"></a>7.12</h2><pre><code>plaintext
+A. ADDR(s) = ADDR(.text) = 0x4004e0
+   ADDR(r.symbol) = ADDR(swap) = 0x4004f8
+       refaddr = ADDR(s) + r.offset
+               = 0x4004e0 + 0xa
+               = 0x4004ea
+       *refptr = (unsigned) (ADDR(r.symbol) + r.addend - refaddr)
+               = (unsigned) (0x4004f8 - 0x4 - 0x0x4004ea)
+               = (unsigned) 0xa
+
+B. ADDR(s) = ADDR(.text) = 0x4004d0
+   ADDR(r.symbol) = ADDR(swap) = 0x400500
+       refaddr = ADDR(s) + r.offset
+               = 0x4004d0 + 0xa
+               = 0x4004da
+       *refptr = (unsigned) (ADDR(r.symbol) + r.addend - refaddr)
+               = (unsigned) (0x400500 - 0x4 - 0x0x4004da)
+               = (unsigned) 0x22 
+</code></pre>
+<h1 id="Chapter8"><a href="#Chapter8" class="headerlink" title="Chapter8"></a>Chapter8</h1><h2 id="8-9"><a href="#8-9" class="headerlink" title="8.9"></a>8.9</h2><table>
+<thead>
+<tr>
+<th>进程对</th>
+<th>并发地？</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AB</td>
+<td>否</td>
+</tr>
+<tr>
+<td>AC</td>
+<td>是</td>
+</tr>
+<tr>
+<td>AD</td>
+<td>是</td>
+</tr>
+<tr>
+<td>BC</td>
+<td>是</td>
+</tr>
+<tr>
+<td>BD</td>
+<td>是</td>
+</tr>
+<tr>
+<td>CD</td>
+<td>是</td>
+</tr>
+</tbody></table>
+<h2 id="8-10"><a href="#8-10" class="headerlink" title="8.10"></a>8.10</h2><pre><code>plaintext
+A. fork
+B. execve, longjmp
+C. setjmp
+</code></pre>
+<h2 id="8-11"><a href="#8-11" class="headerlink" title="8.11"></a>8.11</h2><p>4个</p>
+<h2 id="8-12"><a href="#8-12" class="headerlink" title="8.12"></a>8.12</h2><p>8个</p>
+<h2 id="8-13"><a href="#8-13" class="headerlink" title="8.13"></a>8.13</h2><pre><code>plaintext
+x=2
+x=4
+x=3
+</code></pre>
+<h2 id="8-14"><a href="#8-14" class="headerlink" title="8.14"></a>8.14</h2><p>3个</p>
+<h2 id="8-15"><a href="#8-15" class="headerlink" title="8.15"></a>8.15</h2><p>5个</p>
+<h2 id="8-16"><a href="#8-16" class="headerlink" title="8.16"></a>8.16</h2><p>2</p>
+<h2 id="8-17"><a href="#8-17" class="headerlink" title="8.17"></a>8.17</h2><pre><code>plaintext
+case 1:
+Hello
+1
+Bye
+0
+2
+Bye
+
+case 2:
+Hello
+1
+0
+Bye
+2
+Bye
+
+case 3:
+Hello
+0
+1
+Bye
+2
+Bye
+</code></pre>
+<h2 id="8-18"><a href="#8-18" class="headerlink" title="8.18"></a>8.18</h2><p>可能的输出：A,C,E</p>
+<h2 id="8-19"><a href="#8-19" class="headerlink" title="8.19"></a>8.19</h2><p>2的n次方</p>
+<h2 id="8-20"><a href="#8-20" class="headerlink" title="8.20"></a>8.20</h2><p>我所使用的是shell程序为bash而非csh，因此</p>
+<pre><code>plaintext
+linux&gt; setenv COLUMNS 40
+linux&gt; unsetenv COLUMNS
+</code></pre>
+<p>应改为</p>
+<pre><code>plaintext
+linux&gt; export COLUMNS=40
+linux&gt; unset COLUMNS
+c
+#include&lt;unistd.h&gt;
+#include&lt;stdlib.h&gt;
+
+int main(int argc, char* argvp[], char* envp[]) &#123;
+    char* p = getenv(&quot;COLUMNS&quot;);
+    if (p == NULL)
+        setenv(&quot;COLUMNS&quot;, &quot;80&quot;, 1);
+    execve(&quot;/bin/ls&quot;, argv, envp);
+&#125;
+</code></pre>
+<p>实际上我写这个并没能实现按COLUMNS的值不同而显示不同的功能，但暂时不知道怎么改，先就这样</p>
+<h2 id="8-21"><a href="#8-21" class="headerlink" title="8.21"></a>8.21</h2><pre><code>plaintext
+abc
+bac
+</code></pre>
+<h2 id="8-22"><a href="#8-22" class="headerlink" title="8.22"></a>8.22</h2><pre><code>c
+#include&lt;unistd.h&gt;
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;sys/types.h&gt;
+#include&lt;sys/wait.h&gt;
+
+int mysystem(char* command) &#123;
+        pid_t pid;
+        int status;
+        if (pid = fork() == 0) &#123;
+                execl(&quot;/bin/sh&quot;, &quot;sh&quot;, &quot;-c&quot;, command, (char*)0);
+        &#125;
+        while(waitpid(pid, &amp;status, WUNTRACED) == pid) &#123;
+                if (WIFEXITED(status)) &#123;
+                        return WEXITSTATUS(status);
+                &#125;
+                else if (WIFSIGNALED(status)) &#123;
+                        fprintf(stderr, &quot;command terminated by signal number %d.\n&quot;, WTERMSIG(status));
+                        return WTERMSIG(status);
+                &#125;
+        &#125;       
+&#125;
+</code></pre>
+<h2 id="8-23"><a href="#8-23" class="headerlink" title="8.23"></a>8.23</h2><p>未经处理的信号是不排队的。在子进程发送第一个SIGUSR2信号号给父进程时，count++，在sleep(1)时，后续四个信号均已发出，而父进程的pending位向量只会保留一个SIGUSR2信号，因此即使发送了5个信号，count值也为2</p>
+<h2 id="8-24"><a href="#8-24" class="headerlink" title="8.24"></a>8.24</h2><pre><code>c
+#include &quot;csapp.h&quot;
+#define N 2
+int main()
+&#123;
+    int status, i;
+    pid_t pid;
+    
+    /* Parent creates N children */
+    for (i = 0; i &lt; N; i++)
+        if ((pid = Fork()) == 0) /* Child */
+            exit(100 + i);
+    
+    /* Parent reaps N children in no particular order */
+    while ((pid = waitpid(-1, &amp;status, 0) &gt; 0)) &#123;
+        if (WIFEXITED(status))
+            printf(&quot;child %d terminated normally with exit status=%d\n&quot;, pid, WEXITSTATUS(status));
+        else if (WIFSIGNALED(status)) &#123;
+            char* sigErr = strsignal(WTERMSIG(status))
+            psignal(WTERMSIG(status), sigErr);
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h2 id="8-25"><a href="#8-25" class="headerlink" title="8.25"></a>8.25</h2><pre><code>c
+#include&quot;csapp.h&quot;
+
+void sigalrm_handler(int sig) &#123;
+        if (alarm(0) == 0)
+                _exit(0);
+&#125;
+
+char* tfgets(char* str, int n, FILE* stream) &#123;
+        signal(SIGALRM, sigalrm_handler);
+        alarm(5);
+        fgets(str, n, stream);
+        return str;
+&#125;
+</code></pre>
+<h2 id="8-26"><a href="#8-26" class="headerlink" title="8.26"></a>8.26</h2><p>不做，完成Shell Lab代替之</p>
+<h1 id="Chapter9"><a href="#Chapter9" class="headerlink" title="Chapter9"></a>Chapter9</h1><h2 id="9-11"><a href="#9-11" class="headerlink" title="9.11"></a>9.11</h2><p>虚拟地址格式</p>
+<table>
+<thead>
+<tr>
+<th>13</th>
+<th>12</th>
+<th>11</th>
+<th>10</th>
+<th>9</th>
+<th>8</th>
+<th>7</th>
+<th>6</th>
+<th>5</th>
+<th>4</th>
+<th>3</th>
+<th>2</th>
+<th>1</th>
+<th>0</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<p>地址翻译</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>VPN</td>
+<td>0x9</td>
+</tr>
+<tr>
+<td>TLB索引</td>
+<td>0x1</td>
+</tr>
+<tr>
+<td>TLB标记</td>
+<td>0x2</td>
+</tr>
+<tr>
+<td>TLB命中？</td>
+<td>是</td>
+</tr>
+<tr>
+<td>缺页？</td>
+<td>是</td>
+</tr>
+<tr>
+<td>PPN</td>
+<td>—-</td>
+</tr>
+</tbody></table>
+<h2 id="9-12"><a href="#9-12" class="headerlink" title="9.12"></a>9.12</h2><p>虚拟地址格式</p>
+<table>
+<thead>
+<tr>
+<th>13</th>
+<th>12</th>
+<th>11</th>
+<th>10</th>
+<th>9</th>
+<th>8</th>
+<th>7</th>
+<th>6</th>
+<th>5</th>
+<th>4</th>
+<th>3</th>
+<th>2</th>
+<th>1</th>
+<th>0</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<p>地址翻译</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>VPN</td>
+<td>0x0E</td>
+</tr>
+<tr>
+<td>TLB索引</td>
+<td>0x2</td>
+</tr>
+<tr>
+<td>TLB标记</td>
+<td>0x3</td>
+</tr>
+<tr>
+<td>TLB命中?</td>
+<td>是</td>
+</tr>
+<tr>
+<td>缺页?</td>
+<td>是</td>
+</tr>
+<tr>
+<td>PPN</td>
+<td>—-</td>
+</tr>
+</tbody></table>
+<h2 id="9-13"><a href="#9-13" class="headerlink" title="9.13"></a>9.13</h2><p>虚拟地址格式</p>
+<table>
+<thead>
+<tr>
+<th>13</th>
+<th>12</th>
+<th>11</th>
+<th>10</th>
+<th>9</th>
+<th>8</th>
+<th>7</th>
+<th>6</th>
+<th>5</th>
+<th>4</th>
+<th>3</th>
+<th>2</th>
+<th>1</th>
+<th>0</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody></table>
+<p>地址翻译</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>VPN</td>
+<td>0x1</td>
+</tr>
+<tr>
+<td>TLB索引</td>
+<td>0x1</td>
+</tr>
+<tr>
+<td>TLB标记</td>
+<td>0x0</td>
+</tr>
+<tr>
+<td>TLB命中?</td>
+<td>否</td>
+</tr>
+<tr>
+<td>缺页?</td>
+<td>是</td>
+</tr>
+<tr>
+<td>PPN</td>
+<td>—-</td>
+</tr>
+</tbody></table>
+<h2 id="9-14"><a href="#9-14" class="headerlink" title="9.14"></a>9.14</h2><pre><code>c
+/* problem914.c */
+#include &quot;csapp.h&quot;
+  
+int main(int argc, char* argv[]) &#123;
+        struct stat stat;
+        int fd;
+        char* bufp;
+
+        /* Copy the input argument */
+        fd = Open(argv[1], O_RDONLY, 0);
+        fstat(fd, &amp;stat);
+        bufp = Mmap(NULL, stat.st_size, PROT_WRITE | PROT_READ, MAP_PRIVATE, fd, 0);
+        bufp[0] = &#39;J&#39;;
+        write(1, bufp, stat.st_size);
+
+        return 0;
+&#125;
+plaintext
+fez@papyruszzz:~/Sketch$ cat hello.txt 
+Hello, world!
+fez@papyruszzz:~/Sketch$ gcc -o prog mmapcopy.c csapp.h csapp.c -lpthread
+fez@papyruszzz:~/Sketch$ ./prog hello.txt 
+Jello, world!
+</code></pre>
+<h2 id="9-15"><a href="#9-15" class="headerlink" title="9.15"></a>9.15</h2><table>
+<thead>
+<tr>
+<th>请求</th>
+<th>块大小（十进制字节）</th>
+<th>块头部（十六进制）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>malloc(3)</td>
+<td>8</td>
+<td>0x9</td>
+</tr>
+<tr>
+<td>malloc(11)</td>
+<td>16</td>
+<td>0x11</td>
+</tr>
+<tr>
+<td>malloc(20)</td>
+<td>24</td>
+<td>0x19</td>
+</tr>
+<tr>
+<td>malloc(21)</td>
+<td>32</td>
+<td>0x21</td>
+</tr>
+</tbody></table>
+<h2 id="9-16"><a href="#9-16" class="headerlink" title="9.16"></a>9.16</h2><table>
+<thead>
+<tr>
+<th>对齐要求</th>
+<th>已分配块</th>
+<th>空闲块</th>
+<th>最小块大小（字节）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单字</td>
+<td>头部和脚部</td>
+<td>头部和脚部</td>
+<td>16</td>
+</tr>
+<tr>
+<td>单字</td>
+<td>头部，但是没有脚部</td>
+<td>头部和脚部</td>
+<td>16</td>
+</tr>
+<tr>
+<td>双字</td>
+<td>头部和脚部</td>
+<td>头部和脚部</td>
+<td>16</td>
+</tr>
+<tr>
+<td>双字</td>
+<td>头部，但是没有脚部</td>
+<td>头部和脚部</td>
+<td>16</td>
+</tr>
+</tbody></table>
+<h2 id="9-17"><a href="#9-17" class="headerlink" title="9.17"></a>9.17</h2><pre><code>c
+/* 
+ * Simple, 32-bit and 64-bit clean allocator based on implicit free
+ * lists, first-fit placement, and boundary tag coalescing, as described
+ * in the CS:APP3e text. Blocks must be aligned to doubleword (8 byte) 
+ * boundaries. Minimum block size is 16 bytes. 
+ */
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+#include &quot;mm.h&quot;
+#include &quot;memlib.h&quot;
+
+/*
+ * If NEXT_FIT defined use next fit search, else use first-fit search 
+ */
+#define NEXT_FITx
+
+/* $begin mallocmacros */
+/* Basic constants and macros */
+#define WSIZE       4       /* Word and header/footer size (bytes) */ //line:vm:mm:beginconst
+#define DSIZE       8       /* Double word size (bytes) */
+#define CHUNKSIZE  (1&lt;&lt;12)  /* Extend heap by this amount (bytes) */  //line:vm:mm:endconst 
+
+#define MAX(x, y) ((x) &gt; (y)? (x) : (y))  
+
+/* Pack a size and allocated bit into a word */
+#define PACK(size, alloc)  ((size) | (alloc)) //line:vm:mm:pack
+
+/* Read and write a word at address p */
+#define GET(p)       (*(unsigned int *)(p))            //line:vm:mm:get
+#define PUT(p, val)  (*(unsigned int *)(p) = (val))    //line:vm:mm:put
+
+/* Read the size and allocated fields from address p */
+#define GET_SIZE(p)  (GET(p) &amp; ~0x7)                   //line:vm:mm:getsize
+#define GET_ALLOC(p) (GET(p) &amp; 0x1)                    //line:vm:mm:getalloc
+
+/* Given block ptr bp, compute address of its header and footer */
+#define HDRP(bp)       ((char *)(bp) - WSIZE)                      //line:vm:mm:hdrp
+#define FTRP(bp)       ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE) //line:vm:mm:ftrp
+
+/* Given block ptr bp, compute address of next and previous blocks */
+#define NEXT_BLKP(bp)  ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE))) //line:vm:mm:nextblkp
+#define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE))) //line:vm:mm:prevblkp
+/* $end mallocmacros */
+
+/* Global variables */
+static char *heap_listp = 0;  /* Pointer to first block */  
+
+#ifdef NEXT_FIT
+static char *rover;           /* Next fit rover */
+#endif
+
+/* Function prototypes for internal helper routines */
+static void *extend_heap(size_t words);
+static void place(void *bp, size_t asize);
+static void *find_fit(size_t asize);
+static void *coalesce(void *bp);
+static void printblock(void *bp); 
+static void checkheap(int verbose);
+static void checkblock(void *bp);
+
+/* 
+ * mm_init - Initialize the memory manager 
+ */
+/* $begin mminit */
+int mm_init(void) 
+&#123;
+    /* Create the initial empty heap */
+    if ((heap_listp = mem_sbrk(4*WSIZE)) == (void *)-1) //line:vm:mm:begininit
+        return -1;
+    PUT(heap_listp, 0);                          /* Alignment padding */
+    PUT(heap_listp + (1*WSIZE), PACK(DSIZE, 1)); /* Prologue header */ 
+    PUT(heap_listp + (2*WSIZE), PACK(DSIZE, 1)); /* Prologue footer */ 
+    PUT(heap_listp + (3*WSIZE), PACK(0, 1));     /* Epilogue header */
+    heap_listp += (2*WSIZE);                     //line:vm:mm:endinit  
+    /* $end mminit */
+
+#ifdef NEXT_FIT
+    rover = heap_listp;
+#endif
+    /* $begin mminit */
+
+    /* Extend the empty heap with a free block of CHUNKSIZE bytes */
+    if (extend_heap(CHUNKSIZE/WSIZE) == NULL) 
+        return -1;
+    return 0;
+&#125;
+/* $end mminit */
+
+/* 
+ * mm_malloc - Allocate a block with at least size bytes of payload 
+ */
+/* $begin mmmalloc */
+void *mm_malloc(size_t size) 
+&#123;
+    size_t asize;      /* Adjusted block size */
+    size_t extendsize; /* Amount to extend heap if no fit */
+    char *bp;      
+
+    /* $end mmmalloc */
+    if (heap_listp == 0)&#123;
+        mm_init();
+    &#125;
+    /* $begin mmmalloc */
+    /* Ignore spurious requests */
+    if (size == 0)
+        return NULL;
+
+    /* Adjust block size to include overhead and alignment reqs. */
+    if (size &lt;= DSIZE)                                          //line:vm:mm:sizeadjust1
+        asize = 2*DSIZE;                                        //line:vm:mm:sizeadjust2
+    else
+        asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE); //line:vm:mm:sizeadjust3
+
+    /* Search the free list for a fit */
+    if ((bp = find_fit(asize)) != NULL) &#123;  //line:vm:mm:findfitcall
+        place(bp, asize);                  //line:vm:mm:findfitplace
+        return bp;
+    &#125;
+
+    /* No fit found. Get more memory and place the block */
+    extendsize = MAX(asize,CHUNKSIZE);                 //line:vm:mm:growheap1
+    if ((bp = extend_heap(extendsize/WSIZE)) == NULL)  
+        return NULL;                                  //line:vm:mm:growheap2
+    place(bp, asize);                                 //line:vm:mm:growheap3
+    return bp;
+&#125; 
+/* $end mmmalloc */
+
+/* 
+ * mm_free - Free a block 
+ */
+/* $begin mmfree */
+void mm_free(void *bp)
+&#123;
+    /* $end mmfree */
+    if (bp == 0) 
+        return;
+
+    /* $begin mmfree */
+    size_t size = GET_SIZE(HDRP(bp));
+    /* $end mmfree */
+    if (heap_listp == 0)&#123;
+        mm_init();
+    &#125;
+    /* $begin mmfree */
+
+    PUT(HDRP(bp), PACK(size, 0));
+    PUT(FTRP(bp), PACK(size, 0));
+    coalesce(bp);
+&#125;
+
+/* $end mmfree */
+/*
+ * coalesce - Boundary tag coalescing. Return ptr to coalesced block
+ */
+/* $begin mmfree */
+static void *coalesce(void *bp) 
+&#123;
+    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+    size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+    size_t size = GET_SIZE(HDRP(bp));
+
+    if (prev_alloc &amp;&amp; next_alloc) &#123;            /* Case 1 */
+        return bp;
+    &#125;
+
+    else if (prev_alloc &amp;&amp; !next_alloc) &#123;      /* Case 2 */
+        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+        PUT(HDRP(bp), PACK(size, 0));
+        PUT(FTRP(bp), PACK(size,0));
+    &#125;
+
+    else if (!prev_alloc &amp;&amp; next_alloc) &#123;      /* Case 3 */
+        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+        PUT(FTRP(bp), PACK(size, 0));
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        bp = PREV_BLKP(bp);
+    &#125;
+
+    else &#123;                                     /* Case 4 */
+        size += GET_SIZE(HDRP(PREV_BLKP(bp))) + 
+            GET_SIZE(FTRP(NEXT_BLKP(bp)));
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
+        bp = PREV_BLKP(bp);
+    &#125;
+    /* $end mmfree */
+#ifdef NEXT_FIT
+    /* Make sure the rover isn&#39;t pointing into the free block */
+    /* that we just coalesced */
+    if ((rover &gt; (char *)bp) &amp;&amp; (rover &lt; NEXT_BLKP(bp))) 
+        rover = bp;
+#endif
+    /* $begin mmfree */
+    return bp;
+&#125;
+/* $end mmfree */
+
+/*
+ * mm_realloc - Naive implementation of realloc
+ */
+void *mm_realloc(void *ptr, size_t size)
+&#123;
+    size_t oldsize;
+    void *newptr;
+
+    /* If size == 0 then this is just free, and we return NULL. */
+    if(size == 0) &#123;
+        mm_free(ptr);
+        return 0;
+    &#125;
+
+    /* If oldptr is NULL, then this is just malloc. */
+    if(ptr == NULL) &#123;
+        return mm_malloc(size);
+    &#125;
+
+    newptr = mm_malloc(size);
+
+    /* If realloc() fails the original block is left untouched  */
+    if(!newptr) &#123;
+        return 0;
+    &#125;
+
+    /* Copy the old data. */
+    oldsize = GET_SIZE(HDRP(ptr));
+    if(size &lt; oldsize) oldsize = size;
+    memcpy(newptr, ptr, oldsize);
+
+    /* Free the old block. */
+    mm_free(ptr);
+
+    return newptr;
+&#125;
+
+/* 
+ * mm_checkheap - Check the heap for correctness
+ */
+void mm_checkheap(int verbose)  
+&#123; 
+    checkheap(verbose);
+&#125;
+
+/* 
+ * The remaining routines are internal helper routines 
+ */
+
+/* 
+ * extend_heap - Extend heap with free block and return its block pointer
+ */
+/* $begin mmextendheap */
+static void *extend_heap(size_t words) 
+&#123;
+    char *bp;
+    size_t size;
+
+    /* Allocate an even number of words to maintain alignment */
+    size = (words % 2) ? (words+1) * WSIZE : words * WSIZE; //line:vm:mm:beginextend
+    if ((long)(bp = mem_sbrk(size)) == -1)  
+        return NULL;                                        //line:vm:mm:endextend
+
+    /* Initialize free block header/footer and the epilogue header */
+    PUT(HDRP(bp), PACK(size, 0));         /* Free block header */   //line:vm:mm:freeblockhdr
+    PUT(FTRP(bp), PACK(size, 0));         /* Free block footer */   //line:vm:mm:freeblockftr
+    PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1)); /* New epilogue header */ //line:vm:mm:newepihdr
+
+    /* Coalesce if the previous block was free */
+    return coalesce(bp);                                          //line:vm:mm:returnblock
+&#125;
+/* $end mmextendheap */
+
+/* 
+ * place - Place block of asize bytes at start of free block bp 
+ *         and split if remainder would be at least minimum block size
+ */
+/* $begin mmplace */
+/* $begin mmplace-proto */
+static void place(void *bp, size_t asize)
+/* $end mmplace-proto */
+&#123;
+    size_t csize = GET_SIZE(HDRP(bp));   
+
+    if ((csize - asize) &gt;= (2*DSIZE)) &#123; 
+        PUT(HDRP(bp), PACK(asize, 1));
+        PUT(FTRP(bp), PACK(asize, 1));
+        bp = NEXT_BLKP(bp);
+        PUT(HDRP(bp), PACK(csize-asize, 0));
+        PUT(FTRP(bp), PACK(csize-asize, 0));
+    &#125;
+    else &#123; 
+        PUT(HDRP(bp), PACK(csize, 1));
+        PUT(FTRP(bp), PACK(csize, 1));
+    &#125;
+&#125;
+/* $end mmplace */
+
+/* 
+ * find_fit - Find a fit for a block with asize bytes 
+ */
+/* $begin mmfirstfit */
+/* $begin mmfirstfit-proto */
+static void *find_fit(size_t asize)
+/* $end mmfirstfit-proto */
+&#123;
+    /* $end mmfirstfit */
+
+#ifdef NEXT_FIT 
+    /* Next fit search */
+    char *oldrover = rover;
+
+    /* Search from the rover to the end of list */
+    for ( ; GET_SIZE(HDRP(rover)) &gt; 0; rover = NEXT_BLKP(rover))
+        if (!GET_ALLOC(HDRP(rover)) &amp;&amp; (asize &lt;= GET_SIZE(HDRP(rover))))
+            return rover;
+
+    /* search from start of list to old rover */
+    for (rover = heap_listp; rover &lt; oldrover; rover = NEXT_BLKP(rover))
+        if (!GET_ALLOC(HDRP(rover)) &amp;&amp; (asize &lt;= GET_SIZE(HDRP(rover))))
+            return rover;
+
+    return NULL;  /* no fit found */
+#else 
+    /* $begin mmfirstfit */
+    /* First-fit search */
+    void *bp;
+
+    for (bp = heap_listp; GET_SIZE(HDRP(bp)) &gt; 0; bp = NEXT_BLKP(bp)) &#123;
+        if (!GET_ALLOC(HDRP(bp)) &amp;&amp; (asize &lt;= GET_SIZE(HDRP(bp)))) &#123;
+            return bp;
+        &#125;
+    &#125;
+    return NULL; /* No fit */
+#endif
+&#125;
+/* $end mmfirstfit */
+
+static void printblock(void *bp) 
+&#123;
+    size_t hsize, halloc, fsize, falloc;
+
+    checkheap(0);
+    hsize = GET_SIZE(HDRP(bp));
+    halloc = GET_ALLOC(HDRP(bp));  
+    fsize = GET_SIZE(FTRP(bp));
+    falloc = GET_ALLOC(FTRP(bp));  
+
+    if (hsize == 0) &#123;
+        printf(&quot;%p: EOL\n&quot;, bp);
+        return;
+    &#125;
+
+    printf(&quot;%p: header: [%ld:%c] footer: [%ld:%c]\n&quot;, bp, 
+           hsize, (halloc ? &#39;a&#39; : &#39;f&#39;), 
+           fsize, (falloc ? &#39;a&#39; : &#39;f&#39;)); 
+&#125;
+
+static void checkblock(void *bp) 
+&#123;
+    if ((size_t)bp % 8)
+        printf(&quot;Error: %p is not doubleword aligned\n&quot;, bp);
+    if (GET(HDRP(bp)) != GET(FTRP(bp)))
+        printf(&quot;Error: header does not match footer\n&quot;);
+&#125;
+
+/* 
+ * checkheap - Minimal check of the heap for consistency 
+ */
+void checkheap(int verbose) 
+&#123;
+    char *bp = heap_listp;
+
+    if (verbose)
+        printf(&quot;Heap (%p):\n&quot;, heap_listp);
+
+    if ((GET_SIZE(HDRP(heap_listp)) != DSIZE) || !GET_ALLOC(HDRP(heap_listp)))
+        printf(&quot;Bad prologue header\n&quot;);
+    checkblock(heap_listp);
+
+    for (bp = heap_listp; GET_SIZE(HDRP(bp)) &gt; 0; bp = NEXT_BLKP(bp)) &#123;
+        if (verbose) 
+            printblock(bp);
+        checkblock(bp);
+    &#125;
+
+    if (verbose)
+        printblock(bp);
+    if ((GET_SIZE(HDRP(bp)) != 0) || !(GET_ALLOC(HDRP(bp))))
+        printf(&quot;Bad epilogue header\n&quot;);
+&#125;
+</code></pre>
+<h2 id="9-18"><a href="#9-18" class="headerlink" title="9.18"></a>9.18</h2><pre><code>c
+/* 
+ * Simple, 32-bit and 64-bit clean allocator based on implicit free
+ * lists, first-fit placement, and boundary tag coalescing, as described
+ * in the CS:APP3e text. Blocks must be aligned to doubleword (8 byte) 
+ * boundaries. Minimum block size is 16 bytes. 
+ */
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+#include &quot;mm.h&quot;
+#include &quot;memlib.h&quot;
+
+/*
+ * If NEXT_FIT defined use next fit search, else use first-fit search 
+ */
+#define NEXT_FITx
+
+/* $begin mallocmacros */
+/* Basic constants and macros */
+#define WSIZE       4       /* Word and header/footer size (bytes) */ //line:vm:mm:beginconst
+#define DSIZE       8       /* Double word size (bytes) */
+#define CHUNKSIZE  (1&lt;&lt;12)  /* Extend heap by this amount (bytes) */  //line:vm:mm:endconst 
+
+#define MAX(x, y) ((x) &gt; (y)? (x) : (y))  
+
+/* Pack a size and allocated bit into a word */
+#define PACK(size, alloc)  ((size) | (alloc)) //line:vm:mm:pack
+
+/* Read and write a word at address p */
+#define GET(p)       (*(unsigned int *)(p))            //line:vm:mm:get
+#define PUT(p, val)  (*(unsigned int *)(p) = (val))    //line:vm:mm:put
+
+/* Read the size and allocated fields from address p */
+#define GET_SIZE(p)  (GET(p) &amp; ~0x7)                   //line:vm:mm:getsize
+#define GET_ALLOC(p) (GET(p) &amp; 0x1)                    //line:vm:mm:getalloc
+
+/* Given block ptr bp, compute address of its header and footer */
+#define HDRP(bp)       ((char *)(bp) - WSIZE)                      //line:vm:mm:hdrp
+#define FTRP(bp)       ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE) //line:vm:mm:ftrp
+
+/* Given block ptr bp, compute address of next and previous blocks */
+#define NEXT_BLKP(bp)  ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE))) //line:vm:mm:nextblkp
+#define PREV_BLKP(bp)  ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE))) //line:vm:mm:prevblkp
+/* $end mallocmacros */
+
+/* Global variables */
+static char *heap_listp = 0;  /* Pointer to first block */  
+#ifdef NEXT_FIT
+static char *rover;           /* Next fit rover */
+#endif
+
+/* Function prototypes for internal helper routines */
+static void *extend_heap(size_t words);
+static void place(void *bp, size_t asize);
+static void *find_fit(size_t asize);
+static void *coalesce(void *bp);
+static void printblock(void *bp); 
+static void checkheap(int verbose);
+static void checkblock(void *bp);
+
+/* 
+ * mm_init - Initialize the memory manager 
+ */
+/* $begin mminit */
+int mm_init(void) 
+&#123;
+    /* Create the initial empty heap */
+    if ((heap_listp = mem_sbrk(4*WSIZE)) == (void *)-1) //line:vm:mm:begininit
+        return -1;
+    PUT(heap_listp, 0);                          /* Alignment padding */
+    PUT(heap_listp + (1*WSIZE), PACK(DSIZE, 1)); /* Prologue header */ 
+    PUT(heap_listp + (2*WSIZE), PACK(DSIZE, 1)); /* Alignment padding */ 
+    PUT(heap_listp + (3*WSIZE), PACK(0, 1));     /* Epilogue header */
+    heap_listp += (2*WSIZE);                     //line:vm:mm:endinit  
+    /* $end mminit */
+
+#ifdef NEXT_FIT
+    rover = heap_listp;
+#endif
+    /* $begin mminit */
+
+    /* Extend the empty heap with a free block of CHUNKSIZE bytes */
+    if (extend_heap(CHUNKSIZE/WSIZE) == NULL) 
+        return -1;
+    return 0;
+&#125;
+/* $end mminit */
+
+/* 
+ * mm_malloc - Allocate a block with at least size bytes of payload 
+ */
+/* $begin mmmalloc */
+void *mm_malloc(size_t size) 
+&#123;
+    size_t asize;      /* Adjusted block size */
+    size_t extendsize; /* Amount to extend heap if no fit */
+    char *bp;      
+
+    /* $end mmmalloc */
+    if (heap_listp == 0)&#123;
+        mm_init();
+    &#125;
+    /* $begin mmmalloc */
+    /* Ignore spurious requests */
+    if (size == 0)
+        return NULL;
+
+    /* Adjust block size to include overhead and alignment reqs. */
+    if (size &lt;= DSIZE)                                          //line:vm:mm:sizeadjust1
+        asize = 2*DSIZE;                                        //line:vm:mm:sizeadjust2
+    else
+        asize = DSIZE * ((size + (WSIZE) + (DSIZE-1)) / DSIZE); //line:vm:mm:sizeadjust3
+
+    /* Search the free list for a fit */
+    if ((bp = find_fit(asize)) != NULL) &#123;  //line:vm:mm:findfitcall
+        place(bp, asize);                  //line:vm:mm:findfitplace
+        return bp;
+    &#125;
+
+    /* No fit found. Get more memory and place the block */
+    extendsize = MAX(asize,CHUNKSIZE);                 //line:vm:mm:growheap1
+    if ((bp = extend_heap(extendsize/WSIZE)) == NULL)  
+        return NULL;                                  //line:vm:mm:growheap2
+    place(bp, asize);                                 //line:vm:mm:growheap3
+    return bp;
+&#125; 
+/* $end mmmalloc */
+
+/* 
+ * mm_free - Free a block 
+ */
+/* $begin mmfree */
+void mm_free(void *bp)
+&#123;
+    /* $end mmfree */
+    if (bp == 0) 
+        return;
+
+    /* $begin mmfree */
+    size_t size = GET_SIZE(HDRP(bp));
+    /* $end mmfree */
+    if (heap_listp == 0)&#123;
+        mm_init();
+    &#125;
+    /* $begin mmfree */
+
+    PUT(HDRP(bp), PACK(size, 0));
+    PUT(FTRP(bp), PACK(size, 0));
+    coalesce(bp);
+&#125;
+
+/* $end mmfree */
+/*
+ * coalesce - Boundary tag coalescing. Return ptr to coalesced block
+ */
+/* $begin mmfree */
+static void *coalesce(void *bp) 
+&#123;
+    size_t prev_alloc = GET_ALLOC(HDRP(PREV_BLKP(bp)));
+    size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
+    size_t size = GET_SIZE(HDRP(bp));
+
+    if (prev_alloc &amp;&amp; next_alloc) &#123;            /* Case 1 */
+        return bp;
+    &#125;
+
+    else if (prev_alloc &amp;&amp; !next_alloc) &#123;      /* Case 2 */
+        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+        PUT(HDRP(bp), PACK(size, 0));
+        PUT(FTRP(bp), PACK(size,0));
+    &#125;
+
+    else if (!prev_alloc &amp;&amp; next_alloc) &#123;      /* Case 3 */
+        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+        PUT(FTRP(bp), PACK(size, 0));
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        bp = PREV_BLKP(bp);
+    &#125;
+
+    else &#123;                                     /* Case 4 */
+        size += GET_SIZE(HDRP(PREV_BLKP(bp))) + 
+            GET_SIZE(FTRP(NEXT_BLKP(bp)));
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
+        bp = PREV_BLKP(bp);
+    &#125;
+    /* $end mmfree */
+#ifdef NEXT_FIT
+    /* Make sure the rover isn&#39;t pointing into the free block */
+    /* that we just coalesced */
+    if ((rover &gt; (char *)bp) &amp;&amp; (rover &lt; NEXT_BLKP(bp))) 
+        rover = bp;
+#endif
+    /* $begin mmfree */
+    return bp;
+&#125;
+/* $end mmfree */
+
+/*
+ * mm_realloc - Naive implementation of realloc
+ */
+void *mm_realloc(void *ptr, size_t size)
+&#123;
+    size_t oldsize;
+    void *newptr;
+
+    /* If size == 0 then this is just free, and we return NULL. */
+    if(size == 0) &#123;
+        mm_free(ptr);
+        return 0;
+    &#125;
+
+    /* If oldptr is NULL, then this is just malloc. */
+    if(ptr == NULL) &#123;
+        return mm_malloc(size);
+    &#125;
+
+    newptr = mm_malloc(size);
+
+    /* If realloc() fails the original block is left untouched  */
+    if(!newptr) &#123;
+        return 0;
+    &#125;
+
+    /* Copy the old data. */
+    oldsize = GET_SIZE(HDRP(ptr));
+    if(size &lt; oldsize) oldsize = size;
+    memcpy(newptr, ptr, oldsize);
+
+    /* Free the old block. */
+    mm_free(ptr);
+
+    return newptr;
+&#125;
+
+/* 
+ * mm_checkheap - Check the heap for correctness
+ */
+void mm_checkheap(int verbose)  
+&#123; 
+    checkheap(verbose);
+&#125;
+
+/* 
+ * The remaining routines are internal helper routines 
+ */
+
+/* 
+ * extend_heap - Extend heap with free block and return its block pointer
+ */
+/* $begin mmextendheap */
+static void *extend_heap(size_t words) 
+&#123;
+    char *bp;
+    size_t size;
+
+    /* Allocate an even number of words to maintain alignment */
+    size = (words % 2) ? (words+1) * WSIZE : words * WSIZE; //line:vm:mm:beginextend
+    if ((long)(bp = mem_sbrk(size)) == -1)  
+        return NULL;                                        //line:vm:mm:endextend
+
+    /* Initialize free block header/footer and the epilogue header */
+    PUT(HDRP(bp), PACK(size, 0));         /* Free block header */   //line:vm:mm:freeblockhdr
+    PUT(FTRP(bp), PACK(size, 0));         /* Free block footer */   //line:vm:mm:freeblockftr
+    PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1)); /* New epilogue header */ //line:vm:mm:newepihdr
+
+    /* Coalesce if the previous block was free */
+    return coalesce(bp);                                          //line:vm:mm:returnblock
+&#125;
+/* $end mmextendheap */
+
+/* 
+ * place - Place block of asize bytes at start of free block bp 
+ *         and split if remainder would be at least minimum block size
+ */
+/* $begin mmplace */
+/* $begin mmplace-proto */
+static void place(void *bp, size_t asize)
+/* $end mmplace-proto */
+&#123;
+    size_t csize = GET_SIZE(HDRP(bp));   
+
+    if ((csize - asize) &gt;= (2*DSIZE)) &#123; 
+        PUT(HDRP(bp), PACK(asize, 1));
+        bp = NEXT_BLKP(bp);
+        PUT(HDRP(bp), PACK(csize-asize, 0));
+        PUT(FTRP(bp), PACK(csize-asize, 0));
+    &#125;
+    else &#123; 
+        PUT(HDRP(bp), PACK(csize, 1));
+    &#125;
+&#125;
+/* $end mmplace */
+
+/* 
+ * find_fit - Find a fit for a block with asize bytes 
+ */
+/* $begin mmfirstfit */
+/* $begin mmfirstfit-proto */
+static void *find_fit(size_t asize)
+/* $end mmfirstfit-proto */
+&#123;
+    /* $end mmfirstfit */
+
+#ifdef NEXT_FIT 
+    /* Next fit search */
+    char *oldrover = rover;
+
+    /* Search from the rover to the end of list */
+    for ( ; GET_SIZE(HDRP(rover)) &gt; 0; rover = NEXT_BLKP(rover))
+        if (!GET_ALLOC(HDRP(rover)) &amp;&amp; (asize &lt;= GET_SIZE(HDRP(rover))))
+            return rover;
+
+    /* search from start of list to old rover */
+    for (rover = heap_listp; rover &lt; oldrover; rover = NEXT_BLKP(rover))
+        if (!GET_ALLOC(HDRP(rover)) &amp;&amp; (asize &lt;= GET_SIZE(HDRP(rover))))
+            return rover;
+
+    return NULL;  /* no fit found */
+#else 
+    /* $begin mmfirstfit */
+    /* First-fit search */
+    void *bp;
+
+    for (bp = heap_listp; GET_SIZE(HDRP(bp)) &gt; 0; bp = NEXT_BLKP(bp)) &#123;
+        if (!GET_ALLOC(HDRP(bp)) &amp;&amp; (asize &lt;= GET_SIZE(HDRP(bp)))) &#123;
+            return bp;
+        &#125;
+    &#125;
+    return NULL; /* No fit */
+#endif
+&#125;
+/* $end mmfirstfit */
+
+static void printblock(void *bp) 
+&#123;
+    size_t hsize, halloc, fsize, falloc;
+
+    checkheap(0);
+    hsize = GET_SIZE(HDRP(bp));
+    halloc = GET_ALLOC(HDRP(bp));  
+    fsize = GET_SIZE(FTRP(bp));
+    falloc = GET_ALLOC(FTRP(bp));  
+
+    if (hsize == 0) &#123;
+        printf(&quot;%p: EOL\n&quot;, bp);
+        return;
+    &#125;
+
+    printf(&quot;%p: header: [%ld:%c] footer: [%ld:%c]\n&quot;, bp, 
+           hsize, (halloc ? &#39;a&#39; : &#39;f&#39;), 
+           fsize, (falloc ? &#39;a&#39; : &#39;f&#39;)); 
+&#125;
+
+static void checkblock(void *bp) 
+&#123;
+    if ((size_t)bp % 8)
+        printf(&quot;Error: %p is not doubleword aligned\n&quot;, bp);
+    if (GET(HDRP(bp)) != GET(FTRP(bp)))
+        printf(&quot;Error: header does not match footer\n&quot;);
+&#125;
+
+/* 
+ * checkheap - Minimal check of the heap for consistency 
+ */
+void checkheap(int verbose) 
+&#123;
+    char *bp = heap_listp;
+
+    if (verbose)
+        printf(&quot;Heap (%p):\n&quot;, heap_listp);
+
+    if ((GET_SIZE(HDRP(heap_listp)) != DSIZE) || !GET_ALLOC(HDRP(heap_listp)))
+        printf(&quot;Bad prologue header\n&quot;);
+    checkblock(heap_listp);
+
+    for (bp = heap_listp; GET_SIZE(HDRP(bp)) &gt; 0; bp = NEXT_BLKP(bp)) &#123;
+        if (verbose) 
+            printblock(bp);
+        checkblock(bp);
+    &#125;
+
+    if (verbose)
+        printblock(bp);
+    if ((GET_SIZE(HDRP(bp)) != 0) || !(GET_ALLOC(HDRP(bp))))
+        printf(&quot;Bad epilogue header\n&quot;);
+&#125;
+</code></pre>
+<h2 id="9-19"><a href="#9-19" class="headerlink" title="9.19"></a>9.19</h2><pre><code>plaintext
+1) c
+2) d
+3) b
+</code></pre>
+<h2 id="9-20"><a href="#9-20" class="headerlink" title="9.20"></a>9.20</h2><p>不做，完成Malloc Lab代替之</p>
+<h1 id="Chapter10"><a href="#Chapter10" class="headerlink" title="Chapter10"></a>Chapter10</h1><h2 id="10-6"><a href="#10-6" class="headerlink" title="10.6"></a>10.6</h2><pre><code>plaintext
+fd2 = 4
+</code></pre>
+<h2 id="10-7"><a href="#10-7" class="headerlink" title="10.7"></a>10.7</h2><pre><code>c
+#include &quot;csapp.h&quot;
+#define MAXBUF 128
+
+int main(int argc, char* argv[]) &#123;
+    int n;
+    rio_t rio;
+    char buf[MAXLINE];
+    
+    Rio_readinitb(&amp;rio, STDIN_FILENO);
+    while((n = Rio_readlineb(&amp;rio, buf, MAXLINE)) != 0) &#123;
+        while (n != 0) &#123;
+            int fit_size = n &gt; MAXBUF? MAXBUF : n;
+            Rio_writen(STDOUT_FILENO, buf, fit_size);
+            n -= fit_size;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<h2 id="10-8"><a href="#10-8" class="headerlink" title="10.8"></a>10.8</h2><pre><code>c
+#include &quot;csapp.h&quot;
+
+int main(int argc, char* argv[]) &#123;
+    struct stat stat;
+    char *type, *readok;
+    int fd = atoi(argv[1]);
+    
+    fstat(fd, &amp;stat);
+    if (S_ISREG(stat.st_mode))
+        type = &quot;regular&quot;;
+    else if (S_ISDIR(stat.st_mode))
+        type = &quot;directory&quot;;
+    else
+        type = &quot;other&quot;;
+    if ((stat.st_mode &amp; S_IRUSR))
+        readok = &quot;yes&quot;;
+    else
+        readok = &quot;no&quot;;
+    
+    printf(&quot;type: %s, read: %s\n&quot;, type, readok);
+    exit(0);
+&#125;
+</code></pre>
+<h2 id="10-9"><a href="#10-9" class="headerlink" title="10.9"></a>10.9</h2><p>不会</p>
+<p>看了别人的题解还是不理解</p>
+<h2 id="10-10"><a href="#10-10" class="headerlink" title="10.10"></a>10.10</h2><pre><code>c
+#include &quot;csapp.h&quot;
+
+int main(int argc, char **argv) 
+&#123;
+    int n;
+    rio_t rio;
+    char buf[MAXLINE];
+
+    if (argc == 2) /* infile */
+    &#123;
+        int fd = Open(argv[1], O_RDONLY|O_CREAT);
+        Dup2(fd, STDIN_FILENO);
+        Close(fd);
+    &#125;
+    else if (argc &gt; 2)
+    &#123;
+        printf(&quot;usage: %s [--infile]\n&quot;, argv[0]);
+    &#125;
+
+    Rio_readinitb(&amp;rio, STDIN_FILENO);
+    while((n = Rio_readlineb(&amp;rio, buf, MAXLINE)) != 0) 
+        Rio_writen(STDOUT_FILENO, buf, n);
+
+    return 0;
+&#125;
+</code></pre>
+<h1 id="Chapter12"><a href="#Chapter12" class="headerlink" title="Chapter12"></a>Chapter12</h1><h2 id="12-16"><a href="#12-16" class="headerlink" title="12.16"></a>12.16</h2><pre><code>c
+#include &quot;csapp.h&quot;
+void *thread(void *vargp);
+
+int main(int argc, char* argv[]) &#123;
+    int num, i;
+    pthread_t *tid;
+    
+    if (argc != 2) &#123;
+        fprintf(stderr, &quot;usage: %s &lt;num&gt;\n&quot;, argv[0]);
+        exit(0);
+    &#125;
+    
+    num = atoi(agrv[1]);
+    tid = Calloc(num, sizeof(pthread_t));
+    for (i = 0; i &lt; num; i++) &#123;
+        Pthread_create(&amp;tid[i], NULL, thread, NULL);
+    &#125;
+    for (i = 0; i &lt; num; i++) &#123;
+        Pthread_join(tid, NULL);
+    &#125;
+    exit(0);
+&#125;
+
+void *thread(void *vargp) &#123;
+    printf(&quot;Hello, world!\n&quot;);
+    return NULL;
+&#125;
+</code></pre>
+<h2 id="12-17"><a href="#12-17" class="headerlink" title="12.17"></a>12.17</h2><pre><code>plaintext
+A. 该线程睡眠时，主线程调用exit()函数，所有线程均强制结束，也就没来得及输出
+B. Pthread_join()
+</code></pre>
+<h2 id="12-18"><a href="#12-18" class="headerlink" title="12.18"></a>12.18</h2><pre><code>plaintext
+A. unsafe
+B. safe
+C. unsafe
+</code></pre>
+<h2 id="12-19"><a href="#12-19" class="headerlink" title="12.19"></a>12.19</h2><pre><code>c
+int readcnt;					/* Initially = 0 */
+sem_t mutex, w, reader_first; 	/* All initially = 1 */
+
+void reader(void) &#123;
+    while (1) &#123;
+        P(&amp;mutex);
+        readcnt++;
+        if (readcnt == 1) &#123;
+            P(&amp;w);
+        &#125;
+        V(&amp;mutex);
+        
+        /* Critical section */
+        /* Reading happens  */
+        
+        P(&amp;mutex);
+        readcnt--;
+        if (readcnt == 0)
+            V(&amp;w);
+        V(&amp;mutex);
+    &#125;
+&#125;
+
+void writer(void) &#123;
+    while (1) &#123;
+        P(&amp;reader_first);
+        P(&amp;w);
+        
+        /* Critical section */
+        /* writing happens  */
+        
+        V(&amp;w);
+        P(&amp;mutex);
+        V(&amp;reader_first);
+        V(&amp;mutex);
+    &#125;
+&#125;
+</code></pre>
+<h2 id="12-20"><a href="#12-20" class="headerlink" title="12.20"></a>12.20</h2><pre><code>c
+sem_t mutex, w, readable; 		/* mutex, w initially = 1, readable initally n */
+
+void reader(void) &#123;
+    while (1) &#123;
+        P(&amp;readable);
+        P(&amp;mutex);
+        P(&amp;w);
+        V(&amp;mutex);
+        
+        /* Critical section */
+        /* Reading happens  */
+        
+        P(&amp;mutex);
+        V(&amp;w);
+        V(&amp;mutex);
+        V(&amp;readable);
+    &#125;
+&#125;
+
+void writer(void) &#123;
+    while (1) &#123;
+        P(&amp;w);
+        
+        /* Critical section */
+        /* writing happens  */
+        
+        V(&amp;w);
+    &#125;
+&#125;
+</code></pre>
+<h2 id="12-21"><a href="#12-21" class="headerlink" title="12.21"></a>12.21</h2><pre><code>c
+int writecnt, readcnt;			/* Both initially = 0 */
+sem_t wmutex, rmutex, w, read; 		/* All initially = 1  */
+
+void reader(void) &#123;
+    while (1) &#123;
+        P(&amp;read);
+        P(&amp;rmutex);
+        readcnt++;
+        if (readcnt == 1)
+            P(&amp;w);
+        V(&amp;rmutex);
+        V(&amp;read);
+        
+        /* Critical section */
+        /* Reading happens  */
+        
+        P(&amp;rmutex);
+        readcnt--;
+        if (readcnt == 0)
+            V(&amp;w);
+        V(&amp;mutex);
+    &#125;
+&#125;
+
+void writer(void) &#123;
+    while (1) &#123;
+        P(&amp;wmutex);
+        writecnt++;
+        if (writecnt == 1) 
+            P(&amp;read);
+        V(&amp;wmutex);
+        
+        P(&amp;w);
+        /* Critical section */
+        /* writing happens  */
+        V(&amp;w);
+        
+        P(&amp;wmutex);
+        writecnt--;
+        if (writecnt == 0)
+            V(&amp;read);
+        V(&amp;w);
+    &#125;
+&#125;
+</code></pre>
+
+    </div>
+    
+    
+    
+    
+    <div id="comment">
+        <div id="giscus-container" class="giscus"></div>
+    </div>
+    
+    
+    
+    
+</div>
+
+            <footer id="footer">
+    <div id="footer-wrap">
+        <div>
+            &copy;
+            2024 - 2024 Frun1na &#39;s blog
+            <span id="footer-icon">
+                <i class="fa-solid fa-font-awesome fa-fw"></i>
+            </span>
+            &commat;Frun1na
+        </div>
+        <div>
+            Based on the <a target="_blank" rel="noopener" href="https://hexo.io">Hexo Engine</a> &amp;
+            <a target="_blank" rel="noopener" href="https://github.com/theme-particlex/hexo-theme-particlex">ParticleX Theme</a>
+        </div>
+        
+    </div>
+</footer>
+
+        </div>
+        
+        <transition name="fade">
+            <div id="preview" ref="preview" v-show="previewShow">
+                <img id="preview-content" ref="previewContent" />
+            </div>
+        </transition>
+        
+    </div>
+    <script src="/js/main.js"></script>
+    
+    
+<script
+    src="https://giscus.app/client.js"
+    data-repo="Frun1na/Frun1na.github.io"
+    data-repo-id="R_kgDOMv7m6Q"
+    data-category="General"
+    data-category-id="DIC_kwDOMv7m6c4CiZjQ"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="zh-CN"
+    crossorigin
+    async
+></script>
+
+
+
+
+
+    
+</body>
+</html>

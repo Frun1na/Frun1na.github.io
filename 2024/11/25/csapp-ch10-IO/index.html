@@ -1,0 +1,876 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <title>csapp-ch10-IO | Frun1na &#39;s blog</title>
+    <meta name="author" content="Frun1na" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <link rel="icon" href="/images/avatar.jpg" />
+    <link rel="preconnect" href="https://s4.zstatic.net" />
+<script src="https://s4.zstatic.net/ajax/libs/vue/3.3.7/vue.global.prod.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.cn" />
+<link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin />
+<link
+    rel="stylesheet"
+    href="https://fonts.googleapis.cn/css2?family=Fira+Code:wght@400;500;600;700&family=Lexend:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;800;900&display=swap"
+/>
+<script> const mixins = {}; </script>
+
+<script src="https://polyfill.alicdn.com/v3/polyfill.min.js?features=default"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/highlightjs-line-numbers.js/2.8.0/highlightjs-line-numbers.min.js"></script>
+<link
+    rel="stylesheet"
+    href="https://s4.zstatic.net/ajax/libs/highlight.js/11.9.0/styles/github.min.css"
+/>
+<script src="/js/lib/highlight.js"></script>
+
+
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://s4.zstatic.net/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+<script src="/js/lib/math.js"></script>
+
+
+<script src="/js/lib/preview.js"></script>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/css/main.css" />
+
+<meta name="generator" content="Hexo 7.3.0"></head>
+<body>
+    <div id="layout">
+        <transition name="fade">
+            <div id="loading" v-show="loading">
+                <div id="loading-circle">
+                    <h2>LOADING</h2>
+                    <p>加载过慢请开启缓存 浏览器默认开启</p>
+                    <img src="/images/loading.gif" />
+                </div>
+            </div>
+        </transition>
+        <div id="menu" :class="{ hidden: hiddenMenu, 'menu-color': menuColor}">
+    <nav id="desktop-menu">
+        <a class="title" href="/">
+            <span>FRUN1NA &#39;S BLOG</span>
+        </a>
+        
+        <a href="/">
+            <i class="fa-solid fa-house fa-fw"></i>
+            <span>&ensp;Home</span>
+        </a>
+        
+        <a href="/about">
+            <i class="fa-solid fa-id-card fa-fw"></i>
+            <span>&ensp;About</span>
+        </a>
+        
+        <a href="/archives">
+            <i class="fa-solid fa-box-archive fa-fw"></i>
+            <span>&ensp;Archives</span>
+        </a>
+        
+        <a href="/categories">
+            <i class="fa-solid fa-bookmark fa-fw"></i>
+            <span>&ensp;Categories</span>
+        </a>
+        
+        <a href="/tags">
+            <i class="fa-solid fa-tags fa-fw"></i>
+            <span>&ensp;Tags</span>
+        </a>
+        
+    </nav>
+    <nav id="mobile-menu">
+        <div class="title" @click="showMenuItems = !showMenuItems">
+            <i class="fa-solid fa-bars fa-fw"></i>
+            <span>&emsp;FRUN1NA &#39;S BLOG</span>
+        </div>
+        <transition name="slide">
+            <div class="items" v-show="showMenuItems">
+                
+                <a href="/">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-house fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Home</div>
+                    </div>
+                </a>
+                
+                <a href="/about">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-id-card fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">About</div>
+                    </div>
+                </a>
+                
+                <a href="/archives">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-box-archive fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Archives</div>
+                    </div>
+                </a>
+                
+                <a href="/categories">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-bookmark fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Categories</div>
+                    </div>
+                </a>
+                
+                <a href="/tags">
+                    <div class="item">
+                        <div style="min-width: 20px; max-width: 50px; width: 10%">
+                            <i class="fa-solid fa-tags fa-fw"></i>
+                        </div>
+                        <div style="min-width: 100px; max-width: 150%; width: 20%">Tags</div>
+                    </div>
+                </a>
+                
+            </div>
+        </transition>
+    </nav>
+</div>
+<transition name="fade">
+    <div id="menu-curtain" @click="showMenuItems = !showMenuItems" v-show="showMenuItems"></div>
+</transition>
+
+        <div id="main" :class="loading ? 'into-enter-from': 'into-enter-active'">
+            <div class="article">
+    <div>
+        <h1>csapp-ch10-IO</h1>
+    </div>
+    <div class="info">
+        <span class="date">
+            <span class="icon">
+                <i class="fa-solid fa-calendar fa-fw"></i>
+            </span>
+            2024/11/25
+        </span>
+        
+        
+    </div>
+    
+    <div class="content" v-pre>
+        <h1 id="用户空间I-O"><a href="#用户空间I-O" class="headerlink" title="用户空间I&#x2F;O"></a>用户空间I&#x2F;O</h1><span id="more"></span>
+
+<p>Linux如何访问外设？</p>
+<p>使用与访问文件完全一样的办法。</p>
+<p>Linux中，将外设抽象成了一个文件</p>
+<p>输入设备就是只读的（键盘，摄像头，传感器等）</p>
+<p>输出设备就是可写的（显示器，打印机，广义上，就是将计算机的计算结果，影响到物理世界，都叫做输出设备）</p>
+<p>我们将学到，Linux的三套IO函数，Unix I&#x2F;O（系统级IO），RIO包，标准C库IO</p>
+<h1 id="Unix-I-O"><a href="#Unix-I-O" class="headerlink" title="Unix I&#x2F;O"></a>Unix I&#x2F;O</h1><p>基于Unix的系统调用，且Linux和win都兼容</p>
+<p>Linux文件是包含了m个字节的序列：（物理存储上是线性的）</p>
+<p>B0，B1，…，Bk，…，Bm-1</p>
+<p>一个有趣的事实：</p>
+<p>Linux系统中所有I&#x2F;O设备都被表示为文件：&#x2F;dev&#x2F;sda2 （磁盘分区），&#x2F;dev&#x2F;tty2 （终端）</p>
+<p>甚至内核也被表示为文件：&#x2F;boot&#x2F;vmlinuz-3.13.0-55-generic（内核映像），&#x2F;proc（内核数据结构）</p>
+<p>优雅地将文件映射到设备，使得内核能够提供一个简单的接口称为Unix I&#x2F;O：</p>
+<p>打开和关闭文件：open() 和close()。</p>
+<p>​	打开文件时，内核返回一个小的非负整数，叫做描述符，它在后续对此文件的所有操作中标识这个文件。告诉系统，我操作的是哪个文件。内核维护着所有进程打开的文件，每个描述符对应一个文件</p>
+<p>改变当前文件游标：lseek()</p>
+<p>​	对于每个打开的文件，内核保持着一个文件位置k（游标），初始为 0，这个文件位置是从文件开头起始的字节偏移量。</p>
+<p>读取和写入文件：read()和write()</p>
+<h1 id="文件"><a href="#文件" class="headerlink" title="文件"></a>文件</h1><p>每个Linux文件都有一个类型（type)来表明它在系统中的角色</p>
+<p>普通文件：包含任意数据</p>
+<p>目录：相关文件组的索引</p>
+<p>套接字：用于与另一台机器上的进程通信（网络）</p>
+<p>其他文件类型</p>
+<p>命名管道（FIFOs）（用于两个进程通信）</p>
+<p>符号链接</p>
+<p>字符设备和块设备</p>
+<h2 id="普通文件"><a href="#普通文件" class="headerlink" title="普通文件"></a>普通文件</h2><p>包含任意数据</p>
+<p>应用程序通常将其分为两类：文本文件和二进制文件</p>
+<p>文本文件是只包含ASCII或Unicode字符的普通文件</p>
+<p>二进制文件是其他所有类型的文件，例如，目标文件，JPEG图像</p>
+<p>内核并不知道以上两者的区别（文件的后缀其实没啥用）</p>
+<p>文本文件是文本<strong>行</strong>的序列，<strong>文本行</strong>是以换行符（‘\n‘）为终止标志的字符序列（换行符是0xa，与ASCII换行字符（LF）相同）</p>
+<p>其他系统中的行结束（EOL）指示符</p>
+<ul>
+<li>Linux和Mac OS：‘\n’（0xa）：换行（LF）</li>
+<li>Windows和Internet协议：‘\r\n’（0xd 0xa）：回车（CR）后跟换行（LF）</li>
+</ul>
+<p>注：linux和win的换行符不同，不要简简单单直接ctrl c v复制，不过win有自动切换功能，也就是，linux复制到win之后，自动添上回车符。</p>
+<h2 id="目录（相当于文件夹）"><a href="#目录（相当于文件夹）" class="headerlink" title="目录（相当于文件夹）"></a>目录（相当于文件夹）</h2><p>目录由一个链接数组组成，每个链接将文件名映射到一个文件</p>
+<p>每个目录至少包含两个基本项</p>
+<ul>
+<li>.   是指向自身的链接</li>
+<li>..  是指向目录层次结构中父目录的链接</li>
+</ul>
+<p>用于操作目录的命令：</p>
+<ul>
+<li>mkdir：创建空目录</li>
+<li>ls：查看目录内容</li>
+<li>rmdir：删除空目录</li>
+</ul>
+<h2 id="目录层次结构"><a href="#目录层次结构" class="headerlink" title="目录层次结构"></a>目录层次结构</h2><p>所有文件都组织成一个以根目录为锚点的层次结构，根目录名为&#x2F;（斜杠）</p>
+<p>内核为每个进程维护当前工作目录（cwd）可使用cd命令进行修改，这个一定要注意。</p>
+<img src="https://frun1na.netlify.app//20241116203608.png" style="zoom:50%;" />
+
+<h2 id="路径名"><a href="#路径名" class="headerlink" title="路径名"></a>路径名</h2><p>文件在层次结构中的位置由路径名表示</p>
+<p>绝对路径名以’&#x2F;‘开头，表示从根目录开始的路径&#x2F;home&#x2F;droh&#x2F;hello.c</p>
+<p>相对路径名表示从当前工作目录开始的路径..&#x2F;home&#x2F;droh&#x2F;hello.c</p>
+<h1 id="打开和关闭文件"><a href="#打开和关闭文件" class="headerlink" title="打开和关闭文件"></a>打开和关闭文件</h1><p>下面都是一些Unix的系统调用，不是标准C的，而是操作系统的</p>
+<h2 id="打开"><a href="#打开" class="headerlink" title="打开"></a>打开</h2><pre><code class="c">int fd;   /* file descriptor */
+if ((fd= open(&quot;/etc/hosts&quot;, O_RDONLY)) &lt; 0) &#123;
+    perror(&quot;open&quot;);
+    exit(1);
+&#125;
+</code></pre>
+<p>通过调用open函数来<strong>打开一个已存在的文件</strong>或者<strong>创建一个新文件</strong></p>
+<pre><code class="c">#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+
+int open(char *filename, int flags, mode_t mode);
+//返回：若成功则为新文件描述符，若出错为一1。
+</code></pre>
+<p>返回文件描述符，整数类型。又称为句柄(handler)</p>
+<p>每次返回的都是可用的，最小的整数值作为文件描述符。</p>
+<p>​		例如，已经有0,1,2这三个用了，那么下次open，返回3，再open，返回4，close 3之后，再open，返回3。</p>
+<p>flags参数指明了进程打算如何访问这个文件：</p>
+<p>O_RDONLY: 只读</p>
+<p>O_WRONLY: 只写</p>
+<p>O_RDWR: 可读可写</p>
+<p>O_CREAT: 如果文件不存在，就创建它的一个截断的（truncated)(空）文件。</p>
+<p>O_TRUNC: 如果文件已经存在，就截断它。</p>
+<p> O_APPEND: 在每次写操作前，设置文件位置到文件的结尾处。</p>
+<p><strong>可以使用或运算<code>|</code>，以同时使用多个flag</strong></p>
+<p> mode 参数指定了新文件的访问权限位。如图:</p>
+<img src="https://frun1na.netlify.app//20241116205040.png" style="zoom:50%;" />
+
+<p>每个进程上下文都有一个umask，它是通过调用umask函数来设置 的。当进程通过带某个mode参数的open函数调用来创建一个新文件时，文件的访问权限位被设置为 mode &amp; ~ umask </p>
+<p>假设</p>
+<pre><code class="c">#define DEF_UMASK S_IWGRP|S_IWOTH
+#define DEF_MODE S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH
+
+umask(DEF_UMASK);
+fd = Open(&quot;foo.txt&quot;, O_CREAT|O_TRUNC|O_WRONLY, DEF_MODE);
+</code></pre>
+<p>此代码表示：创建一个新文件，文件的拥有者有读写权限，而所有其他的用户都有读权限：</p>
+<p>由Linux shell创建的每个进程在初始状态时与终端关联<strong>三个打开文件</strong>：</p>
+<ul>
+<li>0：标准输入（stdin）</li>
+<li>1：标准输出（stdout）</li>
+<li>2：标准错误（stderr）</li>
+</ul>
+<h2 id="关闭"><a href="#关闭" class="headerlink" title="关闭"></a>关闭</h2><p>关闭文件通知内核你已经完成对该文件的访问</p>
+<pre><code class="c">int fd;     /* file descriptor */
+int retval; /* return value */
+if ((retval = close(fd)) &lt; 0) &#123;
+    perror(&quot;close&quot;);
+    exit(1);
+ &#125;
+</code></pre>
+<p>返回：若成功则为0，若出错则为-1。</p>
+<p>在多线程程序中<strong>关闭已关闭的文件</strong>是灾难的开始</p>
+<p>规范：即使是看似无害的函数，如close()，也要始终<strong>检查返回码</strong></p>
+<h1 id="读和写文件"><a href="#读和写文件" class="headerlink" title="读和写文件"></a>读和写文件</h1><h2 id="读文件"><a href="#读文件" class="headerlink" title="读文件"></a>读文件</h2><p>读取文件将字节从当前文件位置复制到内存，然后更新文件位置</p>
+<pre><code class="c">char buf[512];
+int fd;       /* file descriptor */
+int nbytes;   /* number of bytes read */
+/* Open file fd ...  */
+/* Then read up to 512 bytes from file fd */
+if ((nbytes = read(fd, buf, sizeof(buf))) &lt; 0) &#123;
+    perror(&quot;read&quot;);
+    exit(1);
+&#125;
+</code></pre>
+<p>调用read和write函数实现读写</p>
+<p><code>ssize_t read(int fd, void *buf, size_t n);</code>（返回：若成功则为读的字节数，若EOF则为0, 若出错为-1）</p>
+<p>返回从文件fd读取到buf中的字节数。</p>
+<p>返回类型ssize_t是有符号整数</p>
+<p>nbytes&lt; 0 表示发生了错误</p>
+<p>短计数（nbytes&lt; sizeof(buf) ）是可能的，且不是错误！（后面一会说）</p>
+<blockquote>
+<p>ssize_t和size_t 有些什么区别？</p>
+<p>read函数有一个 size_t的输入参数和一个 ssize_t的返 回值。那么这两种类型之间有什么区别呢？</p>
+<p>在X86-64 系统中，size_t被定义为 unsigned long，而 ssize_t(有符号的大小）被定义为 long，read 函数返回一个有符号的大小，而不是一个无符号大小，这是因为出错时它必须返回-1。因此，read的最大值减小了一半</p>
+</blockquote>
+<h2 id="写文件"><a href="#写文件" class="headerlink" title="写文件"></a>写文件</h2><p>写入文件将字节从内存复制到当前文件位置，然后更新当前文件位置</p>
+<pre><code class="c">char buf[512];
+int fd;       /* file descriptor */
+int nbytes;   /* number of bytes read */
+/* Open the file fd ... */
+/* Then write up to 512 bytes from buf to file fd */
+if ((nbytes = write(fd, buf, sizeof(buf)) &lt; 0) &#123;
+    perror(&quot;write&quot;);
+    exit(1);
+&#125;
+</code></pre>
+<p><code>ssize_t write(int fd, const void *buf, size_t n);</code>返回：若成功则为写的字节数，若出错则为-1。</p>
+<p>返回从buf写入到文件fd中的字节数</p>
+<p>nbytes&lt; 0 表示发生了错误</p>
+<p>与读取一样，短计数是可能的，且不是错误！</p>
+<h1 id="关于短计数"><a href="#关于短计数" class="headerlink" title="关于短计数"></a>关于短计数</h1><p>在以下情况下可能出现短计数:</p>
+<ul>
+<li>在读取时遇到（文件结束符）EOF</li>
+<li>从终端读取文本行</li>
+<li>读取和写入网络套接字</li>
+</ul>
+<p>在以下情况下永远不会出现短计数：</p>
+<ul>
+<li>从磁盘文件读取（除了EOF）</li>
+<li>向磁盘文件写入</li>
+</ul>
+<p>在实践中最好的方式是，在程序中始终容忍短计数出现的可能</p>
+<h1 id="RIO包"><a href="#RIO包" class="headerlink" title="RIO包"></a>RIO包</h1><p>RIO（Robust I&#x2F;O,健壮的I&#x2F;O）是一组包装器，提供了高效和健壮的I&#x2F;O，适用于需要处理短计数的应用程序，比如网络程序</p>
+<p>RIO提供了两种不同类型的函数：</p>
+<p>无缓冲的二进制数据输入和输出：<code>rio_readn</code>和<code>rio_writen</code></p>
+<p>有缓冲的文本行和二进制数据输入：<code>rio_readlineb</code>和<code>rio_readnb</code></p>
+<p>缓冲的RIO例程是<strong>线程安全</strong>的，并且可以任意交错地在相同的描述符上使用</p>
+<h2 id="无缓冲的输入和输出"><a href="#无缓冲的输入和输出" class="headerlink" title="无缓冲的输入和输出"></a>无缓冲的输入和输出</h2><p>与Unix的read和write具有相同的接口</p>
+<p>特别适用于在网络套接字上传输数据</p>
+<pre><code class="c">#include &quot;csapp.h&quot;
+ssize_t rio_readn(intfd, void *usrbuf, size_t n);
+ssize_t rio_writen(intfd, void *usrbuf, size_t n);
+//Return: 若成功则为传送的字节数, 0 on EOF (rio_readnonly), -1 on error
+</code></pre>
+<p>rio_readn仅在遇到EOF时返回短计数</p>
+<p>仅在知道要读取多少字节时才使用它</p>
+<p>rio_writen永远不会返回短计数</p>
+<p>可以任意交错地在相同的描述符上调用rio_readn和rio_writen</p>
+<h2 id="有缓冲的输入"><a href="#有缓冲的输入" class="headerlink" title="有缓冲的输入"></a>有缓冲的输入</h2><p>从部分缓存在内部<strong>内存缓冲区</strong>中的文件中高效读取文本行和二进制数据</p>
+<p>先读取一堆，到缓冲区，用的时候从缓冲区里面拿。将多次系统调用减少为1次</p>
+<pre><code class="c">#include &quot;csapp.h&quot;
+void rio_readinitb(rio_t*rp, intfd);
+
+ssize_t rio_readlineb(rio_t*rp, void *usrbuf, size_t maxlen);
+ssize_t rio_readnb(rio_t*rp, void *usrbuf, size_t n);
+ //Return: num. bytes read if OK, 0 on EOF, -1 on error
+</code></pre>
+<p>rio_readlineb从文件fd中读取最多maxlen字节的文本行，并将该行存储在usrbuf中(特别适用于从网络套接字读取文本行)</p>
+<p>停止条件：</p>
+<ul>
+<li>读取了maxlen字节</li>
+<li>遇到EOF</li>
+<li>遇到换行符（’\n’）</li>
+</ul>
+<h2 id="有缓冲的输入-2"><a href="#有缓冲的输入-2" class="headerlink" title="有缓冲的输入(2)"></a>有缓冲的输入(2)</h2><pre><code class="c">ssize_t rio_readlineb(rio_t*rp, void *usrbuf, size_t maxlen);
+ssize_t rio_readnb(rio_t*rp, void *usrbuf, size_t n);
+</code></pre>
+<p>rio_readnb从文件fd中读取最多n字节的数据</p>
+<p>停止条件：</p>
+<p>读取了maxlen字节</p>
+<p>遇到EOF</p>
+<p>可以任意交错地在相同的描述符上调用rio_readlineb和rio_readnb</p>
+<p>注意：<strong>不要与对rio_readn的调用交错</strong>因为先读一整个缓冲区的，然后再读没有缓冲区的，肯定就读错了</p>
+<p>对于从文件读取的情况：</p>
+<p>文件有关联的缓冲区，用于保存<strong>已从文件中读取</strong>但尚<strong>未被用户代码读取</strong>的字节</p>
+<p><img src="https://frun1na.netlify.app/20241116213105.png"></p>
+<p>该缓冲区构建在Unix文件之上：</p>
+<p><img src="https://frun1na.netlify.app/20241116213135.png"></p>
+<p>所有关于缓冲区的信息都包含在结构体rio_t中</p>
+<pre><code class="c">typedef struct&#123;
+    int rio_fd;                /* 文件描述符*/
+    int rio_cnt;               /* 缓冲区中未读数据的大小*/
+    char *rio_bufptr;          /* 指向缓冲区未读数据的指针*/
+    char rio_buf[RIO_BUFSIZE]; /* 缓冲区*/
+&#125; rio_t;
+</code></pre>
+<h2 id="RIO的使用示例"><a href="#RIO的使用示例" class="headerlink" title="RIO的使用示例"></a>RIO的使用示例</h2><p>将文本文件的行从标准输入复制到标准输出</p>
+<pre><code class="c">#include &quot;csapp.h&quot;
+ int main(int argc, char **argv) &#123;
+     int n;
+     rio_t rio;
+     char buf[MAXLINE];
+     rio_readinitb(&amp;rio, STDIN_FILENO);
+     while((n = rio_readlineb(&amp;rio, buf, MAXLINE)) != 0) 
+        rio_writen(STDOUT_FILENO, buf, n);
+     exit(0);
+ &#125;
+</code></pre>
+<h1 id="元数据、共享和重定向"><a href="#元数据、共享和重定向" class="headerlink" title="元数据、共享和重定向"></a>元数据、共享和重定向</h1><h2 id="文件元数据"><a href="#文件元数据" class="headerlink" title="文件元数据"></a>文件元数据</h2><p>元数据是关于数据的数据，在本节中特指<strong>文件的数据信息</strong></p>
+<p>每个文件的元数据都有内核维护</p>
+<p>用户可以使用stat和fstat函数访问</p>
+<pre><code class="c">#include &lt;unistd.h&gt;
+#include &lt;sys/stat.h&gt;
+int stat(const char *filename, struct stat *buf);
+int fstat(int fd, struct stat *buf); 
+//返回：若成功则为0，若出错则为-1
+</code></pre>
+<p>stat 函数以一个文件名（路径）作为输入，fstat函数以文件描述符作为输入</p>
+<pre><code class="c">/* stat和fstat函数返回的元数据*/
+ struct stat &#123;
+     dev_t 			st_dev;      /* 设备*/
+     ino_t           st_ino;      /* inode */
+     mode_t 			st_mode;     /* 保护模式和文件类型*/
+     nlink_t         st_nlink;    /* 硬链接数*/
+     uid_t           st_uid;      /* 拥有者ID */
+     gid_t           st_gid;      /* 拥有者所在组ID */
+     dev_t           st_rdev;     /* 设备类型(如果是inode设备) */
+     off_t           st_size;     /* 总大小（字节数）                      这个很有用*/
+     unsigned long   st_blksize;  /* 文件系统I/O块大小*/
+     unsigned long   st_blocks;   /* 已分配的块数*/
+     time_t          st_atime;    /* 最后一次访问时间*/
+     time_t          st_mtime;    /* 最后一次修改时间*/
+     time_t          st_ctime;    /* inode的改变时间*/
+ &#125;;
+</code></pre>
+<p>Linux在 sys&#x2F;stat.h 中定义了宏谓词来确定 st_mode成员 的文件类型：</p>
+<ul>
+<li>S_ISREG(m) 这是一个普通文件吗？ </li>
+<li>S_ISDIR(m) 这是一个目录文件吗？ </li>
+<li>S_ISSOCK(m) 这是一个网络套接字吗？</li>
+</ul>
+<p>(注：这些系统调用man手册学习  man stat发现不是我们需要的，于是查看第二页man 2 stat)</p>
+<h2 id="在内核中如何表示已打开的文件"><a href="#在内核中如何表示已打开的文件" class="headerlink" title="在内核中如何表示已打开的文件"></a>在内核中如何表示已打开的文件</h2><p>OS如何管理进程打开的文件？</p>
+<p>两个描述符引用两个不同的打开文件</p>
+<p>描述符1（stdout）指向终端，描述符4指向打开的磁盘文件</p>
+<p><img src="https://frun1na.netlify.app/20241116214658.png"></p>
+<p>打开文件表是运行时的一些信息，pos表示游标，refcnt表示打开了几次（几个进程打开它）</p>
+<p>描述符表为上一章task_struct中的一个表项</p>
+<h2 id="文件共享"><a href="#文件共享" class="headerlink" title="文件共享"></a>文件共享</h2><h3 id="两个不同描述符共享同一个磁盘文件"><a href="#两个不同描述符共享同一个磁盘文件" class="headerlink" title="两个不同描述符共享同一个磁盘文件"></a><strong>两个不同描述符共享同一个磁盘文件</strong></h3><p>通过两个不同的打开文件表项</p>
+<p>例如：<strong>使用相同的文件名参数两次调用open</strong></p>
+<p><img src="https://frun1na.netlify.app/20241116215140.png"></p>
+<p>不以共享的方式打开，这样游标就相互独立</p>
+<h3 id="进程间共享文件"><a href="#进程间共享文件" class="headerlink" title="进程间共享文件"></a><strong>进程间共享文件</strong></h3><p>子进程继承其父进程的打开文件</p>
+<p>注意：通过exec函数不会改变这种情况（可以使用fcntl来更改）（原来打开的文件不会自动关闭）</p>
+<p><img src="https://frun1na.netlify.app/20241116215343.png"></p>
+<p><img src="https://frun1na.netlify.app/20241116215556.png"></p>
+<p>注：这张图片的refcnt都为2</p>
+<h2 id="I-O重定向"><a href="#I-O重定向" class="headerlink" title="I&#x2F;O重定向"></a>I&#x2F;O重定向</h2><p>在Shell中如何实现I&#x2F;O重定向？</p>
+<p><code>linux&gt; ls &gt; foo.txt</code></p>
+<p>这样，就将stdout重定位成了foo.txt，这样ls本来输出到屏幕，但是重定向后，输出到该文件。</p>
+<p>在代码里面，通过系统调用进行重定向</p>
+<p>通过调用<code>dup2(oldfd, newfd)</code>函数，将（每个进程的）描述符表条目oldfd复制到条目newfd</p>
+<p><img src="https://frun1na.netlify.app/20241116220039.png"></p>
+<h2 id="I-O重定向示例"><a href="#I-O重定向示例" class="headerlink" title="I&#x2F;O重定向示例"></a>I&#x2F;O重定向示例</h2><p>首先通过fork创建子进程，然后直接用dup2进行重定位，之后再execve</p>
+<h1 id="读取目录内容"><a href="#读取目录内容" class="headerlink" title="读取目录内容"></a>读取目录内容</h1><p>应用程序可以用readdir系列函数来读取目录的内容</p>
+<pre><code class="c">#include &lt;sys/types.h&gt;
+#include &lt;dirent.h&gt;
+ DIR *opendir(const char *name);
+//返回：若成功，则为处理的指针；若出错，则为 NULLÿ
+</code></pre>
+<p>opendir以路径名为参数，返回指向目录流（directory stream)的指针。流是对 条目有序列表的抽象，在这里是指目录项的列表。</p>
+<pre><code class="c">struct dirent *readdir(DIR *dirp);
+//（返回：若成功，则为指向下一个目录项的指针；若没有更多的目录项或出错，则为 NULL）
+</code></pre>
+<p>每个目录项都是一个结构：</p>
+<pre><code class="c">struct dirent &#123;
+ ino_t d_ino;      /* inode number */
+ char d_name[256]; /* Filename */
+&#125;
+</code></pre>
+<p>成员d_name 是文件名，d_ino是文件位置</p>
+<p>唯一能区分错误和流结束情况的方法是检査自调用readdir以来errno是否被修改过</p>
+<pre><code class="c"> int closedir(DIR *dirp);
+//返回：成功为0; 错误为-1
+</code></pre>
+<p>函数closedir关闭流并释放其所有的资源。</p>
+<h1 id="标准I-O"><a href="#标准I-O" class="headerlink" title="标准I&#x2F;O"></a>标准I&#x2F;O</h1><p>C标准库（libc.so）包含一系列更高级别的标准I&#x2F;O函数（和RIO差不多，都是对unix IO的封装）</p>
+<p>标准I&#x2F;O函数包括：</p>
+<ul>
+<li>文件的打开和关闭（fopen和fclose）</li>
+<li>基于字节的读取和写入（fread和fwrite）</li>
+<li>文本行的读取和写入（fgets和fputs）</li>
+<li>格式化的读取和写入（fscanf和fprintf）</li>
+</ul>
+<p>标准I&#x2F;O将文件打开为流，这是文件描述符和内存中的缓冲区的抽象</p>
+<p>C程序在开始时具有三个打开的流（在stdio.h中定义）：</p>
+<ul>
+<li>stdin（标准输入）</li>
+<li>stdout（标准输出）</li>
+<li>stderr（标准错误）</li>
+</ul>
+<pre><code class="c"> #include &lt;stdio.h&gt;
+ extern FILE *stdin;  /* standard input  (descriptor 0) */
+ extern FILE *stdout; /* standard output (descriptor 1) */
+ extern FILE *stderr; /* standard error  (descriptor 2) */
+ int main() &#123;
+     fprintf(stdout, &quot;Hello, world\n&quot;);
+ &#125;
+</code></pre>
+<h2 id="有缓冲的I-O：设计目标"><a href="#有缓冲的I-O：设计目标" class="headerlink" title="有缓冲的I&#x2F;O：设计目标"></a>有缓冲的I&#x2F;O：设计目标</h2><p>应用程序通常以逐个字符的方式进行读写</p>
+<ul>
+<li><p>getc、putc和ungetc</p>
+</li>
+<li><p>gets 和fgets (这些函数逐个字符地读取文本行，在遇到换行符时停止)</p>
+</li>
+</ul>
+<p>使用Unix I&#x2F;O调用会降低性能</p>
+<p>因为read 和write 需要进行系统调用，&gt; 10,000个时钟周期</p>
+<p>解决方案：使用缓冲读取</p>
+<p>利用Unix read 函数来抓取字节块，用户输入函数从缓冲区逐个字节获取数据，当缓冲区为空时重新填充缓冲区。</p>
+<h2 id="标准I-O中的缓冲区"><a href="#标准I-O中的缓冲区" class="headerlink" title="标准I&#x2F;O中的缓冲区"></a>标准I&#x2F;O中的缓冲区</h2><p>标准I&#x2F;O使用带缓冲区的I&#x2F;O</p>
+<p>在遇到“\n”换行符时、调用fflush函数、缓冲区满、调用exit 函数、或从main 函数返回时， 缓冲区才被<strong>写入</strong>到文件中。</p>
+<p>printf, fprintf等等</p>
+<h2 id="stdout与stderr的区别"><a href="#stdout与stderr的区别" class="headerlink" title="stdout与stderr的区别"></a>stdout与stderr的区别</h2><p>stderr为无缓冲输出</p>
+<p>stdout为有缓冲输出</p>
+<h2 id="标准I-O缓冲区的工作方式"><a href="#标准I-O缓冲区的工作方式" class="headerlink" title="标准I&#x2F;O缓冲区的工作方式"></a>标准I&#x2F;O缓冲区的工作方式</h2><p>可以使用Linux 中的strace程序来查看这种缓冲机制的实际运行情况。</p>
+<pre><code class="bash"> linux&gt; strace ./hello
+ execve(&quot;./hello&quot;, [&quot;hello&quot;], [/* ... */]).
+ ...
+ write(1, &quot;hello\n&quot;, 6)               = 6
+ ...
+ exit_group(0)                        = ?
+</code></pre>
+<p>hello.c ：</p>
+<p><img src="https://frun1na.netlify.app/20241116221638.png"></p>
+<h2 id="printf-函数的调用过程"><a href="#printf-函数的调用过程" class="headerlink" title="printf()函数的调用过程"></a>printf()函数的调用过程</h2><p><img src="https://frun1na.netlify.app/20241116221735.png"></p>
+<p><img src="https://frun1na.netlify.app/20241116221751.png"></p>
+<h1 id="如何选择I-O函数"><a href="#如何选择I-O函数" class="headerlink" title="如何选择I&#x2F;O函数"></a>如何选择I&#x2F;O函数</h1><p>如图，unix IO是最底层的</p>
+<p><img src="https://frun1na.netlify.app/20241116221845.png"></p>
+<h2 id="Unix-I-O-的优缺点"><a href="#Unix-I-O-的优缺点" class="headerlink" title="Unix I&#x2F;O 的优缺点"></a>Unix I&#x2F;O 的优缺点</h2><p>优点：</p>
+<ul>
+<li>Unix I&#x2F;O 是最通用且开销最低的I&#x2F;O 形式。</li>
+<li>所有其他I&#x2F;O 包都是使用Unix I&#x2F;O 函数实现的。</li>
+<li>Unix I&#x2F;O 提供了访问文件元数据的函数。</li>
+<li>Unix I&#x2F;O 函数是异步信号安全的，可以在信号处理程序中安全使用。</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>处理短计数（short counts）比较棘手且容易出错</li>
+<li>高效地读取文本行需要一定形式的缓冲，这也是比较棘手且容易出错的。</li>
+<li>这两个问题都可以通过标准I&#x2F;O和RIO包来解决。</li>
+</ul>
+<h2 id="标准I-O-的优缺点"><a href="#标准I-O-的优缺点" class="headerlink" title="标准I&#x2F;O 的优缺点"></a>标准I&#x2F;O 的优缺点</h2><p>优点：</p>
+<ul>
+<li>使用缓冲区提高了效率，通过减少read和write调用的次数。</li>
+<li>短计数会被自动处理。</li>
+</ul>
+<p>缺点：</p>
+<p>不提供访问文件元数据的函数。</p>
+<p>标准I&#x2F;O函数<strong>不是异步信号安全</strong>的，并且不适用于信号处理程序。</p>
+<p>标准I&#x2F;O <strong>不适用于网络套接字</strong>的输入和输出。</p>
+<h2 id="如何选择I-O函数-1"><a href="#如何选择I-O函数-1" class="headerlink" title="如何选择I&#x2F;O函数"></a>如何选择I&#x2F;O函数</h2><p>一般原则：尽可能使用最高级别的I&#x2F;O函数</p>
+<p>许多C程序员能够完全使用标准I&#x2F;O函数完成所有工作</p>
+<p>但是，请确保你<strong>理解</strong>所使用的函数！</p>
+<p>何时使用标准I&#x2F;O：当与磁盘或终端文件一起工作时。</p>
+<p>何时使用Unix I&#x2F;O：在信号处理程序中，因为Unix I&#x2F;O是异步信号安全的。在极少数需要绝对最高性能的情况下</p>
+<p>何时使用RIO：当您需要读写网络套接字时。避免在套接字上使用标准I&#x2F;O</p>
+<p>注：这三个不要同时在一个程序使用。</p>
+<h1 id="下面是RIO包的实现："><a href="#下面是RIO包的实现：" class="headerlink" title="下面是RIO包的实现："></a>下面是RIO包的实现：</h1><pre><code class="c">/*********************************************************************
+ * The Rio package - robust I/O functions
+ **********************************************************************/
+/*
+ * rio_readn - robustly read n bytes (unbuffered)
+ */
+/* $begin rio_readn */
+ssize_t rio_readn(int fd, void *usrbuf, size_t n) 
+&#123;
+    size_t nleft = n;
+    ssize_t nread;
+    char *bufp = usrbuf;
+
+    while (nleft &gt; 0) &#123;
+    if ((nread = read(fd, bufp, nleft)) &lt; 0) &#123;
+        if (errno == EINTR) /* interrupted by sig handler return */
+        nread = 0;      /* and call read() again */
+        else
+        return -1;      /* errno set by read() */ 
+    &#125; 
+    else if (nread == 0)
+        break;              /* EOF */
+    nleft -= nread;
+    bufp += nread;
+    &#125;
+    return (n - nleft);         /* return &gt;= 0 */
+&#125;
+/* $end rio_readn */
+
+/*
+ * rio_writen - robustly write n bytes (unbuffered)
+ */
+/* $begin rio_writen */
+ssize_t rio_writen(int fd, void *usrbuf, size_t n) 
+&#123;
+    size_t nleft = n;
+    ssize_t nwritten;
+    char *bufp = usrbuf;
+
+    while (nleft &gt; 0) &#123;
+    if ((nwritten = write(fd, bufp, nleft)) &lt;= 0) &#123;
+        if (errno == EINTR)  /* interrupted by sig handler return */
+        nwritten = 0;    /* and call write() again */
+        else
+        return -1;       /* errorno set by write() */
+    &#125;
+    nleft -= nwritten;
+    bufp += nwritten;
+    &#125;
+    return n;
+&#125;
+/* $end rio_writen */
+
+
+/* 
+ * rio_read - This is a wrapper for the Unix read() function that
+ *    transfers min(n, rio_cnt) bytes from an internal buffer to a user
+ *    buffer, where n is the number of bytes requested by the user and
+ *    rio_cnt is the number of unread bytes in the internal buffer. On
+ *    entry, rio_read() refills the internal buffer via a call to
+ *    read() if the internal buffer is empty.
+ */
+/* $begin rio_read */
+static ssize_t rio_read(rio_t *rp, char *usrbuf, size_t n)
+&#123;
+    int cnt;
+
+    while (rp-&gt;rio_cnt &lt;= 0) &#123;  /* refill if buf is empty */
+    rp-&gt;rio_cnt = read(rp-&gt;rio_fd, rp-&gt;rio_buf, 
+               sizeof(rp-&gt;rio_buf));
+    if (rp-&gt;rio_cnt &lt; 0) &#123;
+        if (errno != EINTR) /* interrupted by sig handler return */
+        return -1;
+    &#125;
+    else if (rp-&gt;rio_cnt == 0)  /* EOF */
+        return 0;
+    else 
+        rp-&gt;rio_bufptr = rp-&gt;rio_buf; /* reset buffer ptr */
+    &#125;
+
+    /* Copy min(n, rp-&gt;rio_cnt) bytes from internal buf to user buf */
+    cnt = n;          
+    if (rp-&gt;rio_cnt &lt; n)   
+    cnt = rp-&gt;rio_cnt;
+    memcpy(usrbuf, rp-&gt;rio_bufptr, cnt);
+    rp-&gt;rio_bufptr += cnt;
+    rp-&gt;rio_cnt -= cnt;
+    return cnt;
+&#125;
+/* $end rio_read */
+
+/*
+ * rio_readinitb - Associate a descriptor with a read buffer and reset buffer
+ */
+/* $begin rio_readinitb */
+void rio_readinitb(rio_t *rp, int fd) 
+&#123;
+    rp-&gt;rio_fd = fd;  
+    rp-&gt;rio_cnt = 0;  
+    rp-&gt;rio_bufptr = rp-&gt;rio_buf;
+&#125;
+/* $end rio_readinitb */
+
+/*
+ * rio_readnb - Robustly read n bytes (buffered)
+ */
+/* $begin rio_readnb */
+ssize_t rio_readnb(rio_t *rp, void *usrbuf, size_t n) 
+&#123;
+    size_t nleft = n;
+    ssize_t nread;
+    char *bufp = usrbuf;
+    
+    while (nleft &gt; 0) &#123;
+    if ((nread = rio_read(rp, bufp, nleft)) &lt; 0) &#123;
+        if (errno == EINTR) /* interrupted by sig handler return */
+        nread = 0;      /* call read() again */
+        else
+        return -1;      /* errno set by read() */ 
+    &#125; 
+    else if (nread == 0)
+        break;              /* EOF */
+    nleft -= nread;
+    bufp += nread;
+    &#125;
+    return (n - nleft);         /* return &gt;= 0 */
+&#125;
+/* $end rio_readnb */
+
+/* 
+ * rio_readlineb - robustly read a text line (buffered)
+ */
+/* $begin rio_readlineb */
+ssize_t rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen) 
+&#123;
+    int n, rc;
+    char c, *bufp = usrbuf;
+
+    for (n = 1; n &lt; maxlen; n++) &#123; 
+    if ((rc = rio_read(rp, &amp;c, 1)) == 1) &#123;
+        *bufp++ = c;
+        if (c == &#39;\n&#39;)
+        break;
+    &#125; else if (rc == 0) &#123;
+        if (n == 1)
+        return 0; /* EOF, no data read */
+        else
+        break;    /* EOF, some data was read */
+    &#125; else
+        return -1;	  /* error */
+    &#125;
+    *bufp = 0;
+    return n;
+&#125;
+/* $end rio_readlineb */
+
+/**********************************
+ * Wrappers for robust I/O routines
+ **********************************/
+ssize_t Rio_readn(int fd, void *ptr, size_t nbytes) 
+&#123;
+    ssize_t n;
+  
+    if ((n = rio_readn(fd, ptr, nbytes)) &lt; 0)
+    unix_error(&quot;Rio_readn error&quot;);
+    return n;
+&#125;
+
+void Rio_writen(int fd, void *usrbuf, size_t n) 
+&#123;
+    if (rio_writen(fd, usrbuf, n) != n)
+    unix_error(&quot;Rio_writen error&quot;);
+&#125;
+
+void Rio_readinitb(rio_t *rp, int fd)
+&#123;
+    rio_readinitb(rp, fd);
+&#125; 
+
+ssize_t Rio_readnb(rio_t *rp, void *usrbuf, size_t n) 
+&#123;
+    ssize_t rc;
+
+    if ((rc = rio_readnb(rp, usrbuf, n)) &lt; 0)
+    unix_error(&quot;Rio_readnb error&quot;);
+    return rc;
+&#125;
+
+ssize_t Rio_readlineb(rio_t *rp, void *usrbuf, size_t maxlen) 
+&#123;
+    ssize_t rc;
+
+    if ((rc = rio_readlineb(rp, usrbuf, maxlen)) &lt; 0)
+    unix_error(&quot;Rio_readlineb error&quot;);
+    return rc;
+&#125; 
+
+
+/************************** 
+ * Error-handling functions
+ **************************/
+/* $begin errorfuns */
+/* $begin unixerror */
+void unix_error(char *msg) /* unix-style error */
+&#123;
+    fprintf(stderr, &quot;%s: %s\n&quot;, msg, strerror(errno));
+    exit(0);
+&#125;
+/* $end unixerror */
+
+void posix_error(int code, char *msg) /* posix-style error */
+&#123;
+    fprintf(stderr, &quot;%s: %s\n&quot;, msg, strerror(code));
+    exit(0);
+&#125;
+
+void dns_error(char *msg) /* dns-style error */
+&#123;
+    fprintf(stderr, &quot;%s: DNS error %d\n&quot;, msg, h_errno);
+    exit(0);
+&#125;
+
+void app_error(char *msg) /* application error */
+&#123;
+    fprintf(stderr, &quot;%s\n&quot;, msg);
+    exit(0);
+&#125;
+/* $end errorfuns */
+</code></pre>
+<p>需要的结构：</p>
+<pre><code class="c">/* Persistent state for the robust I/O (Rio) package */
+/* $begin rio_t */
+#define RIO_BUFSIZE 8192
+typedef struct &#123;
+    int rio_fd;                /* descriptor for this internal buf */
+    int rio_cnt;               /* unread bytes in internal buf */
+    char *rio_bufptr;          /* next unread byte in internal buf */
+    char rio_buf[RIO_BUFSIZE]; /* internal buffer */
+&#125; rio_t;
+/* $end rio_t */
+</code></pre>
+
+    </div>
+    
+    
+    
+    
+    <div id="comment">
+        <div id="giscus-container" class="giscus"></div>
+    </div>
+    
+    
+    
+    
+</div>
+
+            <footer id="footer">
+    <div id="footer-wrap">
+        <div>
+            &copy;
+            2024 - 2024 Frun1na &#39;s blog
+            <span id="footer-icon">
+                <i class="fa-solid fa-font-awesome fa-fw"></i>
+            </span>
+            &commat;Frun1na
+        </div>
+        <div>
+            Based on the <a target="_blank" rel="noopener" href="https://hexo.io">Hexo Engine</a> &amp;
+            <a target="_blank" rel="noopener" href="https://github.com/theme-particlex/hexo-theme-particlex">ParticleX Theme</a>
+        </div>
+        
+    </div>
+</footer>
+
+        </div>
+        
+        <transition name="fade">
+            <div id="preview" ref="preview" v-show="previewShow">
+                <img id="preview-content" ref="previewContent" />
+            </div>
+        </transition>
+        
+    </div>
+    <script src="/js/main.js"></script>
+    
+    
+<script
+    src="https://giscus.app/client.js"
+    data-repo="Frun1na/Frun1na.github.io"
+    data-repo-id="R_kgDOMv7m6Q"
+    data-category="General"
+    data-category-id="DIC_kwDOMv7m6c4CiZjQ"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="zh-CN"
+    crossorigin
+    async
+></script>
+
+
+
+
+
+    
+</body>
+</html>
